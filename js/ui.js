@@ -6,9 +6,11 @@ export function switchTab(tabId) {
     
     document.getElementById(tabId).classList.add('active');
     document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+    
+    // Auf Mobile sanft nach oben scrollen beim Tab-Wechsel
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// DOM Cache
 export const DOM = {
     lawFilter: document.getElementById('lawFilter'), paragraphFilter: document.getElementById('paragraphFilter'),
     absatzFilter: document.getElementById('absatzFilter'), searchInput: document.getElementById('searchInput'),
@@ -21,7 +23,6 @@ export const DOM = {
     reloadBtn: document.getElementById('reloadBtn')
 };
 
-// Hilfsfunktionen
 export function escapeHTML(t) { return t ? String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;") : ""; }
 export function escapeJS(s) { return s ? s.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n') : ''; }
 export function containsExactWord(t, q) { 
@@ -30,11 +31,24 @@ export function containsExactWord(t, q) {
     return new RegExp(`(^|[^\\p{L}\\p{N}])(${e})([^\\p{L}\\p{N}]|$)`,'iu').test(t); 
 }
 
+// NEU: Globale Text-Toggle Funktion für "Mehr lesen"
+window.toggleText = function(btn) {
+    const target = btn.previousElementSibling;
+    target.classList.toggle('text-clamp');
+    btn.innerHTML = target.classList.contains('text-clamp') ? 'Mehr anzeigen ⬇' : 'Weniger anzeigen ⬆';
+};
+
+// NEU: Mobile-freundliches Toast-Feedback
+export function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
 export function copyTextToClipboard(btn, text) {
     navigator.clipboard.writeText(text).then(() => {
-        const orig = btn.innerHTML;
-        btn.innerHTML = '✓ Kopiert!'; btn.style.backgroundColor = '#10b981'; btn.style.color = 'white';
-        setTimeout(() => { btn.innerHTML = orig; btn.style.backgroundColor = ''; btn.style.color = ''; }, 2000);
+        showToast('✓ Text erfolgreich kopiert');
     });
 }
 
@@ -84,6 +98,7 @@ export function renderResults() {
                 const hasB = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
                 const uB = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
                 const isA = state.revisionsSchreibenListe.some(i => i.id === item.id);
+                
                 return `
                 <div class="paragraph-box">
                     <div class="paragraph-box-header">
@@ -93,8 +108,18 @@ export function renderResults() {
                             ${hasB ? `<button class="action-icon-btn ${isA?'added':''}" id="add-btn-${item.id}" onclick="toggleToSchreiben('${item.id}')">${isA?'✓ Im Schreiben':'➕ Zum Schreiben'}</button>`:''}
                         </div>
                     </div>
-                    <div class="paragraph-text">${escapeHTML(item.inhalt)}</div>
-                    ${hasB ? `<div class="revision-preview-box"><div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:0.35rem;">Vorschau Textbaustein</div>${escapeHTML(uB)}</div>`:''}
+                    
+                    <div class="text-content-wrapper">
+                        <div class="paragraph-text text-clamp">${escapeHTML(item.inhalt)}</div>
+                        <button class="toggle-more-btn" onclick="window.toggleText(this)">Mehr anzeigen ⬇</button>
+                    </div>
+
+                    ${hasB ? `
+                    <div class="revision-preview-box">
+                        <div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:0.35rem;">Vorschau Textbaustein</div>
+                        <div class="text-clamp">${escapeHTML(uB)}</div>
+                        <button class="toggle-more-btn" onclick="window.toggleText(this)">Mehr anzeigen ⬇</button>
+                    </div>`:''}
                 </div>`;
             }).join('')}
         </div>`).join('');
@@ -103,11 +128,10 @@ export function renderResults() {
 export function renderDocumentView() {
     const count = state.revisionsSchreibenListe.length;
     DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
-    
-    DOM.tabCounter.textContent = count; // NEU: Zähler im Reiter aktualisieren
+    DOM.tabCounter.textContent = count; 
     
     if (count === 0) {
-        DOM.schreibenList.innerHTML = `<div class="doc-empty">Das Schreiben ist noch leer.<br><br>Suchen Sie links nach Paragrafen und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.</div>`;
+        DOM.schreibenList.innerHTML = `<div class="doc-empty">Das Schreiben ist noch leer.<br><br>Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.</div>`;
         DOM.copySchreibenBtn.disabled = true; DOM.clearSchreibenBtn.style.display = 'none'; return;
     }
 
@@ -158,7 +182,5 @@ export function copyComposedSchreiben() {
 }
 
 function onCopySuccess() { 
-    const b = DOM.copySchreibenBtn; const o = b.innerHTML; 
-    b.innerHTML = '✓ Kopiert!'; b.style.backgroundColor = '#15803d'; 
-    setTimeout(() => { b.innerHTML = o; b.style.backgroundColor = ''; }, 2500); 
+    showToast('✓ Gesamtes Schreiben erfolgreich kopiert!');
 }

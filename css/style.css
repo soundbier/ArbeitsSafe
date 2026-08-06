@@ -178,20 +178,13 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
 }
 
 .btn-mini {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    padding: 0;
-    min-height: unset; /* Überschreibt das große mobile Touch-Limit für diesen Bereich */
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .btn-mini:hover {

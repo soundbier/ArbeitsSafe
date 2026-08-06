@@ -7,13 +7,15 @@ function initData(csvString, fileName = null) {
     state.lastLoadedFileName = fileName;
     state.gesetzeData = parseCSV(csvString);
     
-    if(fileName) { 
-        DOM.statusBadge.className = 'status-badge loaded'; 
-        DOM.statusText.innerHTML = `${fileName} (${state.gesetzeData.length})`; 
-    } else { 
-        DOM.statusBadge.className = 'status-badge'; 
-        DOM.statusText.textContent = `Demo-Modus (${state.gesetzeData.length})`; 
-    }
+    if (fileName) {
+    DOM.statusBadge.className = 'status-mini';
+    DOM.statusBadge.innerHTML = '<span>🟢</span>';
+    DOM.statusBadge.title = `${fileName} (${state.gesetzeData.length} Einträge)`;
+} else {
+    DOM.statusBadge.className = 'status-mini';
+    DOM.statusBadge.innerHTML = '<span>🟡</span>';
+    DOM.statusBadge.title = `Demo-Modus (${state.gesetzeData.length} Einträge)`;
+}
     updateDropdowns(); 
     renderResults();
 }

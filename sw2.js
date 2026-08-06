@@ -1,10 +1,10 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer (z.B. auf 'revisions-tool-v8'). Der Browser weiß dann 
+// Versionsnummer (z.B. auf 'revisions-tool-v9'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v7';
+const CACHE_NAME = 'revisions-tool-v8';
 
 // Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert.
 // HINWEIS: Der fehleranfällige Eintrag './' wurde hier entfernt.

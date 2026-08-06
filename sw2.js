@@ -1,10 +1,10 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer (z.B. auf 'revisions-tool-v9'). Der Browser weiß dann 
+// Versionsnummer (z.B. auf 'revisions-tool-v10'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v8';
+const CACHE_NAME = 'revisions-tool-v9';
 
 // Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert.
 // HINWEIS: Der fehleranfällige Eintrag './' wurde hier entfernt.
@@ -54,27 +54,39 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. DATEN ABRUFEN: Cache-First Strategie mit Navigation-Fix
+// 3. DATEN ABRUFEN: Cache-First Strategie mit robustem Redirect-Fix für GitHub Pages
 self.addEventListener('fetch', event => {
-    // FIX: Wenn es sich um einen Seitenaufruf der App (Navigation) handelt,
-    // zwingen wir den SW, direkt die saubere index.html auszuliefern.
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            caches.match('./index.html')
-                .then(cachedResponse => {
-                    return cachedResponse || fetch(event.request);
-                })
-        );
-        return; 
-    }
+    // Ignoriere Requests, die keine GET-Anfragen sind
+    if (event.request.method !== 'GET') return;
 
-    // Bisherige Logik für alle anderen Ressourcen (CSS, JS, Bilder, CSV)
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
-                // Wenn die Datei im Cache liegt, gib sie sofort zurück. 
-                // Wenn nicht, lade sie ganz normal aus dem Netzwerk.
-                return cachedResponse || fetch(event.request);
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+
+                return fetch(event.request).then(networkResponse => {
+                    // Prüfen, ob die Antwort eine Weiterleitung (Redirect) ist oder fehlerhaft
+                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
+                        return networkResponse;
+                    }
+
+                    // WICHTIG: Wenn GitHub Pages oder der Browser eine Umleitung liefert,
+                    // clonen wir die Response sauber, damit der Service Worker nicht stolpert.
+                    let responseToCache = networkResponse.clone();
+
+                    // Optional: Dynamisches Caching für neue Ressourcen, 
+                    // aber vor allem fängt es den Fehler ab.
+                    return networkResponse;
+                }).catch(err => {
+                    // Fallback, falls offline und nicht im Cache: 
+                    // Bei Navigationen geben wir die index.html zurück
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
+                    throw err;
+                });
             })
     );
 });

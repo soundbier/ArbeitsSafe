@@ -7,10 +7,9 @@
     
     <style>
         /* =========================================
-           1. VARIABLEN (Konsolidiert)
+           1. VARIABLEN
            ========================================= */
         :root {
-            /* Globale Dashboard Farben */
             --primary: #0284c7;
             --primary-hover: #0369a1;
             --bg-gradient-start: #f8fafc;
@@ -19,8 +18,6 @@
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
-            
-            /* Tool-spezifische Farben */
             --primary-light: #e0f2fe;
             --success-bg: #f0fdf4;
             --success-text: #16a34a;
@@ -28,307 +25,163 @@
         }
 
         /* =========================================
-           2. RESET & BASE (Konsolidiert)
+           2. RESET & BASE
            ========================================= */
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; }
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-            color: var(--text-main);
-            min-height: 100vh;
-            line-height: 1.6;
+            color: var(--text-main); min-height: 100vh; line-height: 1.6;
         }
-
         h1, h2, h3 { margin-top: 0; line-height: 1.2; }
 
         /* =========================================
-           3. KOMPONENTEN (Konsolidiert)
+           3. KOMPONENTEN
            ========================================= */
         .card-base {
-            background: var(--card-bg);
-            border-radius: 16px;
+            background: var(--card-bg); border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-            border: 1px solid var(--border-color);
-            padding: 1.5rem;
+            border: 1px solid var(--border-color); padding: 1.5rem;
         }
 
         .btn {
-            display: inline-block;
-            background: var(--primary);
-            color: #ffffff;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s ease;
+            display: inline-block; background: var(--primary); color: #ffffff;
+            padding: 0.5rem 1rem; border-radius: 8px; border: none;
+            font-size: 1rem; cursor: pointer; transition: background 0.2s ease;
         }
-
         .btn:hover { background: var(--primary-hover); color: #ffffff; }
 
         /* =========================================
-           4. TOOL LAYOUT & SPEZIFISCHES CSS
+           4. TOOL LAYOUT (50/50 Split)
            ========================================= */
         .workspace-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+            max-width: 1800px; /* Etwas breiter für den 50/50 Look */
+            margin: 0 auto; padding: 2rem 1.5rem;
+            display: flex; flex-direction: column; gap: 1.5rem;
         }
 
-        /* ----- Tool Header ----- */
         .tool-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 30px; 
+            display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; 
         }
+        .header-titles h1 { font-size: 2.2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; margin: 0 0 5px 0; }
+        .header-titles p { color: var(--text-muted); font-size: 1.1rem; margin: 0; }
+        .header-right { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
-        .header-titles h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--text-main);
-            letter-spacing: -0.5px;
-            margin: 0 0 5px 0;
-        }
+        .status-badge { display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--bg-gradient-start); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+        .status-badge.loaded { background-color: var(--success-bg); border-color: var(--success-border); color: var(--success-text); font-weight: 600; }
 
-        .header-titles p {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            margin: 0;
-        }
+        .btn-tool { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .btn-tool:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .btn-secondary { background-color: #e2e8f0; color: #334155; }
+        .btn-secondary:hover { background-color: #cbd5e1; color: #334155; }
+        .btn-success { background-color: #16a34a; color: white; }
+        .btn-success:hover { background-color: #15803d; color: white; }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
+        .upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .upload-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; font-size: 100px; }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background-color: var(--bg-gradient-start);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .status-badge.loaded {
-            background-color: var(--success-bg);
-            border-color: var(--success-border);
-            color: var(--success-text);
-            font-weight: 600;
-        }
-
-        /* ----- Tool Buttons ----- */
-        .btn-tool {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        }
-
-        .btn-tool:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-
-        .btn-secondary {
-            background-color: #e2e8f0;
-            color: #334155;
-        }
-
-        .btn-secondary:hover {
-            background-color: #cbd5e1;
-            color: #334155;
-        }
-
-        .btn-success {
-            background-color: #16a34a;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background-color: #15803d;
-            color: white;
-        }
-
-        .upload-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-
-        .upload-wrapper input[type="file"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-            font-size: 100px;
-        }
-
-        /* ----- Layout (Grid) ----- */
+        /* NEU: 50/50 Layout */
         .workspace-layout {
             display: grid;
-            grid-template-columns: 1fr 450px;
-            gap: 24px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* Perfekter 50/50 Split */
+            gap: 2rem;
             align-items: start;
         }
+        @media (max-width: 1200px) { .workspace-layout { grid-template-columns: 1fr; } }
 
-        @media (max-width: 1400px) {
-            .workspace-layout { grid-template-columns: 1fr; }
-        }
+        .main-content-area { display: flex; flex-direction: column; gap: 1.5rem; }
 
-        .main-content-area {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            min-width: 0;
-        }
-
-        /* ----- Filter Toolbar ----- */
-        .controls-toolbar {
-            display: grid;
-            grid-template-columns: 1fr 1.4fr 0.8fr 1.2fr auto;
-            gap: 1.25rem;
-            padding: 24px 30px;
-            align-items: center;
-        }
-
-        @media (max-width: 1200px) {
-            .controls-toolbar { grid-template-columns: 1fr; }
-            .tool-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-        }
+        .controls-toolbar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; padding: 24px 30px; align-items: center; }
+        .search-full-width { grid-column: span 2; } /* Suchfeld nimmt mehr Platz ein */
+        @media (max-width: 800px) { .controls-toolbar { grid-template-columns: 1fr; } .search-full-width { grid-column: span 1; } }
 
         .control-field { display: flex; flex-direction: column; gap: 0.4rem; }
-        .control-field label {
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--text-muted);
-        }
-
-        select, input[type="text"] {
-            width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem;
-            border: 1px solid var(--border-color); border-radius: 8px;
-            background-color: #ffffff; color: var(--text-main);
-            transition: all 0.2s; font-family: inherit;
-        }
-
-        select:focus, input[type="text"]:focus {
-            outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-        }
-        
+        .control-field label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        select, input[type="text"] { width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: #ffffff; color: var(--text-main); transition: all 0.2s; font-family: inherit; }
+        select:focus, input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
         select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cursor: not-allowed; }
 
-        .filter-checkbox-wrapper {
-            display: flex; align-items: center; gap: 0.5rem;
-            background-color: var(--bg-gradient-start); border: 1px solid var(--border-color);
-            padding: 0.75rem 1rem; border-radius: 8px; height: 46px;
-            cursor: pointer; font-size: 0.9rem; font-weight: 600;
-            color: var(--text-main); user-select: none; margin-top: 1.4rem;
-            transition: all 0.2s;
-        }
-        
+        .filter-checkbox-wrapper { display: flex; align-items: center; gap: 0.5rem; background-color: var(--bg-gradient-start); border: 1px solid var(--border-color); padding: 0.75rem 1rem; border-radius: 8px; height: 46px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-main); user-select: none; margin-top: 1.4rem; transition: all 0.2s; }
         .filter-checkbox-wrapper:hover { border-color: var(--primary-light); background-color: #f1f5f9; }
         .filter-checkbox-wrapper input { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); cursor: pointer; }
 
-        /* ----- Result-Bereich ----- */
-        .results-container {
-            max-height: calc(100vh - 300px);
-            overflow-y: auto; padding-right: 0.5rem;
-            display: flex; flex-direction: column; gap: 24px;
-        }
-
+        /* ----- Ergebnisse links ----- */
+        .results-container { max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
         .results-container::-webkit-scrollbar { width: 8px; }
         .results-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .law-card { padding: 30px; transition: box-shadow 0.2s; }
-        .law-card:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-
         .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .badge { background-color: var(--primary-light); color: var(--primary); font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 9999px; text-transform: uppercase; }
         .law-title-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; margin-left: 0.5rem; }
-
         .paragraph-heading { font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
-        .paragraphs-stack { display: flex; flex-direction: column; gap: 1.25rem; }
-
-        .paragraph-box {
-            background-color: var(--bg-gradient-start); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 1.25rem 1.5rem; transition: all 0.2s ease-in-out;
-        }
+        
+        .paragraph-box { background-color: var(--bg-gradient-start); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; transition: all 0.2s ease-in-out; }
         .paragraph-box:hover { border-color: #cbd5e1; background-color: #ffffff; }
-
         .paragraph-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
         .absatz-tag { font-weight: 700; font-size: 0.85rem; color: var(--primary); background-color: var(--primary-light); padding: 0.25rem 0.6rem; border-radius: 6px; }
 
         .action-buttons-group { display: flex; gap: 0.5rem; }
-        
-        .action-icon-btn {
-            background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted);
-            font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0.75rem; border-radius: 8px;
-            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.35rem; font-family: inherit;
-        }
+        .action-icon-btn { background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0.75rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.35rem; font-family: inherit; }
         .action-icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
         .action-icon-btn.added { background-color: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
         .action-icon-btn.added:hover { background-color: #dcfce7; color: #15803d; }
 
-        .paragraph-text { font-size: 1rem; color: #334155; white-space: pre-line; line-height: 1.6; margin-bottom: 1rem; }
-        
-        .revision-preview-box {
-            background-color: #ffffff; border: 1px solid #bae6fd; border-left: 4px solid var(--primary);
-            border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.95rem; color: var(--text-main);
-            white-space: pre-line; line-height: 1.6;
+        .paragraph-text { font-size: 0.95rem; color: #334155; white-space: pre-line; line-height: 1.6; margin-bottom: 1rem; }
+        .revision-preview-box { background-color: #ffffff; border: 1px solid #bae6fd; border-left: 4px solid var(--primary); border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.9rem; color: var(--text-main); white-space: pre-line; line-height: 1.6; }
+
+        /* =========================================
+           5. DOKUMENTEN-ANSICHT (Das "Blatt Papier")
+           ========================================= */
+        .document-view {
+            background-color: #ffffff;
+            border-radius: 4px; /* Weniger rund, wie Papier */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 40px 50px; /* Großzügiger Rand */
+            position: sticky; top: 40px;
+            max-height: calc(100vh - 80px);
+            display: flex; flex-direction: column; gap: 1.5rem;
         }
 
-        /* ----- Sidebar ----- */
-        .schreiben-sidebar {
-            padding: 30px; position: sticky; top: 40px;
-            max-height: calc(100vh - 80px); display: flex; flex-direction: column; gap: 1.25rem;
-        }
-
-        .schreiben-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
-        .schreiben-header h3 { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0; }
+        .doc-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--text-main); padding-bottom: 1rem; margin-bottom: 1rem; }
+        .doc-header h3 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.5px; }
         .counter-badge { background-color: var(--primary-light); color: var(--primary); font-size: 0.85rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; }
 
-        .schreiben-items-list { overflow-y: auto; max-height: calc(100vh - 280px); display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem; }
-        .schreiben-items-list::-webkit-scrollbar { width: 6px; }
-        .schreiben-items-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .doc-items-list { overflow-y: auto; flex-grow: 1; padding-right: 10px; display: flex; flex-direction: column; }
+        .doc-items-list::-webkit-scrollbar { width: 6px; }
+        .doc-items-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        .schreiben-item-card {
-            background-color: var(--bg-gradient-start); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 1rem; font-size: 0.9rem;
-            display: flex; flex-direction: column; gap: 0.75rem; transition: all 0.2s;
+        /* Ein einzelner Revisionspunkt im Dokument */
+        .doc-item { padding: 1.5rem 0; border-bottom: 1px dashed var(--border-color); position: relative; transition: background 0.2s; }
+        .doc-item:last-child { border-bottom: none; }
+        .doc-item:hover { background-color: #f8fafc; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-left: -15px; margin-right: -15px; }
+
+        .doc-item-title-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .doc-item-num { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
+        
+        /* Unsichtbares Input-Feld, sieht aus wie normaler Text */
+        .doc-title-input { 
+            flex-grow: 1; font-size: 1.1rem; font-weight: 700; color: var(--text-main);
+            border: 1px solid transparent; background: transparent; padding: 0.2rem 0.5rem; border-radius: 4px;
+            transition: all 0.2s; margin-left: -0.5rem;
         }
-        .schreiben-item-card:hover { border-color: #cbd5e1; background-color: #ffffff; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .doc-title-input:hover, .doc-title-input:focus { border-color: var(--primary-light); background: #f1f5f9; outline: none; }
 
-        .schreiben-item-info { display: flex; align-items: center; gap: 0.5rem; }
-        .schreiben-item-num { font-weight: 700; color: var(--primary); font-size: 1rem; min-width: 24px; }
-        .schreiben-title-input { flex-grow: 1; padding: 0.4rem 0.6rem; font-size: 0.9rem; font-weight: 600; }
+        .doc-item-text { font-size: 1rem; color: #1e293b; white-space: pre-line; line-height: 1.6; text-align: justify; }
         
-        .schreiben-item-text { color: #475569; white-space: pre-line; line-height: 1.5; max-height: 90px; overflow: hidden; text-overflow: ellipsis; position: relative; }
-        .schreiben-item-text::after { content: ''; position: absolute; bottom: 0; right: 0; width: 100%; height: 25px; background: linear-gradient(transparent, var(--bg-gradient-start)); }
-        .schreiben-item-card:hover .schreiben-item-text::after { background: linear-gradient(transparent, #ffffff); }
+        /* Hover-Actions (versteckt bis Hover) */
+        .doc-item-actions { 
+            opacity: 0; position: absolute; top: 1.5rem; right: 0; 
+            background: #f8fafc; padding-left: 10px; box-shadow: -10px 0 10px #f8fafc;
+            display: flex; gap: 0.35rem; transition: opacity 0.2s;
+        }
+        .doc-item:hover .doc-item-actions { opacity: 1; right: 15px; }
 
-        .schreiben-item-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); }
-        .schreiben-empty { text-align: center; padding: 3rem 1.5rem; color: var(--text-muted); font-size: 1rem; background-color: var(--bg-gradient-start); border-radius: 12px; border: 2px dashed var(--border-color); }
-        
-        .no-results { text-align: center; padding: 5rem 2rem; color: var(--text-muted); font-size: 1.1rem; }
+        .doc-empty { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 1.1rem; border: 2px dashed var(--border-color); border-radius: 8px; margin-top: 2rem; }
+        .doc-footer { display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); }
         .error-alert { background-color: #fef2f2; border: 1px solid #f87171; color: #991b1b; padding: 1rem 1.25rem; border-radius: 12px; font-size: 0.95rem; }
+        .no-results { text-align: center; padding: 5rem 2rem; color: var(--text-muted); font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -337,14 +190,11 @@
         <header class="card-base tool-header">
             <div class="header-titles">
                 <h1>Revisionsschreiben Tool</h1>
-                <p>Eigenständiger Generator & Gesetzesdatenbank</p>
+                <p>Generator für rechtssichere Textbausteine</p>
             </div>
             <div class="header-right">
-                <div id="statusBadge" class="status-badge">
-                    <span>⚠️</span>
-                    <span id="statusText">Demo-Modus (2 Einträge)</span>
-                </div>
-                <button type="button" id="reloadBtn" class="btn btn-tool btn-secondary" title="Neu laden">🔄 Neu laden</button>
+                <div id="statusBadge" class="status-badge"><span>⚠️</span><span id="statusText">Demo-Modus</span></div>
+                <button type="button" id="reloadBtn" class="btn btn-tool btn-secondary">🔄 Neu laden</button>
                 <div class="upload-wrapper">
                     <button type="button" class="btn btn-tool btn-primary">📁 CSV laden</button>
                     <input type="file" id="csvFileInput" accept=".csv">
@@ -355,573 +205,280 @@
         <div id="errorContainer"></div>
 
         <div class="workspace-layout">
+            
+            <!-- LINKE SEITE: Datenbank & Suche -->
             <div class="main-content-area">
                 <div class="card-base controls-toolbar">
                     <div class="control-field">
-                        <label for="lawFilter">1. Gesetz wählen</label>
-                        <select id="lawFilter">
-                            <option value="">-- Alle Gesetze --</option>
-                        </select>
+                        <label>1. Gesetz</label>
+                        <select id="lawFilter"><option value="">-- Alle --</option></select>
                     </div>
-
                     <div class="control-field">
-                        <label for="paragraphFilter">2. Paragraf & Titel</label>
-                        <select id="paragraphFilter">
-                            <option value="">-- Alle Paragrafen --</option>
-                        </select>
+                        <label>2. Paragraf</label>
+                        <select id="paragraphFilter"><option value="">-- Alle --</option></select>
                     </div>
-
                     <div class="control-field">
-                        <label for="absatzFilter">3. Absatz</label>
-                        <select id="absatzFilter" disabled>
-                            <option value="">-- Alle Absätze --</option>
-                        </select>
+                        <label>3. Absatz</label>
+                        <select id="absatzFilter" disabled><option value="">-- Alle --</option></select>
                     </div>
-
-                    <div class="control-field">
-                        <label for="searchInput">4. Globale Textsuche</label>
-                        <input type="text" id="searchInput" placeholder="Suchbegriff eingeben...">
+                    <div class="control-field search-full-width">
+                        <label>4. Globale Textsuche</label>
+                        <input type="text" id="searchInput" placeholder="Suchbegriff eingeben (z.B. Lärm, Gefährdung)...">
                     </div>
-
                     <div>
                         <label class="filter-checkbox-wrapper">
-                            <input type="checkbox" id="hasBausteinFilter"> Nur mit Baustein
+                            <input type="checkbox" id="hasBausteinFilter"> Nur Einträge mit Textbaustein
                         </label>
                     </div>
                 </div>
 
                 <div id="results" class="results-container">
-                    <div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>
+                    <div class="card-base no-results">Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.</div>
                 </div>
             </div>
 
-            <aside class="card-base schreiben-sidebar">
-                <div class="schreiben-header">
-                    <h3>📄 Schreiben erstellen</h3>
+            <!-- RECHTE SEITE: Dokumenten-Ansicht (A4-Blatt) -->
+            <aside class="document-view">
+                <div class="doc-header">
+                    <h3>Entwurf: Revisionsschreiben</h3>
                     <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
                 </div>
 
-                <div id="schreibenList" class="schreiben-items-list">
-                    <div class="schreiben-empty">Noch keine Mängelpunkte hinzugefügt.<br>Klicken Sie bei den Bausteinen auf „➕ Zum Schreiben“.</div>
+                <div id="schreibenList" class="doc-items-list">
+                    <div class="doc-empty">
+                        Das Schreiben ist noch leer.<br><br>
+                        Suchen Sie links nach Paragrafen und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>, um Bausteine hinzuzufügen.
+                    </div>
                 </div>
 
-                <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="width: 100%; padding: 0.8rem;" onclick="copyComposedSchreiben()" disabled>
-                    📋 Gesamtes Schreiben kopieren
-                </button>
-                <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; display:none;" onclick="clearSchreiben()">
-                    🗑️ Liste leeren
-                </button>
+                <div class="doc-footer">
+                    <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; padding: 1rem; font-size: 1.1rem;" onclick="copyComposedSchreiben()" disabled>
+                        📋 Dokument kopieren
+                    </button>
+                    <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display:none;" onclick="clearSchreiben()">
+                        🗑️ Leeren
+                    </button>
+                </div>
             </aside>
         </div>
     </main>
 
     <script>
-        // --- 0. Helper / Utilities (aus global.js übernommen) ---
-        function escapeHTML(text) {
-            if (text === null || text === undefined) return "";
-            return String(text)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#39;");
-        }
-
-        function escapeJS(str) {
-            if (!str) return '';
-            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\n/g, '\\n');
-        }
-
-        function containsExactWord(text, query) {
-            if (!text || !query) return false;
-            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return new RegExp(`(^|[^\\p{L}\\p{N}])(${escaped})([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
-        }
+        // --- Hilfsfunktionen ---
+        function escapeHTML(t) { return t?String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"):""; }
+        function escapeJS(s) { return s?s.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n'):''; }
+        function containsExactWord(t, q) { if(!t||!q)return !1; const e=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return new RegExp(`(^|[^\\p{L}\\p{N}])(${e})([^\\p{L}\\p{N}]|$)`,'iu').test(t); }
 
         function copyTextToClipboard(btn, text) {
-            if (!navigator.clipboard) {
-                alert("Kopieren wird in diesem Browser nicht unterstützt.");
-                return;
-            }
             navigator.clipboard.writeText(text).then(() => {
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '✓ Kopiert!';
-                btn.style.backgroundColor = '#10b981'; 
-                btn.style.color = 'white';
-                btn.style.borderColor = '#10b981';
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.backgroundColor = '';
-                    btn.style.color = '';
-                    btn.style.borderColor = '';
-                }, 2000);
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✓ Kopiert!'; btn.style.backgroundColor = '#10b981'; btn.style.color = 'white';
+                setTimeout(() => { btn.innerHTML = orig; btn.style.backgroundColor = ''; btn.style.color = ''; }, 2000);
             });
         }
 
-        // --- 1. DOM Elements Cache ---
+        // --- State ---
         const DOM = {
-            lawFilter: document.getElementById('lawFilter'),
-            paragraphFilter: document.getElementById('paragraphFilter'),
-            absatzFilter: document.getElementById('absatzFilter'), 
-            searchInput: document.getElementById('searchInput'),
-            hasBausteinFilter: document.getElementById('hasBausteinFilter'),
-            resultsContainer: document.getElementById('results'),
-            schreibenList: document.getElementById('schreibenList'),
-            schreibenCounter: document.getElementById('schreibenCounter'),
-            copySchreibenBtn: document.getElementById('copySchreibenBtn'),
-            clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
-            errorContainer: document.getElementById('errorContainer'),
-            statusBadge: document.getElementById('statusBadge'),
-            statusText: document.getElementById('statusText'),
-            csvFileInput: document.getElementById('csvFileInput'),
+            lawFilter: document.getElementById('lawFilter'), paragraphFilter: document.getElementById('paragraphFilter'),
+            absatzFilter: document.getElementById('absatzFilter'), searchInput: document.getElementById('searchInput'),
+            hasBausteinFilter: document.getElementById('hasBausteinFilter'), resultsContainer: document.getElementById('results'),
+            schreibenList: document.getElementById('schreibenList'), schreibenCounter: document.getElementById('schreibenCounter'),
+            copySchreibenBtn: document.getElementById('copySchreibenBtn'), clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
+            errorContainer: document.getElementById('errorContainer'), statusBadge: document.getElementById('statusBadge'),
+            statusText: document.getElementById('statusText'), csvFileInput: document.getElementById('csvFileInput'),
             reloadBtn: document.getElementById('reloadBtn')
         };
 
-        // --- 2. State & Data ---
         let rawCsvData = `gesetzKuerzel;gesetzName;paragraf;absatz;titel;inhalt;mangelVorgefunden;rechtsgrundlage;handlungsaufforderung\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 1;Beurteilung der Arbeitsbedingungen;"(1) Der Arbeitgeber hat durch eine Beurteilung der für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, welche Maßnahmen des Arbeitsschutzes erforderlich sind.";"Zum Zeitpunkt der Besichtigung konnte von Ihnen keine Gefährdungsbeurteilungen vorgelegt werden.";"Laut § 5 Arbeitsschutzgesetzes (ArbSchG) hat der Arbeitgeber durch eine Beurteilung die für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, bei Erfordernis notwendige Maßnahmen gegen diese Gefährdungen zu treffen und die Wirksamkeit dieser Maßnahmen fortlaufend zu prüfen.";"Bitte überarbeiten Sie eigenverantwortlich Ihre Gefährdungsbeurteilungen, dokumentieren Sie zukünftig die umgesetzten Maßnahmen und führen Sie Wirksamkeitskontrollen durch."\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 2;Beurteilung der Arbeitsbedingungen;"(2) Eine Beurteilung nach Absatz 1 ist unabhängig von der Zahl der Beschäftigten vorzunehmen.";;;`;
+        let gesetzeData = []; let lastLoadedFileText = rawCsvData; let lastLoadedFileName = null; let revisionsSchreibenListe = [];
 
-        let gesetzeData = [];
-        let lastLoadedFileText = rawCsvData;
-        let lastLoadedFileName = null;
-        let revisionsSchreibenListe = [];
-
-        // --- 3. Parsing & Initialization ---
+        // --- CSV Parser ---
         function parseCSV(text) {
             text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             const linesText = text.split(/\r?\n/).filter(line => line.trim() !== '');
             if (linesText.length < 2) return [];
-
-            const firstLine = linesText[0];
-            const delimiter = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ';' : ',';
-
-            let lines = [];
-            let row = [''];
-            let inQuotes = false;
+            const delimiter = (linesText[0].match(/;/g) || []).length >= (linesText[0].match(/,/g) || []).length ? ';' : ',';
+            let lines = [], row = [''], inQuotes = false;
 
             for (let lineIdx = 0; lineIdx < linesText.length; lineIdx++) {
-                let currentLineStr = linesText[lineIdx];
-                for (let i = 0; i < currentLineStr.length; i++) {
-                    let c = currentLineStr[i];
-                    if (c === '"') {
-                        if (inQuotes && currentLineStr[i + 1] === '"') {
-                            row[row.length - 1] += '"';
-                            i++;
-                        } else {
-                            inQuotes = !inQuotes;
-                        }
-                    } else if (c === delimiter && !inQuotes) {
-                        row.push('');
-                    } else {
-                        row[row.length - 1] += c;
-                    }
+                let curr = linesText[lineIdx];
+                for (let i = 0; i < curr.length; i++) {
+                    let c = curr[i];
+                    if (c === '"') { if (inQuotes && curr[i + 1] === '"') { row[row.length - 1] += '"'; i++; } else { inQuotes = !inQuotes; } } 
+                    else if (c === delimiter && !inQuotes) { row.push(''); } 
+                    else { row[row.length - 1] += c; }
                 }
-                if (!inQuotes) {
-                    lines.push(row);
-                    row = [''];
-                } else {
-                    row[row.length - 1] += '\n';
-                }
+                if (!inQuotes) { lines.push(row); row = ['']; } else { row[row.length - 1] += '\n'; }
             }
-
-            if (lines.length < 2) return [];
 
             let rawHeaders = lines[0].map(h => h.trim().replace(/^"|"$/g, '').replace(/^\uFEFF/, ''));
             const findCol = (names) => rawHeaders.findIndex(h => names.includes(h.toLowerCase().replace(/[\s_-]/g, '')));
-
             const cols = {
-                kuerzel: findCol(['gesetzkuerzel', 'kuerzel', 'gesetz']),
-                name: findCol(['gesetzname', 'name', 'langname']),
-                paragraf: findCol(['paragraf', 'paragraph', 'par', 'norm']),
-                absatz: findCol(['absatz', 'abs']),
-                titel: findCol(['titel', 'ueberschrift', 'überschrift']),
-                inhalt: findCol(['inhalt', 'text', 'baustein', 'gesetzestext']),
-                mangel: findCol(['mangelvorgefunden', 'mangel', 'vorgefunden']),
-                rechtsgrundlage: findCol(['rechtsgrundlage', 'grundlage']),
-                handlung: findCol(['handlungsaufforderung', 'aufforderung', 'handlung'])
+                k: findCol(['gesetzkuerzel','kuerzel','gesetz']), n: findCol(['gesetzname','name','langname']),
+                p: findCol(['paragraf','paragraph','par','norm']), a: findCol(['absatz','abs']),
+                t: findCol(['titel','ueberschrift']), i: findCol(['inhalt','text','baustein']),
+                m: findCol(['mangelvorgefunden','mangel']), r: findCol(['rechtsgrundlage','grundlage']),
+                h: findCol(['handlungsaufforderung','handlung'])
             };
 
-            let result = [];
-            let globalIdCounter = 1;
-
+            let res = [], idCounter = 1;
             for (let r = 1; r < lines.length; r++) {
-                let currentLine = lines[r];
-                if (currentLine && currentLine.some(cell => cell && cell.trim() !== '')) {
-                    const getVal = (idx, fallbackIdx) => {
-                        let val = (idx !== -1 && currentLine[idx] !== undefined) ? currentLine[idx] : (currentLine[fallbackIdx] || '');
-                        return val.replace(/^"|"$/g, '').trim().replace(/\\n/g, '\n');
-                    };
-
-                    let kuerzel = getVal(cols.kuerzel, 0);
-                    let paragraf = getVal(cols.paragraf, 2);
-
-                    result.push({
-                        id: `item_${globalIdCounter++}`,
-                        gesetzKuerzel: kuerzel,
-                        gesetzName: getVal(cols.name, 1),
-                        paragraf: paragraf,
-                        absatz: getVal(cols.absatz, 3),
-                        titel: getVal(cols.titel, 4) || `${kuerzel} ${paragraf}`,
-                        inhalt: getVal(cols.inhalt, 5),
-                        mangelVorgefunden: getVal(cols.mangel, 6),
-                        rechtsgrundlage: getVal(cols.rechtsgrundlage, 7),
-                        handlungsaufforderung: getVal(cols.handlung, 8)
+                let cur = lines[r];
+                if (cur && cur.some(cell => cell && cell.trim() !== '')) {
+                    const getV = (idx, fbIdx) => ((idx !== -1 && cur[idx] !== undefined) ? cur[idx] : (cur[fbIdx] || '')).replace(/^"|"$/g, '').trim().replace(/\\n/g, '\n');
+                    res.push({
+                        id: `item_${idCounter++}`, gesetzKuerzel: getV(cols.k,0), gesetzName: getV(cols.n,1),
+                        paragraf: getV(cols.p,2), absatz: getV(cols.a,3), titel: getV(cols.t,4) || `${getV(cols.k,0)} ${getV(cols.p,2)}`,
+                        inhalt: getV(cols.i,5), mangelVorgefunden: getV(cols.m,6), rechtsgrundlage: getV(cols.r,7), handlungsaufforderung: getV(cols.h,8)
                     });
                 }
             }
-            return result;
+            return res;
         }
 
         function initData(csvString, fileName = null) {
-            DOM.errorContainer.innerHTML = '';
-            lastLoadedFileText = csvString;
-            lastLoadedFileName = fileName;
-
+            lastLoadedFileText = csvString; lastLoadedFileName = fileName;
             gesetzeData = parseCSV(csvString);
-
-            if (gesetzeData.length === 0) {
-                DOM.errorContainer.innerHTML = `<div class="error-alert"><strong>Fehler:</strong> Konnte keine Zeilen auslesen. Bitte CSV-Format prüfen.</div>`;
-                DOM.statusBadge.className = 'status-badge';
-                DOM.statusText.textContent = 'Fehler beim Laden!';
-                return;
-            }
-
-            if (fileName) {
-                DOM.statusBadge.className = 'status-badge loaded';
-                DOM.statusText.innerHTML = `${fileName} (${gesetzeData.length} Einträge)`;
-            } else {
-                DOM.statusBadge.className = 'status-badge';
-                DOM.statusText.textContent = `Demo-Modus (${gesetzeData.length} Einträge)`;
-            }
-
-            updateDropdowns();
-            DOM.searchInput.value = '';
-            DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>`;
+            if(fileName) { DOM.statusBadge.className = 'status-badge loaded'; DOM.statusText.innerHTML = `${fileName} (${gesetzeData.length})`; }
+            else { DOM.statusBadge.className = 'status-badge'; DOM.statusText.textContent = `Demo-Modus (${gesetzeData.length})`; }
+            updateDropdowns(); renderResults();
         }
 
-        // --- 4. Filtering & Dropdowns ---
+        // --- Filter & Rendern ---
         function getFilteredData() {
-            const law = DOM.lawFilter.value;
-            const paragraph = DOM.paragraphFilter.value;
-            const absatz = DOM.absatzFilter.value;
-            const search = DOM.searchInput.value.trim();
-            const hasBaustein = DOM.hasBausteinFilter.checked;
-
+            const law = DOM.lawFilter.value, par = DOM.paragraphFilter.value, abs = DOM.absatzFilter.value, search = DOM.searchInput.value.trim(), reqB = DOM.hasBausteinFilter.checked;
             return gesetzeData.filter(item => {
-                if (hasBaustein && !item.mangelVorgefunden && !item.rechtsgrundlage && !item.handlungsaufforderung) return false;
+                if (reqB && !item.mangelVorgefunden && !item.rechtsgrundlage && !item.handlungsaufforderung) return false;
                 if (law && item.gesetzKuerzel !== law) return false;
-                if (paragraph && item.paragraf !== paragraph) return false;
-                if (absatz && item.absatz !== absatz) return false; 
-                if (search) {
-                    const combinedText = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
-                    if (!containsExactWord(combinedText, search)) return false;
-                }
+                if (par && item.paragraf !== par) return false;
+                if (abs && item.absatz !== abs) return false; 
+                if (search && !containsExactWord(`${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`, search)) return false;
                 return true;
             });
         }
 
         function updateDropdowns() {
-            const currentLaw = DOM.lawFilter.value;
-            const currentPar = DOM.paragraphFilter.value;
-            const currentAbs = DOM.absatzFilter.value;
-            const hasBaustein = DOM.hasBausteinFilter.checked;
-
-            const laws = new Map();
-            gesetzeData.forEach(item => {
-                if (!hasBaustein || (item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) {
-                    laws.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel);
-                }
-            });
+            const curL = DOM.lawFilter.value, curP = DOM.paragraphFilter.value, curA = DOM.absatzFilter.value, reqB = DOM.hasBausteinFilter.checked;
+            const laws = new Map(), pars = new Map(), absatze = new Set();
             
-            DOM.lawFilter.innerHTML = '<option value="">-- Alle Gesetze --</option>';
-            laws.forEach((name, kuerzel) => {
-                DOM.lawFilter.innerHTML += `<option value="${escapeHTML(kuerzel)}">${escapeHTML(kuerzel)} - ${escapeHTML(name)}</option>`;
-            });
-            if (laws.has(currentLaw)) DOM.lawFilter.value = currentLaw;
+            gesetzeData.forEach(i => { if (!reqB || i.mangelVorgefunden || i.rechtsgrundlage || i.handlungsaufforderung) laws.set(i.gesetzKuerzel, i.gesetzName || i.gesetzKuerzel); });
+            DOM.lawFilter.innerHTML = '<option value="">-- Alle Gesetze --</option>' + Array.from(laws).map(([k,n])=>`<option value="${escapeHTML(k)}">${escapeHTML(k)} - ${escapeHTML(n)}</option>`).join('');
+            if (laws.has(curL)) DOM.lawFilter.value = curL;
 
-            const activeLaw = DOM.lawFilter.value;
-            const pars = new Map();
-            gesetzeData.forEach(item => {
-                if (activeLaw && item.gesetzKuerzel !== activeLaw) return;
-                if (hasBaustein && !(item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) return;
-                if (item.paragraf) pars.set(item.paragraf, item.titel || '');
-            });
+            gesetzeData.forEach(i => { if((!DOM.lawFilter.value || i.gesetzKuerzel === DOM.lawFilter.value) && (!reqB || i.mangelVorgefunden || i.rechtsgrundlage || i.handlungsaufforderung) && i.paragraf) pars.set(i.paragraf, i.titel); });
+            DOM.paragraphFilter.innerHTML = '<option value="">-- Alle Paragrafen --</option>' + Array.from(pars).map(([p,t])=>`<option value="${escapeHTML(p)}">${escapeHTML(p)}${t?' — '+escapeHTML(t):''}</option>`).join('');
+            if (pars.has(curP)) DOM.paragraphFilter.value = curP;
 
-            DOM.paragraphFilter.innerHTML = '<option value="">-- Alle Paragrafen --</option>';
-            pars.forEach((titel, paragraf) => {
-                DOM.paragraphFilter.innerHTML += `<option value="${escapeHTML(paragraf)}">${escapeHTML(paragraf)}${titel ? ' — ' + escapeHTML(titel) : ''}</option>`;
-            });
-            
-            if (pars.has(currentPar)) DOM.paragraphFilter.value = currentPar;
-            else DOM.paragraphFilter.value = "";
-
-            const activePar = DOM.paragraphFilter.value;
-            const absatze = new Set();
-            
-            if (activePar) {
-                gesetzeData.forEach(item => {
-                    if (activeLaw && item.gesetzKuerzel !== activeLaw) return;
-                    if (item.paragraf !== activePar) return; 
-                    if (hasBaustein && !(item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) return;
-                    if (item.absatz) absatze.add(item.absatz);
-                });
-            }
-
-            DOM.absatzFilter.innerHTML = '<option value="">-- Alle Absätze --</option>';
-            const sortedAbsatze = Array.from(absatze).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
-            sortedAbsatze.forEach(abs => {
-                DOM.absatzFilter.innerHTML += `<option value="${escapeHTML(abs)}">${escapeHTML(abs)}</option>`;
-            });
-            
-            if (absatze.has(currentAbs)) DOM.absatzFilter.value = currentAbs;
-            else DOM.absatzFilter.value = "";
-
-            DOM.absatzFilter.disabled = (!activePar || absatze.size === 0);
+            if(DOM.paragraphFilter.value) { gesetzeData.forEach(i => { if(i.paragraf === DOM.paragraphFilter.value && (!reqB || i.mangelVorgefunden || i.rechtsgrundlage || i.handlungsaufforderung) && i.absatz) absatze.add(i.absatz); }); }
+            DOM.absatzFilter.innerHTML = '<option value="">-- Alle Absätze --</option>' + Array.from(absatze).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).map(a=>`<option value="${escapeHTML(a)}">${escapeHTML(a)}</option>`).join('');
+            if (absatze.has(curA)) DOM.absatzFilter.value = curA;
+            DOM.absatzFilter.disabled = absatze.size === 0;
         }
 
-        // --- 5. Main Rendering Engine ---
         function renderResults() {
-            const search = DOM.searchInput.value.trim();
-            const paragraph = DOM.paragraphFilter.value;
-
-            if (!search && !paragraph) {
-                DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>`;
-                return;
-            }
-
             const data = getFilteredData();
-
-            if (data.length === 0) {
-                DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`;
-                return;
-            }
+            if (data.length === 0) { DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`; return; }
+            if(!DOM.searchInput.value && !DOM.paragraphFilter.value && !DOM.lawFilter.value) { DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie Filter oder nutzen Sie die Suche.</div>`; return; }
 
             const groupMap = new Map();
-            data.forEach(item => {
-                const key = `${item.gesetzKuerzel}_${item.paragraf}`;
-                if (!groupMap.has(key)) {
-                    groupMap.set(key, { ...item, entries: [] });
-                }
-                groupMap.get(key).entries.push(item);
-            });
+            data.forEach(item => { const k = `${item.gesetzKuerzel}_${item.paragraf}`; if (!groupMap.has(k)) groupMap.set(k, { ...item, entries: [] }); groupMap.get(k).entries.push(item); });
 
-            DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(group => createCardHTML(group)).join('');
-        }
-
-        function createCardHTML(group) {
-            return `
+            DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(g => `
                 <div class="card-base law-card">
-                    <div class="card-top">
-                        <div>
-                            <span class="badge">${escapeHTML(group.gesetzKuerzel)}</span>
-                            <span class="law-title-meta">${escapeHTML(group.gesetzName)}</span>
-                        </div>
-                    </div>
-                    <div class="paragraph-heading">
-                        ${escapeHTML(group.paragraf)}${group.titel && !group.titel.startsWith(group.paragraf) ? ' — ' + escapeHTML(group.titel) : ''}
-                    </div>
-                    <div class="paragraphs-stack">
-                        ${group.entries.map(item => createParagraphBoxHTML(item)).join('')}
-                    </div>
-                </div>
-            `;
+                    <div class="card-top"><div><span class="badge">${escapeHTML(g.gesetzKuerzel)}</span><span class="law-title-meta">${escapeHTML(g.gesetzName)}</span></div></div>
+                    <div class="paragraph-heading">${escapeHTML(g.paragraf)}${g.titel && !g.titel.startsWith(g.paragraf) ? ' — ' + escapeHTML(g.titel) : ''}</div>
+                    ${g.entries.map(item => {
+                        const hasB = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
+                        const uB = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
+                        const isA = revisionsSchreibenListe.some(i => i.id === item.id);
+                        return `
+                        <div class="paragraph-box">
+                            <div class="paragraph-box-header">
+                                <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
+                                <div class="action-buttons-group">
+                                    <button class="action-icon-btn" onclick="copyTextToClipboard(this, \`${escapeJS(item.inhalt)}\`)">📋 Gesetz</button>
+                                    ${hasB ? `<button class="action-icon-btn ${isA?'added':''}" id="add-btn-${item.id}" onclick="toggleToSchreiben('${item.id}')">${isA?'✓ Im Schreiben':'➕ Zum Schreiben'}</button>`:''}
+                                </div>
+                            </div>
+                            <div class="paragraph-text">${escapeHTML(item.inhalt)}</div>
+                            ${hasB ? `<div class="revision-preview-box"><div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:0.35rem;">Vorschau Textbaustein</div>${escapeHTML(uB)}</div>`:''}
+                        </div>`;
+                    }).join('')}
+                </div>`).join('');
         }
 
-        function createParagraphBoxHTML(item) {
-            const hasBaustein = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-            const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
-            const isAdded = revisionsSchreibenListe.some(i => i.id === item.id);
-
-            return `
-                <div class="paragraph-box">
-                    <div class="paragraph-box-header">
-                        <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
-                        <div class="action-buttons-group">
-                            <button class="action-icon-btn" onclick="copyTextToClipboard(this, \`${escapeJS(item.inhalt)}\`)">📋 Gesetzestext</button>
-                            ${hasBaustein ? `
-                                <button class="action-icon-btn ${isAdded ? 'added' : ''}" id="add-btn-${item.id}" onclick="toggleToSchreiben('${item.id}')">
-                                    ${isAdded ? '✓ Im Schreiben' : '➕ Zum Schreiben'}
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                    <div class="paragraph-text">${escapeHTML(item.inhalt)}</div>
-                    ${hasBaustein ? `
-                        <div class="revision-preview-box">
-                            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 0.35rem;">Revisionsbaustein-Vorschau</div>
-                            ${escapeHTML(unifiedBaustein)}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-
-        // --- 6. Writing Module ---
+        // --- Document Logic (Phase 2) ---
         function toggleToSchreiben(itemId) {
-            const item = gesetzeData.find(i => i.id === itemId);
-            if (!item) return;
-
-            const existingIndex = revisionsSchreibenListe.findIndex(i => i.id === itemId);
+            const item = gesetzeData.find(i => i.id === itemId); if (!item) return;
+            const idx = revisionsSchreibenListe.findIndex(i => i.id === itemId);
             const btn = document.getElementById(`add-btn-${itemId}`);
-
-            if (existingIndex > -1) {
-                revisionsSchreibenListe.splice(existingIndex, 1);
-                if (btn) {
-                    btn.classList.remove('added');
-                    btn.innerHTML = '➕ Zum Schreiben';
-                }
-            } else {
-                revisionsSchreibenListe.push({ ...item }); 
-                if (btn) {
-                    btn.classList.add('added');
-                    btn.innerHTML = '✓ Im Schreiben';
-                }
-            }
-            renderSchreibenSidebar();
+            if (idx > -1) { revisionsSchreibenListe.splice(idx, 1); if(btn){ btn.classList.remove('added'); btn.innerHTML='➕ Zum Schreiben'; } } 
+            else { revisionsSchreibenListe.push({ ...item }); if(btn){ btn.classList.add('added'); btn.innerHTML='✓ Im Schreiben'; } }
+            renderDocumentView();
         }
 
-        function renderSchreibenSidebar() {
+        function renderDocumentView() {
             const count = revisionsSchreibenListe.length;
             DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
 
             if (count === 0) {
-                DOM.schreibenList.innerHTML = `<div class="schreiben-empty">Noch keine Mängelpunkte hinzugefügt.<br>Klicken Sie bei den Bausteinen auf „➕ Zum Schreiben“.</div>`;
-                DOM.copySchreibenBtn.disabled = true;
-                DOM.clearSchreibenBtn.style.display = 'none';
-                return;
+                DOM.schreibenList.innerHTML = `<div class="doc-empty">Das Schreiben ist noch leer.<br><br>Suchen Sie links nach Paragrafen und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.</div>`;
+                DOM.copySchreibenBtn.disabled = true; DOM.clearSchreibenBtn.style.display = 'none'; return;
             }
 
-            DOM.copySchreibenBtn.disabled = false;
-            DOM.clearSchreibenBtn.style.display = 'flex';
+            DOM.copySchreibenBtn.disabled = false; DOM.clearSchreibenBtn.style.display = 'flex';
 
             DOM.schreibenList.innerHTML = revisionsSchreibenListe.map((item, idx) => {
-                const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
+                const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
                 return `
-                    <div class="schreiben-item-card">
-                        <div class="schreiben-item-info">
-                            <span class="schreiben-item-num">${idx + 1}.</span>
-                            <input type="text" class="schreiben-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)" placeholder="Titel eingeben...">
-                            <span>
-                                ${idx > 0 ? `<button class="action-icon-btn" style="padding:0.1rem 0.3rem;" onclick="moveItem(${idx}, -1)" title="Nach oben">▲</button>` : ''}
-                                ${idx < count - 1 ? `<button class="action-icon-btn" style="padding:0.1rem 0.3rem;" onclick="moveItem(${idx}, 1)" title="Nach unten">▼</button>` : ''}
-                            </span>
+                    <div class="doc-item">
+                        <div class="doc-item-title-row">
+                            <span class="doc-item-num">${idx + 1}.</span>
+                            <input type="text" class="doc-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)">
                         </div>
-                        <div class="schreiben-item-text">${escapeHTML(unifiedBaustein)}</div>
-                        <div class="schreiben-item-actions">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHTML(item.gesetzKuerzel)} ${escapeHTML(item.paragraf)} ${escapeHTML(item.absatz)}</span>
-                            <button class="action-icon-btn" style="color:#dc2626;" onclick="removeFromSchreiben('${item.id}')">🗑️ Entfernen</button>
+                        <div class="doc-item-text">${escapeHTML(unifiedBaustein)}</div>
+                        
+                        <div class="doc-item-actions">
+                            ${idx > 0 ? `<button class="action-icon-btn" title="Nach oben" onclick="moveItem(${idx}, -1)">▲</button>` : ''}
+                            ${idx < count - 1 ? `<button class="action-icon-btn" title="Nach unten" onclick="moveItem(${idx}, 1)">▼</button>` : ''}
+                            <button class="action-icon-btn" style="color:#dc2626;" title="Punkt entfernen" onclick="removeFromSchreiben('${item.id}')">🗑️</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
-        function updateItemTitle(itemId, newTitle) {
-            const item = revisionsSchreibenListe.find(i => i.id === itemId);
-            if (item) item.titel = newTitle;
-        }
+        function updateItemTitle(id, v) { const i = revisionsSchreibenListe.find(x => x.id === id); if(i) i.titel = v; }
+        function moveItem(idx, dir) { const n = idx+dir; if(n>=0 && n<revisionsSchreibenListe.length){ revisionsSchreibenListe.splice(n,0,revisionsSchreibenListe.splice(idx,1)[0]); renderDocumentView(); } }
+        function removeFromSchreiben(id) { toggleToSchreiben(id); }
+        function clearSchreiben() { revisionsSchreibenListe = []; renderResults(); renderDocumentView(); }
 
-        function moveItem(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= revisionsSchreibenListe.length) return;
-            const movedItem = revisionsSchreibenListe.splice(index, 1)[0];
-            revisionsSchreibenListe.splice(newIndex, 0, movedItem);
-            renderSchreibenSidebar();
-        }
-
-        function removeFromSchreiben(itemId) {
-            toggleToSchreiben(itemId);
-        }
-
-        function clearSchreiben() {
-            revisionsSchreibenListe = [];
-            renderResults(); 
-            renderSchreibenSidebar();
-        }
-
-        // --- 7. Export / Copy ---
         function copyComposedSchreiben() {
             if (revisionsSchreibenListe.length === 0) return;
-
-            const plainText = revisionsSchreibenListe.map((item, idx) => {
-                const parts = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean);
-                return `${idx + 1}. ${item.titel}\r\n\r\n` + parts.join("\r\n\r\n");
-            }).join("\r\n\r\n\r\n");
-
-            const htmlContent = revisionsSchreibenListe.map((item, idx) => {
-                const parts = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung]
-                    .filter(Boolean)
-                    .map(text => {
-                        return text.split(/\r?\n/).map(line => 
-                            `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${escapeHTML(line)}</p>`
-                        ).join('');
-                    });
-                const title = `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>`;
-                return title + parts.join("");
+            const plain = revisionsSchreibenListe.map((i, idx) => `${idx + 1}. ${i.titel}\r\n\r\n` + [i.mangelVorgefunden, i.rechtsgrundlage, i.handlungsaufforderung].filter(Boolean).join("\r\n\r\n")).join("\r\n\r\n\r\n");
+            const html = revisionsSchreibenListe.map((item, idx) => {
+                const p = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).map(t => t.split(/\r?\n/).map(l => `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${escapeHTML(l)}</p>`).join(''));
+                return `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>` + p.join("");
             }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
 
-            const htmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
-            const fallbackCopy = () => navigator.clipboard.writeText(plainText).then(onCopySuccess);
-
+            const cbText = `<html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
+            const fb = () => navigator.clipboard.writeText(plain).then(onCopySuccess);
             if (navigator.clipboard && window.ClipboardItem) {
-                const clipboardItem = new ClipboardItem({
-                    "text/plain": new Blob([plainText], { type: "text/plain" }),
-                    "text/html": new Blob([htmlText], { type: "text/html" })
-                });
-                navigator.clipboard.write([clipboardItem]).then(onCopySuccess).catch(fallbackCopy);
-            } else {
-                fallbackCopy();
-            }
+                navigator.clipboard.write([new ClipboardItem({"text/plain": new Blob([plain], {type: "text/plain"}), "text/html": new Blob([cbText], {type: "text/html"})})]).then(onCopySuccess).catch(fb);
+            } else fb();
         }
+        function onCopySuccess() { const b=DOM.copySchreibenBtn; const o=b.innerHTML; b.innerHTML='✓ Kopiert!'; b.style.backgroundColor='#15803d'; setTimeout(()=>{b.innerHTML=o;b.style.backgroundColor='';},2500); }
 
-        function onCopySuccess() {
-            const originalText = DOM.copySchreibenBtn.innerHTML;
-            DOM.copySchreibenBtn.innerHTML = '✓ Gesamtes Schreiben kopiert!';
-            DOM.copySchreibenBtn.style.backgroundColor = '#15803d';
-            setTimeout(() => {
-                DOM.copySchreibenBtn.innerHTML = originalText;
-                DOM.copySchreibenBtn.style.backgroundColor = '';
-            }, 2500);
-        }
-
-        // --- 8. Event Listeners ---
-        DOM.csvFileInput.addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => initData(new TextDecoder('utf-8', { fatal: false }).decode(ev.target.result), file.name);
-            reader.readAsArrayBuffer(file);
-        });
-
+        // --- Events ---
+        DOM.csvFileInput.addEventListener('change', e => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = ev => initData(new TextDecoder('utf-8', {fatal:false}).decode(ev.target.result), f.name); r.readAsArrayBuffer(f); } });
         DOM.reloadBtn.addEventListener('click', () => initData(lastLoadedFileText, lastLoadedFileName));
         DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
         DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
-        DOM.absatzFilter.addEventListener('change', renderResults); 
-        DOM.searchInput.addEventListener('input', renderResults);
+        DOM.absatzFilter.addEventListener('change', renderResults); DOM.searchInput.addEventListener('input', renderResults);
         DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 
         window.addEventListener('DOMContentLoaded', () => {
-            const csvUrl = 'gesetze.csv'; 
-            DOM.statusBadge.className = 'status-badge';
-            DOM.statusText.textContent = 'Lade Datenbank...';
-
-            fetch(csvUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-                    return response.text();
-                })
-                .then(csvText => {
-                    initData(csvText, "Datenbank geladen");
-                })
-                .catch(error => {
-                    console.error('Fehler beim automatischen Laden:', error);
-                    DOM.errorContainer.innerHTML = `
-                        <div class="error-alert">
-                            <strong>Hinweis:</strong> Die CSV-Datei (${csvUrl}) konnte nicht geladen werden.<br>
-                            Bitte stelle sicher, dass die Datei exakt diesen Namen trägt und im gleichen Ordner liegt.<br>
-                            <small>${escapeHTML(error.message)}</small>
-                        </div>`;
-                    initData(rawCsvData);
-                });
+            fetch('gesetze.csv').then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
+            .then(t => initData(t, "Datenbank geladen")).catch(e => { DOM.errorContainer.innerHTML=`<div class="error-alert"><strong>Lokal/Demo:</strong> gesetze.csv nicht gefunden. Nutze Fallback-Daten.</div>`; initData(rawCsvData); });
         });
     </script>
 </body>

@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- NEU: Viewport für mobile Geräte gesperrt (verhindert versehentliches Hineinzoomen) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ArbeitsSafe</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0284c7">
@@ -27,8 +28,8 @@
 
         <div id="errorContainer"></div>
 
-        <!-- NEU: Tab Navigation -->
-        <div class="card-base tab-navigation">
+        <!-- NEU: Sticky Tab Navigation -->
+        <div class="tab-navigation">
             <button type="button" class="tab-btn active" data-tab="tab-search">
                 🔍 Datenbank & Suche
             </button>
@@ -88,7 +89,7 @@
                     </div>
 
                     <div class="doc-footer">
-                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; padding: 1rem; font-size: 1.1rem;" onclick="copyComposedSchreiben()" disabled>
+                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; font-size: 1.1rem;" onclick="copyComposedSchreiben()" disabled>
                             📋 Dokument kopieren
                         </button>
                         <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display:none;" onclick="clearSchreiben()">
@@ -100,6 +101,9 @@
             
         </div>
     </main>
+
+    <!-- NEU: Toast Notification Container -->
+    <div id="toast" class="toast"></div>
 
     <script type="module" src="js/app.js"></script>
 </body>

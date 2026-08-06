@@ -1,5 +1,5 @@
 import { state, parseCSV } from './data.js';
-import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard } from './ui.js';
+import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard, switchTab } from './ui.js';
 
 // --- Haupt-Logik ---
 function initData(csvString, fileName = null) {
@@ -76,6 +76,13 @@ DOM.absatzFilter.addEventListener('change', renderResults);
 DOM.searchInput.addEventListener('input', renderResults);
 DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 
+// --- Tab Navigation ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        switchTab(e.currentTarget.dataset.tab);
+    });
+});
+
 // --- App Start ---
 window.addEventListener('DOMContentLoaded', () => {
     fetch('gesetze.csv')
@@ -86,6 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
             initData(state.rawCsvData); 
         });
 });
+
 // --- Service Worker Registrierung (PWA) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

@@ -1,13 +1,11 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer (z.B. auf 'revisions-tool-v10'). Der Browser weiß dann 
+// Versionsnummer (z.B. auf 'revisions-tool-v11'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v9';
+const CACHE_NAME = 'revisions-tool-v10';
 
-// Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert.
-// HINWEIS: Der fehleranfällige Eintrag './' wurde hier entfernt.
 const ASSETS_TO_CACHE = [
     './index.html',
     './css/style.css',
@@ -28,8 +26,6 @@ self.addEventListener('install', event => {
                 console.log('[Service Worker] Caching App Shell');
                 return cache.addAll(ASSETS_TO_CACHE);
             })
-            // skipWaiting zwingt den Service Worker, sofort aktiv zu werden, 
-            // ohne darauf zu warten, dass der Nutzer alle Tabs der App schließt.
             .then(() => self.skipWaiting()) 
     );
 });
@@ -40,7 +36,6 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cache => {
-                    // Lösche alle Caches, die nicht der aktuellen CACHE_NAME entsprechen
                     if (cache !== CACHE_NAME) {
                         console.log('[Service Worker] Lösche alten Cache:', cache);
                         return caches.delete(cache);
@@ -48,15 +43,12 @@ self.addEventListener('activate', event => {
                 })
             );
         })
-        // clients.claim sorgt dafür, dass der neue Service Worker sofort 
-        // die Kontrolle über die aktuell geöffnete Seite übernimmt.
         .then(() => self.clients.claim()) 
     );
 });
 
-// 3. DATEN ABRUFEN: Cache-First Strategie mit robustem Redirect-Fix für GitHub Pages
+// 3. DATEN ABRUFEN: Absolut sichere Strategie gegen Redirect-Fehler
 self.addEventListener('fetch', event => {
-    // Ignoriere Requests, die keine GET-Anfragen sind
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
@@ -67,25 +59,18 @@ self.addEventListener('fetch', event => {
                 }
 
                 return fetch(event.request).then(networkResponse => {
-                    // Prüfen, ob die Antwort eine Weiterleitung (Redirect) ist oder fehlerhaft
-                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
+                    // Wenn es keine valide Antwort oder ein Redirect ist, 
+                    // reichen wir sie direkt durch, ohne sie fehlerhaft zu verarbeiten.
+                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error' || networkResponse.type === 'opaqueredirect') {
                         return networkResponse;
                     }
 
-                    // WICHTIG: Wenn GitHub Pages oder der Browser eine Umleitung liefert,
-                    // clonen wir die Response sauber, damit der Service Worker nicht stolpert.
-                    let responseToCache = networkResponse.clone();
-
-                    // Optional: Dynamisches Caching für neue Ressourcen, 
-                    // aber vor allem fängt es den Fehler ab.
                     return networkResponse;
-                }).catch(err => {
-                    // Fallback, falls offline und nicht im Cache: 
-                    // Bei Navigationen geben wir die index.html zurück
+                }).catch(() => {
+                    // Fallback für Offline-Navigation (lädt die App statt abzustürzen)
                     if (event.request.mode === 'navigate') {
                         return caches.match('./index.html');
                     }
-                    throw err;
                 });
             })
     );

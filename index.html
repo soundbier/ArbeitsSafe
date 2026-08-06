@@ -3,54 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesetzesdatenbank</title>
-    
-    <!-- Einbinden der zentralen global.css -->
-    <link rel="stylesheet" href="css/global.css">
+    <title>Revisionsschreiben Tool</title>
     
     <style>
         /* =========================================
-           SPEZIFISCHE STYLES FÜR DIESES TOOL
+           1. VARIABLEN (Konsolidiert)
            ========================================= */
         :root {
-            /* Ergänzende Farben für dieses Tool */
+            /* Globale Dashboard Farben */
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-gradient-start: #f8fafc;
+            --bg-gradient-end: #e2e8f0;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            
+            /* Tool-spezifische Farben */
             --primary-light: #e0f2fe;
             --success-bg: #f0fdf4;
             --success-text: #16a34a;
             --success-border: #bbf7d0;
         }
 
-        /* Überschreibt die max-width des globalen Containers, 
-           da dieses Tool mit der Sidebar mehr Platz braucht */
+        /* =========================================
+           2. RESET & BASE (Konsolidiert)
+           ========================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 { margin-top: 0; line-height: 1.2; }
+
+        /* =========================================
+           3. KOMPONENTEN (Konsolidiert)
+           ========================================= */
+        .card-base {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover { background: var(--primary-hover); color: #ffffff; }
+
+        /* =========================================
+           4. TOOL LAYOUT & SPEZIFISCHES CSS
+           ========================================= */
         .workspace-container {
             max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
 
-        /* Navigations-Button */
-        .nav-back {
-            display: inline-flex;
-            align-items: center;
-            align-self: flex-start;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: -0.5rem;
-            color: var(--text-muted);
-        }
-        
-        .nav-back:hover {
-            color: var(--text-main);
-        }
-
-        /* ----- Tool Header (Baut auf .card-base auf) ----- */
+        /* ----- Tool Header ----- */
         .tool-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 30px; /* Überschreibt das Standard-Padding der card-base */
+            padding: 20px 30px; 
         }
 
         .header-titles h1 {
@@ -71,6 +109,7 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .status-badge {
@@ -93,7 +132,7 @@
             font-weight: 600;
         }
 
-        /* ----- Tool Buttons (Erweitern die globale .btn) ----- */
+        /* ----- Tool Buttons ----- */
         .btn-tool {
             display: inline-flex;
             align-items: center;
@@ -162,7 +201,7 @@
             min-width: 0;
         }
 
-        /* ----- Filter Toolbar (Baut auf .card-base auf) ----- */
+        /* ----- Filter Toolbar ----- */
         .controls-toolbar {
             display: grid;
             grid-template-columns: 1fr 1.4fr 0.8fr 1.2fr auto;
@@ -176,7 +215,6 @@
             .tool-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
         }
 
-        /* Formularelemente */
         .control-field { display: flex; flex-direction: column; gap: 0.4rem; }
         .control-field label {
             font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
@@ -219,7 +257,6 @@
         .results-container::-webkit-scrollbar { width: 8px; }
         .results-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        /* Nutzt .card-base via HTML, hier nur noch interne Abstände & Hover */
         .law-card { padding: 30px; transition: box-shadow 0.2s; }
         .law-card:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
 
@@ -258,7 +295,7 @@
             white-space: pre-line; line-height: 1.6;
         }
 
-        /* ----- Sidebar (Baut auf .card-base auf) ----- */
+        /* ----- Sidebar ----- */
         .schreiben-sidebar {
             padding: 30px; position: sticky; top: 40px;
             max-height: calc(100vh - 80px); display: flex; flex-direction: column; gap: 1.25rem;
@@ -296,16 +333,11 @@
 </head>
 <body>
 
-    <!-- Globale Layout-Klasse mit Tool-Erweiterung -->
-    <main class="container workspace-container">
-        
-        <a href="index.html" class="nav-back">🔙 Zurück zum Dashboard</a>
-
-        <!-- Nutzt nun die .card-base für das Box-Styling -->
+    <main class="workspace-container">
         <header class="card-base tool-header">
             <div class="header-titles">
-                <h1>Gesetzesdatenbank</h1>
-                <p>Gesetzes- und Textbausteindatenbank</p>
+                <h1>Revisionsschreiben Tool</h1>
+                <p>Eigenständiger Generator & Gesetzesdatenbank</p>
             </div>
             <div class="header-right">
                 <div id="statusBadge" class="status-badge">
@@ -323,10 +355,7 @@
         <div id="errorContainer"></div>
 
         <div class="workspace-layout">
-            
             <div class="main-content-area">
-                
-                <!-- Nutzt nun die .card-base -->
                 <div class="card-base controls-toolbar">
                     <div class="control-field">
                         <label for="lawFilter">1. Gesetz wählen</label>
@@ -366,7 +395,6 @@
                 </div>
             </div>
 
-            <!-- Nutzt nun die .card-base -->
             <aside class="card-base schreiben-sidebar">
                 <div class="schreiben-header">
                     <h3>📄 Schreiben erstellen</h3>
@@ -384,12 +412,52 @@
                     🗑️ Liste leeren
                 </button>
             </aside>
-
         </div>
     </main>
 
-    <!-- Der JavaScript-Block bleibt zu 100% identisch und unangetastet -->
     <script>
+        // --- 0. Helper / Utilities (aus global.js übernommen) ---
+        function escapeHTML(text) {
+            if (text === null || text === undefined) return "";
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function escapeJS(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\n/g, '\\n');
+        }
+
+        function containsExactWord(text, query) {
+            if (!text || !query) return false;
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`(^|[^\\p{L}\\p{N}])(${escaped})([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
+        }
+
+        function copyTextToClipboard(btn, text) {
+            if (!navigator.clipboard) {
+                alert("Kopieren wird in diesem Browser nicht unterstützt.");
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '✓ Kopiert!';
+                btn.style.backgroundColor = '#10b981'; 
+                btn.style.color = 'white';
+                btn.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }, 2000);
+            });
+        }
+
         // --- 1. DOM Elements Cache ---
         const DOM = {
             lawFilter: document.getElementById('lawFilter'),
@@ -530,7 +598,7 @@
             DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>`;
         }
 
-        // --- 4. Centralized Filtering & Dropdowns ---
+        // --- 4. Filtering & Dropdowns ---
         function getFilteredData() {
             const law = DOM.lawFilter.value;
             const paragraph = DOM.paragraphFilter.value;
@@ -557,7 +625,6 @@
             const currentAbs = DOM.absatzFilter.value;
             const hasBaustein = DOM.hasBausteinFilter.checked;
 
-            // 1. Update Law Dropdown
             const laws = new Map();
             gesetzeData.forEach(item => {
                 if (!hasBaustein || (item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) {
@@ -571,7 +638,6 @@
             });
             if (laws.has(currentLaw)) DOM.lawFilter.value = currentLaw;
 
-            // 2. Update Paragraph Dropdown
             const activeLaw = DOM.lawFilter.value;
             const pars = new Map();
             gesetzeData.forEach(item => {
@@ -585,13 +651,9 @@
                 DOM.paragraphFilter.innerHTML += `<option value="${escapeHTML(paragraf)}">${escapeHTML(paragraf)}${titel ? ' — ' + escapeHTML(titel) : ''}</option>`;
             });
             
-            if (pars.has(currentPar)) {
-                DOM.paragraphFilter.value = currentPar;
-            } else {
-                DOM.paragraphFilter.value = "";
-            }
+            if (pars.has(currentPar)) DOM.paragraphFilter.value = currentPar;
+            else DOM.paragraphFilter.value = "";
 
-            // 3. Update Absatz Dropdown 
             const activePar = DOM.paragraphFilter.value;
             const absatze = new Set();
             
@@ -605,24 +667,15 @@
             }
 
             DOM.absatzFilter.innerHTML = '<option value="">-- Alle Absätze --</option>';
-            
             const sortedAbsatze = Array.from(absatze).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
-            
             sortedAbsatze.forEach(abs => {
                 DOM.absatzFilter.innerHTML += `<option value="${escapeHTML(abs)}">${escapeHTML(abs)}</option>`;
             });
             
-            if (absatze.has(currentAbs)) {
-                DOM.absatzFilter.value = currentAbs;
-            } else {
-                DOM.absatzFilter.value = "";
-            }
+            if (absatze.has(currentAbs)) DOM.absatzFilter.value = currentAbs;
+            else DOM.absatzFilter.value = "";
 
-            if (!activePar || absatze.size === 0) {
-                DOM.absatzFilter.disabled = true;
-            } else {
-                DOM.absatzFilter.disabled = false;
-            }
+            DOM.absatzFilter.disabled = (!activePar || absatze.size === 0);
         }
 
         // --- 5. Main Rendering Engine ---
@@ -654,8 +707,6 @@
             DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(group => createCardHTML(group)).join('');
         }
 
-        // --- HTML Template Generators ---
-        /* Die result-Karten rufen nun .card-base ab */
         function createCardHTML(group) {
             return `
                 <div class="card-base law-card">
@@ -725,7 +776,6 @@
                     btn.innerHTML = '✓ Im Schreiben';
                 }
             }
-
             renderSchreibenSidebar();
         }
 
@@ -741,7 +791,7 @@
             }
 
             DOM.copySchreibenBtn.disabled = false;
-            DOM.clearSchreibenBtn.style.display = 'flex'; // da es ein .btn-tool ist, flex nutzen
+            DOM.clearSchreibenBtn.style.display = 'flex';
 
             DOM.schreibenList.innerHTML = revisionsSchreibenListe.map((item, idx) => {
                 const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
@@ -788,7 +838,7 @@
             renderSchreibenSidebar();
         }
 
-        // --- 7. Clipboard & Utilities ---
+        // --- 7. Export / Copy ---
         function copyComposedSchreiben() {
             if (revisionsSchreibenListe.length === 0) return;
 
@@ -805,9 +855,7 @@
                             `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${escapeHTML(line)}</p>`
                         ).join('');
                     });
-
                 const title = `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>`;
-                
                 return title + parts.join("");
             }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
 
@@ -835,38 +883,6 @@
             }, 2500);
         }
 
-        function copyTextToClipboard(btn, text) {
-            navigator.clipboard.writeText(text).then(() => {
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '✓ Kopiert!';
-                btn.style.backgroundColor = '#16a34a';
-                btn.style.color = 'white';
-                btn.style.borderColor = '#16a34a';
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.backgroundColor = '';
-                    btn.style.color = '';
-                    btn.style.borderColor = '';
-                }, 2000);
-            });
-        }
-
-        function containsExactWord(text, query) {
-            if (!text || !query) return false;
-            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return new RegExp(`(^|[^\\p{L}\\p{N}])(${escaped})([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
-        }
-
-        function escapeHTML(str) {
-            if (!str) return '';
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-        }
-
-        function escapeJS(str) {
-            if (!str) return '';
-            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\n/g, '\\n');
-        }
-
         // --- 8. Event Listeners ---
         DOM.csvFileInput.addEventListener('change', e => {
             const file = e.target.files[0];
@@ -883,20 +899,14 @@
         DOM.searchInput.addEventListener('input', renderResults);
         DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 
-        // --- AUTOMATISCHER START: Server-Laden für Cloudflare ---
         window.addEventListener('DOMContentLoaded', () => {
-            
-            // Relativer Pfad zur Datei im selben Verzeichnis
             const csvUrl = 'gesetze.csv'; 
-
             DOM.statusBadge.className = 'status-badge';
             DOM.statusText.textContent = 'Lade Datenbank...';
 
             fetch(csvUrl)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP-Fehler! Status: ${response.status}`);
                     return response.text();
                 })
                 .then(csvText => {
@@ -910,11 +920,9 @@
                             Bitte stelle sicher, dass die Datei exakt diesen Namen trägt und im gleichen Ordner liegt.<br>
                             <small>${escapeHTML(error.message)}</small>
                         </div>`;
-                    
                     initData(rawCsvData);
                 });
         });
     </script>
-
 </body>
 </html>

@@ -30,10 +30,10 @@ h1, h2, h3 { margin-top: 0; line-height: 1.2; }
 }
 .btn:hover { background: var(--primary-hover); color: #ffffff; }
 
-.workspace-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.workspace-container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
 .tool-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; }
-.header-titles h1 { font-size: 2.2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; margin: 0 0 5px 0; }
-.header-titles p { color: var(--text-muted); font-size: 1.1rem; margin: 0; }
+.header-titles h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; margin: 0 0 5px 0; }
+.header-titles p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
 .header-right { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
 .status-badge { display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--bg-gradient-start); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); min-height: 44px; }

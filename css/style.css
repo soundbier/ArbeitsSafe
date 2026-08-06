@@ -155,8 +155,9 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
     .filter-checkbox-wrapper { margin-top: 0.5rem; }
 }
 /* =========================================
-   DEZENTES & KOMPAKTES CSV-/STATUS-MENÜ
+   KOMPAKTES CSV-/STATUS-MENÜ
    ========================================= */
+
 .compact-header {
     display: flex;
     align-items: center;
@@ -167,24 +168,47 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
     border-radius: 9999px;
 }
 
+.status-mini,
+.btn-mini,
+.upload-wrapper {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
 .status-mini {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    overflow: hidden;
+}
+
+.status-mini span {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    white-space: nowrap;
+    justify-content: center;
+    line-height: 1;
 }
 
 .btn-mini {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.82rem;
-    font-weight: 600;
+    background: transparent;
+    border: 1px solid var(--border-color);
     color: var(--text-muted);
-    white-space: nowrap;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    min-height: unset;
 }
 
 .btn-mini:hover {
@@ -193,11 +217,28 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
     border-color: var(--primary);
 }
 
-/* Anpassung für mobile Ansicht */
+.upload-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-wrapper .btn-mini {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.upload-wrapper input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
 @media (max-width: 900px) {
     .compact-header {
-        border-radius: 8px;
         width: 100%;
         justify-content: space-between;
+        border-radius: 8px;
     }
 }

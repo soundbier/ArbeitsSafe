@@ -1,7 +1,7 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer (z.B. auf 'revisions-tool-v12'). Der Browser weiß dann 
+// Versionsnummer (z.B. auf 'revisions-tool-v1.1.1.2 [Major.Minor.Patch.Build]'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
 const CACHE_NAME = 'revisions-tool-v1.1.1.1';

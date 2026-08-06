@@ -4,7 +4,7 @@
 // Versionsnummer (z.B. auf 'revisions-tool-v1.1.1.2 [Major.Minor.Patch.Build]'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.2.5';
+const CACHE_NAME = 'revisions-tool-v1.1.2.6';
 
 const ASSETS_TO_CACHE = [
     './index.html',

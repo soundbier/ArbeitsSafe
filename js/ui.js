@@ -1,5 +1,13 @@
 import { state } from './data.js';
 
+export function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+}
+
 // DOM Cache
 export const DOM = {
     lawFilter: document.getElementById('lawFilter'), paragraphFilter: document.getElementById('paragraphFilter'),

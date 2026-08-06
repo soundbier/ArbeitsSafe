@@ -245,9 +245,9 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
         gap: 8px; /* Etwas weniger Abstand zwischen den Tabs */
     }
     .tab-btn {
-        padding: 0.6rem 0.75rem; /* Weniger Padding links/rechts */
-        font-size: 0.95rem;      /* Schriftgröße minimal anpassen */
-        min-width: 0;            /* Hebt das 'max-content'-Erzwingen auf */
-        flex: 1;                 /* Teilen sich den Platz brüderlich */
+        padding: 0.5rem 0.5rem; 
+        font-size: 0.9rem;      
+        min-width: 0;            
+        flex: 1;                 
     }
 }

@@ -16,6 +16,7 @@ export const DOM = {
     schreibenList: document.getElementById('schreibenList'), schreibenCounter: document.getElementById('schreibenCounter'),
     copySchreibenBtn: document.getElementById('copySchreibenBtn'), clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
     errorContainer: document.getElementById('errorContainer'), statusBadge: document.getElementById('statusBadge'),
+    tabCounter: document.getElementById('tabCounter'),
     statusText: document.getElementById('statusText'), csvFileInput: document.getElementById('csvFileInput'),
     reloadBtn: document.getElementById('reloadBtn')
 };
@@ -102,7 +103,9 @@ export function renderResults() {
 export function renderDocumentView() {
     const count = state.revisionsSchreibenListe.length;
     DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
-
+    
+    DOM.tabCounter.textContent = count; // NEU: Zähler im Reiter aktualisieren
+    
     if (count === 0) {
         DOM.schreibenList.innerHTML = `<div class="doc-empty">Das Schreiben ist noch leer.<br><br>Suchen Sie links nach Paragrafen und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.</div>`;
         DOM.copySchreibenBtn.disabled = true; DOM.clearSchreibenBtn.style.display = 'none'; return;

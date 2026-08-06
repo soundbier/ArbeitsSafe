@@ -4,7 +4,7 @@
 // Versionsnummer (z.B. auf 'revisions-tool-v2'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1';
+const CACHE_NAME = 'revisions-tool-v2';
 
 // Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert
 const ASSETS_TO_CACHE = [

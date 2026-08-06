@@ -47,31 +47,21 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. DATEN ABRUFEN: Absolut sichere Strategie gegen Redirect-Fehler
+// 3. DATEN ABRUFEN: Der Cloudflare Pages & iOS Fix
 self.addEventListener('fetch', event => {
+    // WICHTIG: Bei Seitenaufrufen (Navigation) greift der SW NICHT ein. 
+    // Cloudflare Pages darf den Routing-Redirect ungestört machen.
+    if (event.request.mode === 'navigate') {
+        return; 
+    }
+
     if (event.request.method !== 'GET') return;
 
+    // Nur für statische Assets (CSS, JS, CSV, Bilder) greift der Cache
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-
-                return fetch(event.request).then(networkResponse => {
-                    // Wenn es keine valide Antwort oder ein Redirect ist, 
-                    // reichen wir sie direkt durch, ohne sie fehlerhaft zu verarbeiten.
-                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error' || networkResponse.type === 'opaqueredirect') {
-                        return networkResponse;
-                    }
-
-                    return networkResponse;
-                }).catch(() => {
-                    // Fallback für Offline-Navigation (lädt die App statt abzustürzen)
-                    if (event.request.mode === 'navigate') {
-                        return caches.match('./index.html');
-                    }
-                });
+                return cachedResponse || fetch(event.request);
             })
     );
 });

@@ -4,7 +4,7 @@
 // Versionsnummer (z.B. auf 'revisions-tool-v2'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v3';
+const CACHE_NAME = 'revisions-tool-v4';
 
 // Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert
 const ASSETS_TO_CACHE = [
@@ -14,7 +14,10 @@ const ASSETS_TO_CACHE = [
     './js/app.js',
     './js/data.js',
     './js/ui.js',
-    './gesetze.csv'
+    './gesetze.csv',
+    './manifest.json',
+    './icons/img-192x192.png',  // <--- Icon 1 hinzugefügt
+    './icons/img-512x512.png'   // <--- Icon 2 hinzugefügt
 ];
 
 // 1. INSTALLATION: Dateien in den Cache laden

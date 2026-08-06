@@ -139,22 +139,6 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
 /* =========================================
-   NEU: STRICT MOBILE OPTIMIZATION (bis 900px)
-   ========================================= */
-@media (max-width: 900px) { 
-    .workspace-container { padding: 1rem 0.75rem; gap: 1rem; }
-    .tool-header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 15px; }
-    .controls-toolbar { grid-template-columns: 1fr; padding: 15px; gap: 1rem; } 
-    .search-full-width { grid-column: span 1; } 
-    .card-base { padding: 15px; }
-    .law-card { padding: 15px; }
-    .paragraph-box { padding: 15px; }
-    .document-view { padding: 20px 15px; }
-    .doc-item-actions { opacity: 1; position: static; box-shadow: none; padding: 10px 0 0 0; justify-content: flex-end; background: transparent; } 
-    .doc-item:hover { padding: 1.5rem 0; margin: 0; border-radius: 0; background-color: transparent;}
-    .filter-checkbox-wrapper { margin-top: 0.5rem; }
-}
-/* =========================================
    KOMPAKTES CSV-/STATUS-MENÜ
    ========================================= */
 
@@ -235,19 +219,22 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
     cursor: pointer;
 }
 
-@media (max-width: 900px) {
-    .compact-header {
-        width: 100%;
-        justify-content: space-between;
-        border-radius: 8px;
-    }
-    .tab-navigation {
-        gap: 8px; /* Etwas weniger Abstand zwischen den Tabs */
-    }
-    .tab-btn {
-        padding: 0.5rem 0.5rem; 
-        font-size: 0.9rem;      
-        min-width: 0;            
-        flex: 1;                 
-    }
+/* =========================================
+   STRICT MOBILE OPTIMIZATION (bis 900px)
+   ========================================= */
+@media (max-width: 900px) { 
+    .workspace-container { padding: 1rem 0.75rem; gap: 1rem; }
+    .tool-header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 15px; }
+    .controls-toolbar { grid-template-columns: 1fr; padding: 15px; gap: 1rem; } 
+    .search-full-width { grid-column: span 1; } 
+    .card-base { padding: 15px; }
+    .law-card { padding: 15px; }
+    .paragraph-box { padding: 15px; }
+    .document-view { padding: 20px 15px; }
+    .doc-item-actions { opacity: 1; position: static; box-shadow: none; padding: 10px 0 0 0; justify-content: flex-end; background: transparent; } 
+    .doc-item:hover { padding: 1.5rem 0; margin: 0; border-radius: 0; background-color: transparent;}
+    .filter-checkbox-wrapper { margin-top: 0.5rem; }
+    .compact-header { width: 100%; justify-content: space-between; border-radius: 8px;}
+    .tab-navigation {gap: 8px;}
+    .tab-btn {padding: 0.5rem 0.5rem; font-size: 0.9rem; min-width: 0; flex: 1;}
 }

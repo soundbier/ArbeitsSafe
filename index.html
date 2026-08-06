@@ -56,14 +56,12 @@
            4. TOOL LAYOUT (50/50 Split)
            ========================================= */
         .workspace-container {
-            max-width: 1800px; /* Etwas breiter für den 50/50 Look */
+            max-width: 1800px; 
             margin: 0 auto; padding: 2rem 1.5rem;
             display: flex; flex-direction: column; gap: 1.5rem;
         }
 
-        .tool-header {
-            display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; 
-        }
+        .tool-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; }
         .header-titles h1 { font-size: 2.2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; margin: 0 0 5px 0; }
         .header-titles p { color: var(--text-muted); font-size: 1.1rem; margin: 0; }
         .header-right { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
@@ -81,19 +79,13 @@
         .upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
         .upload-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; font-size: 100px; }
 
-        /* NEU: 50/50 Layout */
-        .workspace-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* Perfekter 50/50 Split */
-            gap: 2rem;
-            align-items: start;
-        }
+        .workspace-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
         @media (max-width: 1200px) { .workspace-layout { grid-template-columns: 1fr; } }
 
         .main-content-area { display: flex; flex-direction: column; gap: 1.5rem; }
 
         .controls-toolbar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; padding: 24px 30px; align-items: center; }
-        .search-full-width { grid-column: span 2; } /* Suchfeld nimmt mehr Platz ein */
+        .search-full-width { grid-column: span 2; } 
         @media (max-width: 800px) { .controls-toolbar { grid-template-columns: 1fr; } .search-full-width { grid-column: span 1; } }
 
         .control-field { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -135,13 +127,10 @@
            5. DOKUMENTEN-ANSICHT (Das "Blatt Papier")
            ========================================= */
         .document-view {
-            background-color: #ffffff;
-            border-radius: 4px; /* Weniger rund, wie Papier */
+            background-color: #ffffff; border-radius: 4px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            padding: 40px 50px; /* Großzügiger Rand */
-            position: sticky; top: 40px;
-            max-height: calc(100vh - 80px);
-            display: flex; flex-direction: column; gap: 1.5rem;
+            padding: 40px 50px; position: sticky; top: 40px;
+            max-height: calc(100vh - 80px); display: flex; flex-direction: column; gap: 1.5rem;
         }
 
         .doc-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--text-main); padding-bottom: 1rem; margin-bottom: 1rem; }
@@ -152,15 +141,13 @@
         .doc-items-list::-webkit-scrollbar { width: 6px; }
         .doc-items-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        /* Ein einzelner Revisionspunkt im Dokument */
         .doc-item { padding: 1.5rem 0; border-bottom: 1px dashed var(--border-color); position: relative; transition: background 0.2s; }
         .doc-item:last-child { border-bottom: none; }
         .doc-item:hover { background-color: #f8fafc; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-left: -15px; margin-right: -15px; }
 
-        .doc-item-title-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .doc-item-title-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem; }
         .doc-item-num { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
         
-        /* Unsichtbares Input-Feld, sieht aus wie normaler Text */
         .doc-title-input { 
             flex-grow: 1; font-size: 1.1rem; font-weight: 700; color: var(--text-main);
             border: 1px solid transparent; background: transparent; padding: 0.2rem 0.5rem; border-radius: 4px;
@@ -168,9 +155,15 @@
         }
         .doc-title-input:hover, .doc-title-input:focus { border-color: var(--primary-light); background: #f1f5f9; outline: none; }
 
-        .doc-item-text { font-size: 1rem; color: #1e293b; white-space: pre-line; line-height: 1.6; text-align: justify; }
-        
-        /* Hover-Actions (versteckt bis Hover) */
+        /* NEU: Direkt editierbarer Dokumententext */
+        .doc-editable-text { 
+            font-size: 1rem; color: #1e293b; white-space: pre-wrap; line-height: 1.6; text-align: justify;
+            outline: none; padding: 0.5rem; margin-left: -0.5rem; border-radius: 4px;
+            border: 1px solid transparent; transition: all 0.2s;
+        }
+        .doc-editable-text:hover { background-color: #f1f5f9; cursor: text; }
+        .doc-editable-text:focus { border-color: var(--primary-light); background-color: #ffffff; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+
         .doc-item-actions { 
             opacity: 0; position: absolute; top: 1.5rem; right: 0; 
             background: #f8fafc; padding-left: 10px; box-shadow: -10px 0 10px #f8fafc;
@@ -206,7 +199,6 @@
 
         <div class="workspace-layout">
             
-            <!-- LINKE SEITE: Datenbank & Suche -->
             <div class="main-content-area">
                 <div class="card-base controls-toolbar">
                     <div class="control-field">
@@ -237,7 +229,6 @@
                 </div>
             </div>
 
-            <!-- RECHTE SEITE: Dokumenten-Ansicht (A4-Blatt) -->
             <aside class="document-view">
                 <div class="doc-header">
                     <h3>Entwurf: Revisionsschreiben</h3>
@@ -389,7 +380,7 @@
                     <div class="paragraph-heading">${escapeHTML(g.paragraf)}${g.titel && !g.titel.startsWith(g.paragraf) ? ' — ' + escapeHTML(g.titel) : ''}</div>
                     ${g.entries.map(item => {
                         const hasB = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-                        const uB = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
+                        const uB = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
                         const isA = revisionsSchreibenListe.some(i => i.id === item.id);
                         return `
                         <div class="paragraph-box">
@@ -407,13 +398,23 @@
                 </div>`).join('');
         }
 
-        // --- Document Logic (Phase 2) ---
+        // --- Document Logic (Phase 3: Editierbarkeit) ---
         function toggleToSchreiben(itemId) {
             const item = gesetzeData.find(i => i.id === itemId); if (!item) return;
             const idx = revisionsSchreibenListe.findIndex(i => i.id === itemId);
             const btn = document.getElementById(`add-btn-${itemId}`);
-            if (idx > -1) { revisionsSchreibenListe.splice(idx, 1); if(btn){ btn.classList.remove('added'); btn.innerHTML='➕ Zum Schreiben'; } } 
-            else { revisionsSchreibenListe.push({ ...item }); if(btn){ btn.classList.add('added'); btn.innerHTML='✓ Im Schreiben'; } }
+            
+            if (idx > -1) { 
+                revisionsSchreibenListe.splice(idx, 1); 
+                if(btn){ btn.classList.remove('added'); btn.innerHTML='➕ Zum Schreiben'; } 
+            } else { 
+                // NEU: Wir generieren den kombinierten Text und speichern ihn im State,
+                // damit der User ihn unabhängig von der DB editieren kann.
+                let newItem = { ...item };
+                newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
+                revisionsSchreibenListe.push(newItem); 
+                if(btn){ btn.classList.add('added'); btn.innerHTML='✓ Im Schreiben'; } 
+            }
             renderDocumentView();
         }
 
@@ -429,14 +430,17 @@
             DOM.copySchreibenBtn.disabled = false; DOM.clearSchreibenBtn.style.display = 'flex';
 
             DOM.schreibenList.innerHTML = revisionsSchreibenListe.map((item, idx) => {
-                const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
                 return `
                     <div class="doc-item">
                         <div class="doc-item-title-row">
                             <span class="doc-item-num">${idx + 1}.</span>
                             <input type="text" class="doc-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)">
                         </div>
-                        <div class="doc-item-text">${escapeHTML(unifiedBaustein)}</div>
+                        
+                        <!-- NEU: contenteditable Div speichert Änderungen im State -->
+                        <div class="doc-editable-text" contenteditable="true" 
+                             oninput="updateItemText('${item.id}', this.innerText)" 
+                             title="Klicken, um den Text zu bearbeiten">${escapeHTML(item.editedText)}</div>
                         
                         <div class="doc-item-actions">
                             ${idx > 0 ? `<button class="action-icon-btn" title="Nach oben" onclick="moveItem(${idx}, -1)">▲</button>` : ''}
@@ -448,24 +452,46 @@
         }
 
         function updateItemTitle(id, v) { const i = revisionsSchreibenListe.find(x => x.id === id); if(i) i.titel = v; }
+        
+        // NEU: Update Funktion für den editierten Textbaustein
+        function updateItemText(id, v) { const i = revisionsSchreibenListe.find(x => x.id === id); if(i) i.editedText = v; }
+        
         function moveItem(idx, dir) { const n = idx+dir; if(n>=0 && n<revisionsSchreibenListe.length){ revisionsSchreibenListe.splice(n,0,revisionsSchreibenListe.splice(idx,1)[0]); renderDocumentView(); } }
         function removeFromSchreiben(id) { toggleToSchreiben(id); }
         function clearSchreiben() { revisionsSchreibenListe = []; renderResults(); renderDocumentView(); }
 
+        // --- Export (Optimiert für HTML/Office) ---
         function copyComposedSchreiben() {
             if (revisionsSchreibenListe.length === 0) return;
-            const plain = revisionsSchreibenListe.map((i, idx) => `${idx + 1}. ${i.titel}\r\n\r\n` + [i.mangelVorgefunden, i.rechtsgrundlage, i.handlungsaufforderung].filter(Boolean).join("\r\n\r\n")).join("\r\n\r\n\r\n");
+            
+            // Reiner Text (Fallback)
+            const plain = revisionsSchreibenListe.map((i, idx) => `${idx + 1}. ${i.titel}\r\n\r\n${i.editedText}`).join("\r\n\r\n\r\n");
+            
+            // Optimiertes HTML für Word/Outlook
             const html = revisionsSchreibenListe.map((item, idx) => {
-                const p = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).map(t => t.split(/\r?\n/).map(l => `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${escapeHTML(l)}</p>`).join(''));
-                return `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>` + p.join("");
+                // Trenne den Text an doppelten Zeilenumbrüchen in echte Absätze auf
+                const paragraphs = item.editedText.split(/(?:\r?\n){2,}/).map(block => {
+                    // Einfache Zeilenumbrüche innerhalb eines Absatzes werden zu <br>
+                    const htmlBlock = escapeHTML(block).replace(/\r?\n/g, '<br>');
+                    return `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${htmlBlock}</p>`;
+                }).join('');
+                
+                return `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>` + paragraphs;
             }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
 
             const cbText = `<html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
             const fb = () => navigator.clipboard.writeText(plain).then(onCopySuccess);
+            
             if (navigator.clipboard && window.ClipboardItem) {
-                navigator.clipboard.write([new ClipboardItem({"text/plain": new Blob([plain], {type: "text/plain"}), "text/html": new Blob([cbText], {type: "text/html"})})]).then(onCopySuccess).catch(fb);
+                navigator.clipboard.write([
+                    new ClipboardItem({
+                        "text/plain": new Blob([plain], {type: "text/plain"}), 
+                        "text/html": new Blob([cbText], {type: "text/html"})
+                    })
+                ]).then(onCopySuccess).catch(fb);
             } else fb();
         }
+        
         function onCopySuccess() { const b=DOM.copySchreibenBtn; const o=b.innerHTML; b.innerHTML='✓ Kopiert!'; b.style.backgroundColor='#15803d'; setTimeout(()=>{b.innerHTML=o;b.style.backgroundColor='';},2500); }
 
         // --- Events ---

@@ -73,8 +73,14 @@ DOM.reloadBtn.addEventListener('click', () => initData(state.lastLoadedFileText,
 DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 DOM.absatzFilter.addEventListener('change', renderResults); 
-DOM.searchInput.addEventListener('input', renderResults);
 DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+
+// NEU: Debouncing für die Suchleiste (verhindert Ruckeln auf Mobile)
+let searchTimeout;
+DOM.searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(renderResults, 500);
+});
 
 // --- Tab Navigation ---
 document.querySelectorAll('.tab-btn').forEach(btn => {

@@ -86,3 +86,15 @@ window.addEventListener('DOMContentLoaded', () => {
             initData(state.rawCsvData); 
         });
 });
+// --- Service Worker Registrierung (PWA) ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('[PWA] Service Worker erfolgreich registriert:', registration.scope);
+            })
+            .catch(error => {
+                console.error('[PWA] Service Worker Registrierung fehlgeschlagen:', error);
+            });
+    });
+}

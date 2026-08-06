@@ -1,14 +1,14 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer (z.B. auf 'revisions-tool-v2'). Der Browser weiß dann 
+// Versionsnummer (z.B. auf 'revisions-tool-v8'). Der Browser weiß dann 
 // automatisch, dass er den alten Cache löschen und alles neu laden muss.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v6';
+const CACHE_NAME = 'revisions-tool-v7';
 
-// Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert
+// Diese Dateien werden beim ersten Aufruf für die Offline-Nutzung gespeichert.
+// HINWEIS: Der fehleranfällige Eintrag './' wurde hier entfernt.
 const ASSETS_TO_CACHE = [
-    './',
     './index.html',
     './css/style.css',
     './js/app.js',
@@ -16,8 +16,8 @@ const ASSETS_TO_CACHE = [
     './js/ui.js',
     './gesetze.csv',
     './manifest.json',
-    './icons/img-192x192.png',  // <--- Icon 1 hinzugefügt
-    './icons/img-512x512.png'   // <--- Icon 2 hinzugefügt
+    './icons/img-192x192.png',  
+    './icons/img-512x512.png'   
 ];
 
 // 1. INSTALLATION: Dateien in den Cache laden
@@ -54,8 +54,21 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. DATEN ABRUFEN: Cache-First Strategie (Perfekt für Offline)
+// 3. DATEN ABRUFEN: Cache-First Strategie mit Navigation-Fix
 self.addEventListener('fetch', event => {
+    // FIX: Wenn es sich um einen Seitenaufruf der App (Navigation) handelt,
+    // zwingen wir den SW, direkt die saubere index.html auszuliefern.
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            caches.match('./index.html')
+                .then(cachedResponse => {
+                    return cachedResponse || fetch(event.request);
+                })
+        );
+        return; 
+    }
+
+    // Bisherige Logik für alle anderen Ressourcen (CSS, JS, Bilder, CSV)
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {

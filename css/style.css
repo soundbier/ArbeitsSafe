@@ -154,3 +154,57 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
     .doc-item:hover { padding: 1.5rem 0; margin: 0; border-radius: 0; background-color: transparent;}
     .filter-checkbox-wrapper { margin-top: 0.5rem; }
 }
+/* =========================================
+   DEZENTES & KOMPAKTES CSV-/STATUS-MENÜ
+   ========================================= */
+.compact-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-gradient-start);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 9999px;
+}
+
+.status-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.btn-mini {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    min-height: unset; /* Überschreibt das große mobile Touch-Limit für diesen Bereich */
+}
+
+.btn-mini:hover {
+    background: var(--card-bg);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Anpassung für mobile Ansicht */
+@media (max-width: 900px) {
+    .compact-header {
+        border-radius: 8px;
+        width: 100%;
+        justify-content: space-between;
+    }
+}

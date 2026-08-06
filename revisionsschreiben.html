@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesetzesdatenbank</title>
+    
+    <!-- Einbinden der zentralen global.css -->
+    <link rel="stylesheet" href="css/global.css">
+    
+    <style>
+        /* =========================================
+           SPEZIFISCHE STYLES FÜR DIESES TOOL
+           ========================================= */
+        :root {
+            /* Ergänzende Farben für dieses Tool */
+            --primary-light: #e0f2fe;
+            --success-bg: #f0fdf4;
+            --success-text: #16a34a;
+            --success-border: #bbf7d0;
+        }
+
+        /* Überschreibt die max-width des globalen Containers, 
+           da dieses Tool mit der Sidebar mehr Platz braucht */
+        .workspace-container {
+            max-width: 1600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Navigations-Button */
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            align-self: flex-start;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: -0.5rem;
+            color: var(--text-muted);
+        }
+        
+        .nav-back:hover {
+            color: var(--text-main);
+        }
+
+        /* ----- Tool Header (Baut auf .card-base auf) ----- */
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px; /* Überschreibt das Standard-Padding der card-base */
+        }
+
+        .header-titles h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+            margin: 0 0 5px 0;
+        }
+
+        .header-titles p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: var(--bg-gradient-start);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .status-badge.loaded {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+            color: var(--success-text);
+            font-weight: 600;
+        }
+
+        /* ----- Tool Buttons (Erweitern die globale .btn) ----- */
+        .btn-tool {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .btn-tool:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+            color: #334155;
+        }
+
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+            color: white;
+        }
+
+        .upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .upload-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            font-size: 100px;
+        }
+
+        /* ----- Layout (Grid) ----- */
+        .workspace-layout {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1400px) {
+            .workspace-layout { grid-template-columns: 1fr; }
+        }
+
+        .main-content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        /* ----- Filter Toolbar (Baut auf .card-base auf) ----- */
+        .controls-toolbar {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 0.8fr 1.2fr auto;
+            gap: 1.25rem;
+            padding: 24px 30px;
+            align-items: center;
+        }
+
+        @media (max-width: 1200px) {
+            .controls-toolbar { grid-template-columns: 1fr; }
+            .tool-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        }
+
+        /* Formularelemente */
+        .control-field { display: flex; flex-direction: column; gap: 0.4rem; }
+        .control-field label {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-muted);
+        }
+
+        select, input[type="text"] {
+            width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            background-color: #ffffff; color: var(--text-main);
+            transition: all 0.2s; font-family: inherit;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+        
+        select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cursor: not-allowed; }
+
+        .filter-checkbox-wrapper {
+            display: flex; align-items: center; gap: 0.5rem;
+            background-color: var(--bg-gradient-start); border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem; border-radius: 8px; height: 46px;
+            cursor: pointer; font-size: 0.9rem; font-weight: 600;
+            color: var(--text-main); user-select: none; margin-top: 1.4rem;
+            transition: all 0.2s;
+        }
+        
+        .filter-checkbox-wrapper:hover { border-color: var(--primary-light); background-color: #f1f5f9; }
+        .filter-checkbox-wrapper input { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); cursor: pointer; }
+
+        /* ----- Result-Bereich ----- */
+        .results-container {
+            max-height: calc(100vh - 300px);
+            overflow-y: auto; padding-right: 0.5rem;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+
+        .results-container::-webkit-scrollbar { width: 8px; }
+        .results-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* Nutzt .card-base via HTML, hier nur noch interne Abstände & Hover */
+        .law-card { padding: 30px; transition: box-shadow 0.2s; }
+        .law-card:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .badge { background-color: var(--primary-light); color: var(--primary); font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 9999px; text-transform: uppercase; }
+        .law-title-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; margin-left: 0.5rem; }
+
+        .paragraph-heading { font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
+        .paragraphs-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .paragraph-box {
+            background-color: var(--bg-gradient-start); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 1.25rem 1.5rem; transition: all 0.2s ease-in-out;
+        }
+        .paragraph-box:hover { border-color: #cbd5e1; background-color: #ffffff; }
+
+        .paragraph-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .absatz-tag { font-weight: 700; font-size: 0.85rem; color: var(--primary); background-color: var(--primary-light); padding: 0.25rem 0.6rem; border-radius: 6px; }
+
+        .action-buttons-group { display: flex; gap: 0.5rem; }
+        
+        .action-icon-btn {
+            background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted);
+            font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0.75rem; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.35rem; font-family: inherit;
+        }
+        .action-icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .action-icon-btn.added { background-color: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+        .action-icon-btn.added:hover { background-color: #dcfce7; color: #15803d; }
+
+        .paragraph-text { font-size: 1rem; color: #334155; white-space: pre-line; line-height: 1.6; margin-bottom: 1rem; }
+        
+        .revision-preview-box {
+            background-color: #ffffff; border: 1px solid #bae6fd; border-left: 4px solid var(--primary);
+            border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.95rem; color: var(--text-main);
+            white-space: pre-line; line-height: 1.6;
+        }
+
+        /* ----- Sidebar (Baut auf .card-base auf) ----- */
+        .schreiben-sidebar {
+            padding: 30px; position: sticky; top: 40px;
+            max-height: calc(100vh - 80px); display: flex; flex-direction: column; gap: 1.25rem;
+        }
+
+        .schreiben-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        .schreiben-header h3 { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0; }
+        .counter-badge { background-color: var(--primary-light); color: var(--primary); font-size: 0.85rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; }
+
+        .schreiben-items-list { overflow-y: auto; max-height: calc(100vh - 280px); display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem; }
+        .schreiben-items-list::-webkit-scrollbar { width: 6px; }
+        .schreiben-items-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        .schreiben-item-card {
+            background-color: var(--bg-gradient-start); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 1rem; font-size: 0.9rem;
+            display: flex; flex-direction: column; gap: 0.75rem; transition: all 0.2s;
+        }
+        .schreiben-item-card:hover { border-color: #cbd5e1; background-color: #ffffff; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+
+        .schreiben-item-info { display: flex; align-items: center; gap: 0.5rem; }
+        .schreiben-item-num { font-weight: 700; color: var(--primary); font-size: 1rem; min-width: 24px; }
+        .schreiben-title-input { flex-grow: 1; padding: 0.4rem 0.6rem; font-size: 0.9rem; font-weight: 600; }
+        
+        .schreiben-item-text { color: #475569; white-space: pre-line; line-height: 1.5; max-height: 90px; overflow: hidden; text-overflow: ellipsis; position: relative; }
+        .schreiben-item-text::after { content: ''; position: absolute; bottom: 0; right: 0; width: 100%; height: 25px; background: linear-gradient(transparent, var(--bg-gradient-start)); }
+        .schreiben-item-card:hover .schreiben-item-text::after { background: linear-gradient(transparent, #ffffff); }
+
+        .schreiben-item-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); }
+        .schreiben-empty { text-align: center; padding: 3rem 1.5rem; color: var(--text-muted); font-size: 1rem; background-color: var(--bg-gradient-start); border-radius: 12px; border: 2px dashed var(--border-color); }
+        
+        .no-results { text-align: center; padding: 5rem 2rem; color: var(--text-muted); font-size: 1.1rem; }
+        .error-alert { background-color: #fef2f2; border: 1px solid #f87171; color: #991b1b; padding: 1rem 1.25rem; border-radius: 12px; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Globale Layout-Klasse mit Tool-Erweiterung -->
+    <main class="container workspace-container">
+        
+        <a href="index.html" class="nav-back">🔙 Zurück zum Dashboard</a>
+
+        <!-- Nutzt nun die .card-base für das Box-Styling -->
+        <header class="card-base tool-header">
+            <div class="header-titles">
+                <h1>Gesetzesdatenbank</h1>
+                <p>Gesetzes- und Textbausteindatenbank</p>
+            </div>
+            <div class="header-right">
+                <div id="statusBadge" class="status-badge">
+                    <span>⚠️</span>
+                    <span id="statusText">Demo-Modus (2 Einträge)</span>
+                </div>
+                <button type="button" id="reloadBtn" class="btn btn-tool btn-secondary" title="Neu laden">🔄 Neu laden</button>
+                <div class="upload-wrapper">
+                    <button type="button" class="btn btn-tool btn-primary">📁 CSV laden</button>
+                    <input type="file" id="csvFileInput" accept=".csv">
+                </div>
+            </div>
+        </header>
+
+        <div id="errorContainer"></div>
+
+        <div class="workspace-layout">
+            
+            <div class="main-content-area">
+                
+                <!-- Nutzt nun die .card-base -->
+                <div class="card-base controls-toolbar">
+                    <div class="control-field">
+                        <label for="lawFilter">1. Gesetz wählen</label>
+                        <select id="lawFilter">
+                            <option value="">-- Alle Gesetze --</option>
+                        </select>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="paragraphFilter">2. Paragraf & Titel</label>
+                        <select id="paragraphFilter">
+                            <option value="">-- Alle Paragrafen --</option>
+                        </select>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="absatzFilter">3. Absatz</label>
+                        <select id="absatzFilter" disabled>
+                            <option value="">-- Alle Absätze --</option>
+                        </select>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="searchInput">4. Globale Textsuche</label>
+                        <input type="text" id="searchInput" placeholder="Suchbegriff eingeben...">
+                    </div>
+
+                    <div>
+                        <label class="filter-checkbox-wrapper">
+                            <input type="checkbox" id="hasBausteinFilter"> Nur mit Baustein
+                        </label>
+                    </div>
+                </div>
+
+                <div id="results" class="results-container">
+                    <div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>
+                </div>
+            </div>
+
+            <!-- Nutzt nun die .card-base -->
+            <aside class="card-base schreiben-sidebar">
+                <div class="schreiben-header">
+                    <h3>📄 Schreiben erstellen</h3>
+                    <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
+                </div>
+
+                <div id="schreibenList" class="schreiben-items-list">
+                    <div class="schreiben-empty">Noch keine Mängelpunkte hinzugefügt.<br>Klicken Sie bei den Bausteinen auf „➕ Zum Schreiben“.</div>
+                </div>
+
+                <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="width: 100%; padding: 0.8rem;" onclick="copyComposedSchreiben()" disabled>
+                    📋 Gesamtes Schreiben kopieren
+                </button>
+                <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; display:none;" onclick="clearSchreiben()">
+                    🗑️ Liste leeren
+                </button>
+            </aside>
+
+        </div>
+    </main>
+
+    <!-- Der JavaScript-Block bleibt zu 100% identisch und unangetastet -->
+    <script>
+        // --- 1. DOM Elements Cache ---
+        const DOM = {
+            lawFilter: document.getElementById('lawFilter'),
+            paragraphFilter: document.getElementById('paragraphFilter'),
+            absatzFilter: document.getElementById('absatzFilter'), 
+            searchInput: document.getElementById('searchInput'),
+            hasBausteinFilter: document.getElementById('hasBausteinFilter'),
+            resultsContainer: document.getElementById('results'),
+            schreibenList: document.getElementById('schreibenList'),
+            schreibenCounter: document.getElementById('schreibenCounter'),
+            copySchreibenBtn: document.getElementById('copySchreibenBtn'),
+            clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
+            errorContainer: document.getElementById('errorContainer'),
+            statusBadge: document.getElementById('statusBadge'),
+            statusText: document.getElementById('statusText'),
+            csvFileInput: document.getElementById('csvFileInput'),
+            reloadBtn: document.getElementById('reloadBtn')
+        };
+
+        // --- 2. State & Data ---
+        let rawCsvData = `gesetzKuerzel;gesetzName;paragraf;absatz;titel;inhalt;mangelVorgefunden;rechtsgrundlage;handlungsaufforderung\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 1;Beurteilung der Arbeitsbedingungen;"(1) Der Arbeitgeber hat durch eine Beurteilung der für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, welche Maßnahmen des Arbeitsschutzes erforderlich sind.";"Zum Zeitpunkt der Besichtigung konnte von Ihnen keine Gefährdungsbeurteilungen vorgelegt werden.";"Laut § 5 Arbeitsschutzgesetzes (ArbSchG) hat der Arbeitgeber durch eine Beurteilung die für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, bei Erfordernis notwendige Maßnahmen gegen diese Gefährdungen zu treffen und die Wirksamkeit dieser Maßnahmen fortlaufend zu prüfen.";"Bitte überarbeiten Sie eigenverantwortlich Ihre Gefährdungsbeurteilungen, dokumentieren Sie zukünftig die umgesetzten Maßnahmen und führen Sie Wirksamkeitskontrollen durch."\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 2;Beurteilung der Arbeitsbedingungen;"(2) Eine Beurteilung nach Absatz 1 ist unabhängig von der Zahl der Beschäftigten vorzunehmen.";;;`;
+
+        let gesetzeData = [];
+        let lastLoadedFileText = rawCsvData;
+        let lastLoadedFileName = null;
+        let revisionsSchreibenListe = [];
+
+        // --- 3. Parsing & Initialization ---
+        function parseCSV(text) {
+            text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const linesText = text.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (linesText.length < 2) return [];
+
+            const firstLine = linesText[0];
+            const delimiter = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ';' : ',';
+
+            let lines = [];
+            let row = [''];
+            let inQuotes = false;
+
+            for (let lineIdx = 0; lineIdx < linesText.length; lineIdx++) {
+                let currentLineStr = linesText[lineIdx];
+                for (let i = 0; i < currentLineStr.length; i++) {
+                    let c = currentLineStr[i];
+                    if (c === '"') {
+                        if (inQuotes && currentLineStr[i + 1] === '"') {
+                            row[row.length - 1] += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (c === delimiter && !inQuotes) {
+                        row.push('');
+                    } else {
+                        row[row.length - 1] += c;
+                    }
+                }
+                if (!inQuotes) {
+                    lines.push(row);
+                    row = [''];
+                } else {
+                    row[row.length - 1] += '\n';
+                }
+            }
+
+            if (lines.length < 2) return [];
+
+            let rawHeaders = lines[0].map(h => h.trim().replace(/^"|"$/g, '').replace(/^\uFEFF/, ''));
+            const findCol = (names) => rawHeaders.findIndex(h => names.includes(h.toLowerCase().replace(/[\s_-]/g, '')));
+
+            const cols = {
+                kuerzel: findCol(['gesetzkuerzel', 'kuerzel', 'gesetz']),
+                name: findCol(['gesetzname', 'name', 'langname']),
+                paragraf: findCol(['paragraf', 'paragraph', 'par', 'norm']),
+                absatz: findCol(['absatz', 'abs']),
+                titel: findCol(['titel', 'ueberschrift', 'überschrift']),
+                inhalt: findCol(['inhalt', 'text', 'baustein', 'gesetzestext']),
+                mangel: findCol(['mangelvorgefunden', 'mangel', 'vorgefunden']),
+                rechtsgrundlage: findCol(['rechtsgrundlage', 'grundlage']),
+                handlung: findCol(['handlungsaufforderung', 'aufforderung', 'handlung'])
+            };
+
+            let result = [];
+            let globalIdCounter = 1;
+
+            for (let r = 1; r < lines.length; r++) {
+                let currentLine = lines[r];
+                if (currentLine && currentLine.some(cell => cell && cell.trim() !== '')) {
+                    const getVal = (idx, fallbackIdx) => {
+                        let val = (idx !== -1 && currentLine[idx] !== undefined) ? currentLine[idx] : (currentLine[fallbackIdx] || '');
+                        return val.replace(/^"|"$/g, '').trim().replace(/\\n/g, '\n');
+                    };
+
+                    let kuerzel = getVal(cols.kuerzel, 0);
+                    let paragraf = getVal(cols.paragraf, 2);
+
+                    result.push({
+                        id: `item_${globalIdCounter++}`,
+                        gesetzKuerzel: kuerzel,
+                        gesetzName: getVal(cols.name, 1),
+                        paragraf: paragraf,
+                        absatz: getVal(cols.absatz, 3),
+                        titel: getVal(cols.titel, 4) || `${kuerzel} ${paragraf}`,
+                        inhalt: getVal(cols.inhalt, 5),
+                        mangelVorgefunden: getVal(cols.mangel, 6),
+                        rechtsgrundlage: getVal(cols.rechtsgrundlage, 7),
+                        handlungsaufforderung: getVal(cols.handlung, 8)
+                    });
+                }
+            }
+            return result;
+        }
+
+        function initData(csvString, fileName = null) {
+            DOM.errorContainer.innerHTML = '';
+            lastLoadedFileText = csvString;
+            lastLoadedFileName = fileName;
+
+            gesetzeData = parseCSV(csvString);
+
+            if (gesetzeData.length === 0) {
+                DOM.errorContainer.innerHTML = `<div class="error-alert"><strong>Fehler:</strong> Konnte keine Zeilen auslesen. Bitte CSV-Format prüfen.</div>`;
+                DOM.statusBadge.className = 'status-badge';
+                DOM.statusText.textContent = 'Fehler beim Laden!';
+                return;
+            }
+
+            if (fileName) {
+                DOM.statusBadge.className = 'status-badge loaded';
+                DOM.statusText.innerHTML = `${fileName} (${gesetzeData.length} Einträge)`;
+            } else {
+                DOM.statusBadge.className = 'status-badge';
+                DOM.statusText.textContent = `Demo-Modus (${gesetzeData.length} Einträge)`;
+            }
+
+            updateDropdowns();
+            DOM.searchInput.value = '';
+            DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>`;
+        }
+
+        // --- 4. Centralized Filtering & Dropdowns ---
+        function getFilteredData() {
+            const law = DOM.lawFilter.value;
+            const paragraph = DOM.paragraphFilter.value;
+            const absatz = DOM.absatzFilter.value;
+            const search = DOM.searchInput.value.trim();
+            const hasBaustein = DOM.hasBausteinFilter.checked;
+
+            return gesetzeData.filter(item => {
+                if (hasBaustein && !item.mangelVorgefunden && !item.rechtsgrundlage && !item.handlungsaufforderung) return false;
+                if (law && item.gesetzKuerzel !== law) return false;
+                if (paragraph && item.paragraf !== paragraph) return false;
+                if (absatz && item.absatz !== absatz) return false; 
+                if (search) {
+                    const combinedText = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
+                    if (!containsExactWord(combinedText, search)) return false;
+                }
+                return true;
+            });
+        }
+
+        function updateDropdowns() {
+            const currentLaw = DOM.lawFilter.value;
+            const currentPar = DOM.paragraphFilter.value;
+            const currentAbs = DOM.absatzFilter.value;
+            const hasBaustein = DOM.hasBausteinFilter.checked;
+
+            // 1. Update Law Dropdown
+            const laws = new Map();
+            gesetzeData.forEach(item => {
+                if (!hasBaustein || (item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) {
+                    laws.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel);
+                }
+            });
+            
+            DOM.lawFilter.innerHTML = '<option value="">-- Alle Gesetze --</option>';
+            laws.forEach((name, kuerzel) => {
+                DOM.lawFilter.innerHTML += `<option value="${escapeHTML(kuerzel)}">${escapeHTML(kuerzel)} - ${escapeHTML(name)}</option>`;
+            });
+            if (laws.has(currentLaw)) DOM.lawFilter.value = currentLaw;
+
+            // 2. Update Paragraph Dropdown
+            const activeLaw = DOM.lawFilter.value;
+            const pars = new Map();
+            gesetzeData.forEach(item => {
+                if (activeLaw && item.gesetzKuerzel !== activeLaw) return;
+                if (hasBaustein && !(item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) return;
+                if (item.paragraf) pars.set(item.paragraf, item.titel || '');
+            });
+
+            DOM.paragraphFilter.innerHTML = '<option value="">-- Alle Paragrafen --</option>';
+            pars.forEach((titel, paragraf) => {
+                DOM.paragraphFilter.innerHTML += `<option value="${escapeHTML(paragraf)}">${escapeHTML(paragraf)}${titel ? ' — ' + escapeHTML(titel) : ''}</option>`;
+            });
+            
+            if (pars.has(currentPar)) {
+                DOM.paragraphFilter.value = currentPar;
+            } else {
+                DOM.paragraphFilter.value = "";
+            }
+
+            // 3. Update Absatz Dropdown 
+            const activePar = DOM.paragraphFilter.value;
+            const absatze = new Set();
+            
+            if (activePar) {
+                gesetzeData.forEach(item => {
+                    if (activeLaw && item.gesetzKuerzel !== activeLaw) return;
+                    if (item.paragraf !== activePar) return; 
+                    if (hasBaustein && !(item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung)) return;
+                    if (item.absatz) absatze.add(item.absatz);
+                });
+            }
+
+            DOM.absatzFilter.innerHTML = '<option value="">-- Alle Absätze --</option>';
+            
+            const sortedAbsatze = Array.from(absatze).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+            
+            sortedAbsatze.forEach(abs => {
+                DOM.absatzFilter.innerHTML += `<option value="${escapeHTML(abs)}">${escapeHTML(abs)}</option>`;
+            });
+            
+            if (absatze.has(currentAbs)) {
+                DOM.absatzFilter.value = currentAbs;
+            } else {
+                DOM.absatzFilter.value = "";
+            }
+
+            if (!activePar || absatze.size === 0) {
+                DOM.absatzFilter.disabled = true;
+            } else {
+                DOM.absatzFilter.disabled = false;
+            }
+        }
+
+        // --- 5. Main Rendering Engine ---
+        function renderResults() {
+            const search = DOM.searchInput.value.trim();
+            const paragraph = DOM.paragraphFilter.value;
+
+            if (!search && !paragraph) {
+                DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie einen Paragrafen aus oder geben Sie einen Suchbegriff ein.</div>`;
+                return;
+            }
+
+            const data = getFilteredData();
+
+            if (data.length === 0) {
+                DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`;
+                return;
+            }
+
+            const groupMap = new Map();
+            data.forEach(item => {
+                const key = `${item.gesetzKuerzel}_${item.paragraf}`;
+                if (!groupMap.has(key)) {
+                    groupMap.set(key, { ...item, entries: [] });
+                }
+                groupMap.get(key).entries.push(item);
+            });
+
+            DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(group => createCardHTML(group)).join('');
+        }
+
+        // --- HTML Template Generators ---
+        /* Die result-Karten rufen nun .card-base ab */
+        function createCardHTML(group) {
+            return `
+                <div class="card-base law-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="badge">${escapeHTML(group.gesetzKuerzel)}</span>
+                            <span class="law-title-meta">${escapeHTML(group.gesetzName)}</span>
+                        </div>
+                    </div>
+                    <div class="paragraph-heading">
+                        ${escapeHTML(group.paragraf)}${group.titel && !group.titel.startsWith(group.paragraf) ? ' — ' + escapeHTML(group.titel) : ''}
+                    </div>
+                    <div class="paragraphs-stack">
+                        ${group.entries.map(item => createParagraphBoxHTML(item)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createParagraphBoxHTML(item) {
+            const hasBaustein = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
+            const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
+            const isAdded = revisionsSchreibenListe.some(i => i.id === item.id);
+
+            return `
+                <div class="paragraph-box">
+                    <div class="paragraph-box-header">
+                        <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
+                        <div class="action-buttons-group">
+                            <button class="action-icon-btn" onclick="copyTextToClipboard(this, \`${escapeJS(item.inhalt)}\`)">📋 Gesetzestext</button>
+                            ${hasBaustein ? `
+                                <button class="action-icon-btn ${isAdded ? 'added' : ''}" id="add-btn-${item.id}" onclick="toggleToSchreiben('${item.id}')">
+                                    ${isAdded ? '✓ Im Schreiben' : '➕ Zum Schreiben'}
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="paragraph-text">${escapeHTML(item.inhalt)}</div>
+                    ${hasBaustein ? `
+                        <div class="revision-preview-box">
+                            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 0.35rem;">Revisionsbaustein-Vorschau</div>
+                            ${escapeHTML(unifiedBaustein)}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // --- 6. Writing Module ---
+        function toggleToSchreiben(itemId) {
+            const item = gesetzeData.find(i => i.id === itemId);
+            if (!item) return;
+
+            const existingIndex = revisionsSchreibenListe.findIndex(i => i.id === itemId);
+            const btn = document.getElementById(`add-btn-${itemId}`);
+
+            if (existingIndex > -1) {
+                revisionsSchreibenListe.splice(existingIndex, 1);
+                if (btn) {
+                    btn.classList.remove('added');
+                    btn.innerHTML = '➕ Zum Schreiben';
+                }
+            } else {
+                revisionsSchreibenListe.push({ ...item }); 
+                if (btn) {
+                    btn.classList.add('added');
+                    btn.innerHTML = '✓ Im Schreiben';
+                }
+            }
+
+            renderSchreibenSidebar();
+        }
+
+        function renderSchreibenSidebar() {
+            const count = revisionsSchreibenListe.length;
+            DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
+
+            if (count === 0) {
+                DOM.schreibenList.innerHTML = `<div class="schreiben-empty">Noch keine Mängelpunkte hinzugefügt.<br>Klicken Sie bei den Bausteinen auf „➕ Zum Schreiben“.</div>`;
+                DOM.copySchreibenBtn.disabled = true;
+                DOM.clearSchreibenBtn.style.display = 'none';
+                return;
+            }
+
+            DOM.copySchreibenBtn.disabled = false;
+            DOM.clearSchreibenBtn.style.display = 'flex'; // da es ein .btn-tool ist, flex nutzen
+
+            DOM.schreibenList.innerHTML = revisionsSchreibenListe.map((item, idx) => {
+                const unifiedBaustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
+                return `
+                    <div class="schreiben-item-card">
+                        <div class="schreiben-item-info">
+                            <span class="schreiben-item-num">${idx + 1}.</span>
+                            <input type="text" class="schreiben-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)" placeholder="Titel eingeben...">
+                            <span>
+                                ${idx > 0 ? `<button class="action-icon-btn" style="padding:0.1rem 0.3rem;" onclick="moveItem(${idx}, -1)" title="Nach oben">▲</button>` : ''}
+                                ${idx < count - 1 ? `<button class="action-icon-btn" style="padding:0.1rem 0.3rem;" onclick="moveItem(${idx}, 1)" title="Nach unten">▼</button>` : ''}
+                            </span>
+                        </div>
+                        <div class="schreiben-item-text">${escapeHTML(unifiedBaustein)}</div>
+                        <div class="schreiben-item-actions">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHTML(item.gesetzKuerzel)} ${escapeHTML(item.paragraf)} ${escapeHTML(item.absatz)}</span>
+                            <button class="action-icon-btn" style="color:#dc2626;" onclick="removeFromSchreiben('${item.id}')">🗑️ Entfernen</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateItemTitle(itemId, newTitle) {
+            const item = revisionsSchreibenListe.find(i => i.id === itemId);
+            if (item) item.titel = newTitle;
+        }
+
+        function moveItem(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= revisionsSchreibenListe.length) return;
+            const movedItem = revisionsSchreibenListe.splice(index, 1)[0];
+            revisionsSchreibenListe.splice(newIndex, 0, movedItem);
+            renderSchreibenSidebar();
+        }
+
+        function removeFromSchreiben(itemId) {
+            toggleToSchreiben(itemId);
+        }
+
+        function clearSchreiben() {
+            revisionsSchreibenListe = [];
+            renderResults(); 
+            renderSchreibenSidebar();
+        }
+
+        // --- 7. Clipboard & Utilities ---
+        function copyComposedSchreiben() {
+            if (revisionsSchreibenListe.length === 0) return;
+
+            const plainText = revisionsSchreibenListe.map((item, idx) => {
+                const parts = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean);
+                return `${idx + 1}. ${item.titel}\r\n\r\n` + parts.join("\r\n\r\n");
+            }).join("\r\n\r\n\r\n");
+
+            const htmlContent = revisionsSchreibenListe.map((item, idx) => {
+                const parts = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung]
+                    .filter(Boolean)
+                    .map(text => {
+                        return text.split(/\r?\n/).map(line => 
+                            `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${escapeHTML(line)}</p>`
+                        ).join('');
+                    });
+
+                const title = `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>`;
+                
+                return title + parts.join("");
+            }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
+
+            const htmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
+            const fallbackCopy = () => navigator.clipboard.writeText(plainText).then(onCopySuccess);
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                const clipboardItem = new ClipboardItem({
+                    "text/plain": new Blob([plainText], { type: "text/plain" }),
+                    "text/html": new Blob([htmlText], { type: "text/html" })
+                });
+                navigator.clipboard.write([clipboardItem]).then(onCopySuccess).catch(fallbackCopy);
+            } else {
+                fallbackCopy();
+            }
+        }
+
+        function onCopySuccess() {
+            const originalText = DOM.copySchreibenBtn.innerHTML;
+            DOM.copySchreibenBtn.innerHTML = '✓ Gesamtes Schreiben kopiert!';
+            DOM.copySchreibenBtn.style.backgroundColor = '#15803d';
+            setTimeout(() => {
+                DOM.copySchreibenBtn.innerHTML = originalText;
+                DOM.copySchreibenBtn.style.backgroundColor = '';
+            }, 2500);
+        }
+
+        function copyTextToClipboard(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '✓ Kopiert!';
+                btn.style.backgroundColor = '#16a34a';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#16a34a';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }, 2000);
+            });
+        }
+
+        function containsExactWord(text, query) {
+            if (!text || !query) return false;
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`(^|[^\\p{L}\\p{N}])(${escaped})([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+
+        function escapeJS(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\n/g, '\\n');
+        }
+
+        // --- 8. Event Listeners ---
+        DOM.csvFileInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => initData(new TextDecoder('utf-8', { fatal: false }).decode(ev.target.result), file.name);
+            reader.readAsArrayBuffer(file);
+        });
+
+        DOM.reloadBtn.addEventListener('click', () => initData(lastLoadedFileText, lastLoadedFileName));
+        DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+        DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+        DOM.absatzFilter.addEventListener('change', renderResults); 
+        DOM.searchInput.addEventListener('input', renderResults);
+        DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+
+        // --- AUTOMATISCHER START: Server-Laden für Cloudflare ---
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            // Relativer Pfad zur Datei im selben Verzeichnis
+            const csvUrl = 'gesetze.csv'; 
+
+            DOM.statusBadge.className = 'status-badge';
+            DOM.statusText.textContent = 'Lade Datenbank...';
+
+            fetch(csvUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(csvText => {
+                    initData(csvText, "Datenbank geladen");
+                })
+                .catch(error => {
+                    console.error('Fehler beim automatischen Laden:', error);
+                    DOM.errorContainer.innerHTML = `
+                        <div class="error-alert">
+                            <strong>Hinweis:</strong> Die CSV-Datei (${csvUrl}) konnte nicht geladen werden.<br>
+                            Bitte stelle sicher, dass die Datei exakt diesen Namen trägt und im gleichen Ordner liegt.<br>
+                            <small>${escapeHTML(error.message)}</small>
+                        </div>`;
+                    
+                    initData(rawCsvData);
+                });
+        });
+    </script>
+
+</body>
+</html>

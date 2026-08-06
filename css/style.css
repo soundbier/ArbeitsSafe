@@ -241,4 +241,13 @@ select:disabled { background-color: var(--bg-gradient-start); color: #94a3b8; cu
         justify-content: space-between;
         border-radius: 8px;
     }
+    .tab-navigation {
+        gap: 8px; /* Etwas weniger Abstand zwischen den Tabs */
+    }
+    .tab-btn {
+        padding: 0.6rem 0.75rem; /* Weniger Padding links/rechts */
+        font-size: 0.95rem;      /* Schriftgröße minimal anpassen */
+        min-width: 0;            /* Hebt das 'max-content'-Erzwingen auf */
+        flex: 1;                 /* Teilen sich den Platz brüderlich */
+    }
 }

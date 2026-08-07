@@ -72,3 +72,33 @@ select:disabled { background-color: var(--bg-gradient-start); color: var(--disab
 
 .doc-empty { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 1.1rem; border: 2px dashed var(--border-color); border-radius: 8px; margin-top: 2rem; }
 .doc-footer { display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); flex-wrap: wrap; }
+/* ==========================================
+   MOBILE OPTIMIERUNG (SEARCH & DOC)
+   ========================================== */
+@media (max-width: 600px) {
+    /* 1. Touch-Targets für Buttons bei den Gesetzestexten */
+    .action-icon-btn {
+        min-height: 44px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .action-buttons-group {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    /* 2. Aktions-Buttons im Revisionsschreiben-Entwurf immer sichtbar & groß anzeigen */
+    .doc-item-actions {
+        position: static;
+        opacity: 1;
+        margin-top: 10px;
+        justify-content: flex-end;
+    }
+
+    .doc-item-actions .action-icon-btn {
+        min-height: 40px;
+        padding: 6px 12px;
+    }
+}

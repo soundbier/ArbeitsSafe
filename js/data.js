@@ -89,6 +89,20 @@ export const state = {
     }
 };
 
+// --- Zentrale Farbdefinitionen für Status-Badges (Export) ---
+export const STATUS_COLORS = {
+    NEIN:        { bg: "#fef2f2", col: "#dc2626", text: "NEIN" },
+    AMPEL_ROT:   { bg: "#fef2f2", col: "#dc2626", text: "ROT" },
+    JA_INV:      { bg: "#fef2f2", col: "#dc2626", text: "JA (MANGEL)" },
+    JA:          { bg: "#f0fdf4", col: "#16a34a", text: "JA" },
+    AMPEL_GRUEN: { bg: "#f0fdf4", col: "#16a34a", text: "GRÜN" },
+    NEIN_INV:    { bg: "#f0fdf4", col: "#16a34a", text: "NEIN (OK)" },
+    AMPEL_GELB:  { bg: "#fef9c3", col: "#d97706", text: "GELB" },
+    ENTFAELLT:   { bg: "#f1f5f9", col: "#64748b", text: "ENTFÄLLT" },
+    OFFEN:       { bg: "transparent", col: "#94a3b8", text: "OFFEN" },
+    DEFAULT:     { bg: "#cbd5e1", col: "#475569" }
+};
+
 // --- Lokaler Speicher (Auto-Save) ---
 export function saveToLocalStorage() {
     try {

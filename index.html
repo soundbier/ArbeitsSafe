@@ -45,10 +45,11 @@
              TAB NAVIGATION
              ========================================== -->
         <nav class="tab-navigation" role="tablist">
-            <button type="button" class="tab-btn" data-tab="tab-audit" role="tab" aria-selected="false" aria-controls="tab-audit">
+            <!-- TAB 1: Systemprüfung ist nun aktiv -->
+            <button type="button" class="tab-btn active" data-tab="tab-audit" role="tab" aria-selected="true" aria-controls="tab-audit">
                 <span aria-hidden="true">📋</span> Systemprüfung
             </button>
-            <button type="button" class="tab-btn active" data-tab="tab-search" role="tab" aria-selected="true" aria-controls="tab-search">
+            <button type="button" class="tab-btn" data-tab="tab-search" role="tab" aria-selected="false" aria-controls="tab-search">
                 <span aria-hidden="true">🔍</span> Datenbank
             </button>
             <button type="button" class="tab-btn" data-tab="tab-document" role="tab" aria-selected="false" aria-controls="tab-document">
@@ -62,40 +63,55 @@
              ========================================== -->
         <div class="tabs-container">
             
-            <!-- TAB 1: Systemprüfung -->
-            <section id="tab-audit" class="tab-content" role="tabpanel">
-                <div class="document-view">
-                    <header class="doc-header">
-                        <h3>Platzhalter für die Systemprüfung</h3>
-                    </header>
+            <!-- TAB 1: Systemprüfung (CHECKLISTE HIER EINGEFÜGT) -->
+            <section id="tab-audit" class="tab-content active" role="tabpanel">
+                <div class="document-view" style="padding: 0; overflow: hidden; position: relative; min-height: 600px;">
+                    <!-- Checklisten Topbar -->
+                    <div class="topbar" style="background: var(--card-bg); padding: 18px 24px 14px; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid var(--primary); position: sticky; top: 0; z-index: 30;">
+                        <div class="topbar-left">
+                            <span class="sub" id="topSub" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); display: block; margin-bottom: 4px;">Begehungen verwalten</span>
+                            <h2 id="topTitle" style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Checkliste für Systemprüfungen</h2>
+                        </div>
+                        <div class="topbar-right" style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="backBtn" style="display:none;" onclick="goToList()">[ ZURÜCK ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="loadStateBtn" onclick="document.getElementById('auditFileInput').click()">[ DATEN LADEN ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="saveStateBtn" onclick="exportState()">[ SPEICHERN ]</button>
+                            <input type="file" id="auditFileInput" style="display:none;" accept=".json" onchange="importState(event)">
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="manageBtn" style="display:none;" onclick="openManageQuestions()">[ KATALOG ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn text-danger" id="menuBtn" style="display:none; color: #dc2626;" onclick="openConfirmDelete('session', state.currentSessionId)">[ LÖSCHEN ]</button>
+                        </div>
+                    </div>
+
+                    <!-- Hauptbereich der Checkliste -->
+                    <main id="auditMainArea" style="padding-bottom: 80px;"></main>
+
+                    <!-- Export Bar Checkliste -->
+                    <div class="export-bar" id="exportBar" style="display:none; position: absolute; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border-color); padding: 16px 24px; z-index: 25;">
+                        <div class="export-bar-inner" style="display: flex; justify-content: flex-end;">
+                            <button class="btn btn-success" onclick="openExportModal()">Protokoll Exportieren</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- TAB 2: Datenbank & Suche -->
-            <section id="tab-search" class="tab-content active" role="tabpanel">
+            <section id="tab-search" class="tab-content" role="tabpanel">
                 <div class="main-content-area">
                     
-                    <!-- Such- und Filterleiste -->
                     <div class="card-base controls-toolbar">
                         <div class="control-field">
                             <label for="lawFilter">1. Gesetz</label>
-                            <select id="lawFilter">
-                                <option value="">-- Alle --</option>
-                            </select>
+                            <select id="lawFilter"><option value="">-- Alle --</option></select>
                         </div>
                         
                         <div class="control-field">
                             <label for="paragraphFilter">2. Paragraf</label>
-                            <select id="paragraphFilter">
-                                <option value="">-- Alle --</option>
-                            </select>
+                            <select id="paragraphFilter"><option value="">-- Alle --</option></select>
                         </div>
                         
                         <div class="control-field">
                             <label for="absatzFilter">3. Absatz</label>
-                            <select id="absatzFilter" disabled>
-                                <option value="">-- Alle --</option>
-                            </select>
+                            <select id="absatzFilter" disabled><option value="">-- Alle --</option></select>
                         </div>
                         
                         <div class="control-field search-full-width">
@@ -105,17 +121,13 @@
                         
                         <div>
                             <label for="hasBausteinFilter" class="filter-checkbox-wrapper">
-                                <input type="checkbox" id="hasBausteinFilter"> 
-                                Nur Einträge mit Textbaustein
+                                <input type="checkbox" id="hasBausteinFilter"> Nur Einträge mit Textbaustein
                             </label>
                         </div>
                     </div>
 
-                    <!-- Suchergebnisse -->
                     <div id="results" class="results-container" aria-live="polite">
-                        <div class="card-base no-results">
-                            Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.
-                        </div>
+                        <div class="card-base no-results">Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.</div>
                     </div>
                     
                 </div>
@@ -150,10 +162,75 @@
         </div>
     </main>
 
+    <!-- ==========================================
+         OVERLAYS / MODALS FÜR CHECKLISTE
+         ========================================== -->
+    <div class="overlay" id="newSessionOverlay">
+      <div class="modal">
+        <h2>Neue Begehung</h2>
+        <p class="desc">Bitte Datum und Einsatzort eintragen.</p>
+        <div class="field"><label>Datum</label><input type="date" id="newSessionDate"></div>
+        <div class="field"><label>Uhrzeit</label><input type="time" id="newSessionTime"></div>
+        <div class="field"><label>Ort / Gemarkung</label><input type="text" id="newSessionLocation" placeholder="z.B. Höxter"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeOverlay('newSessionOverlay')">Abbrechen</button>
+          <button class="btn btn-success" onclick="confirmCreateSession()">Erfassen</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="overlay" id="remarkOverlay">
+      <div class="modal">
+        <h2>Bemerkung</h2>
+        <p class="desc" id="remarkQuestionText"></p>
+        <div class="field"><textarea id="remarkTextarea" placeholder="Stichprobe / Feststellung eintragen..."></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeOverlay('remarkOverlay')">Abbrechen</button>
+          <button class="btn btn-success" onclick="saveRemark()">Sichern</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="overlay" id="exportOverlay">
+      <div class="modal" style="max-width:700px;">
+        <h2>Protokoll Übersicht</h2>
+        <p class="desc">Kompakte, farblich markierte Übersicht der beantworteten Fragen.</p>
+        <div class="segmented">
+          <button class="active" id="formatTextBtn" onclick="setExportFormat('html')">Farbiges Protokoll</button>
+          <button id="formatJsonBtn" onclick="setExportFormat('json')">JSON-Daten</button>
+        </div>
+        <div class="export-output" id="exportOutput"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeOverlay('exportOverlay')">Schließen</button>
+          <button class="btn btn-secondary" onclick="copyExport()">Kopieren</button>
+          <button class="btn btn-success" onclick="printExport()">Als PDF Drucken</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="overlay" id="confirmDeleteOverlay">
+      <div class="modal">
+        <h2 id="confirmDeleteTitle">Daten entfernen?</h2>
+        <p class="desc" id="confirmDeleteText">Dieser Vorgang ist endgültig und kann nicht rückgängig gemacht werden.</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeOverlay('confirmDeleteOverlay')">Abbrechen</button>
+          <button class="btn btn-success" style="background-color: #dc2626;" onclick="executeDeleteGeneric()">Bestätigen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAB Button für Checkliste -->
+    <button class="fab" id="fabBtn" onclick="openNewSessionModal()">NEUE ERFASSUNG</button>
+
     <!-- Toast Notification Container -->
-    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+    <div id="toast" class="toast" role="alert" aria-live="assertive">
+        <span id="toastText"></span>
+        <button id="toastUndoBtn" style="display:none; margin-left: 15px; border: 1px solid white; background: transparent; color: white; padding: 2px 8px; border-radius: 4px; cursor: pointer;" onclick="undoLastChange()">Rückgängig</button>
+    </div>
 
     <!-- Scripte -->
     <script type="module" src="js/app.js"></script>
+    <!-- Das Skript für die Checklisten-Logik erstellen wir als nächstes -->
+    <script type="module" src="js/checklist.js"></script>
 </body>
 </html>

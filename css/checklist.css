@@ -114,17 +114,52 @@
 
 .add-question-row { padding: 16px 24px 24px; display: flex; gap: 12px; flex-wrap: wrap; background: var(--bg-hover); border-bottom: 1px solid var(--border-color); }
 .add-category-bar { padding: 32px 24px; text-align: center; }
+
 /* ==========================================
    MOBILE OPTIMIERUNG (CHECKLIST)
    ========================================== */
 @media (max-width: 600px) {
-    /* 1. Sticky Toolbar direkt oben fixieren (Tabs sind ja jetzt unten) */
-    .checklist-toolbar {
-        top: 0;
-        padding: 12px 16px;
+    /* 1. Topbar & Header-Buttons (Kein senkrechtes Text-Umbrechen mehr!) */
+    .document-view .topbar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
     }
 
-    /* 2. Fingerfreundliche Trefferflächen (mind. 44px) für Antwort-Chips & Filter */
+    .topbar-left {
+        width: 100%;
+    }
+
+    .topbar-left h2 {
+        font-size: 1.05rem !important;
+    }
+
+    .topbar-right {
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .topbar-right .btn-mini-text {
+        flex: 1 1 auto !important;
+        white-space: nowrap !important; /* Verhindert das senkrechte Umbrechen */
+        font-size: 10px !important;
+        padding: 8px 6px !important;
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* 2. Sticky Toolbar direkt oben fixieren (Tabs sind unten) */
+    .checklist-toolbar {
+        top: 0 !important;
+        padding: 12px 14px !important;
+    }
+
+    /* 3. Fingerfreundliche Trefferflächen (mind. 44px) für Chips & Controls */
     .answer-chip, 
     .filter-chip, 
     .ghost-btn {
@@ -142,14 +177,33 @@
     }
 
     .answer-chips {
-        gap: 10px;
+        gap: 8px;
     }
 
-    /* 3. Floating Action Button (FAB) über die neue Bottom-Bar anheben */
+    .question-row, .sub-question-row {
+        padding: 14px;
+    }
+
+    .question-controls, .sub-question-row .question-controls {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .row-actions {
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .row-actions .ghost-btn, .row-actions .answer-chip {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* 4. Floating Action Button (FAB) über die Bottom-Bar anheben */
     .fab {
-        right: 20px;
-        bottom: 85px; /* Liegt exakt oberhalb der Tab-Navigation */
-        padding: 14px 20px;
-        font-size: 12px;
+        right: 16px !important;
+        bottom: 85px !important; /* Liegt exakt oberhalb der Tab-Navigation */
+        padding: 12px 18px !important;
+        font-size: 11px !important;
     }
 }

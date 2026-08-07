@@ -2,13 +2,13 @@
 export const state = {
     // --- Datenbank & Revisionsschreiben ---
     gesetzeData: [],
-    revisionsSchreibenListe: [],
+    revisionsSchreibenListe: [], // Namenskonvention für UI und App vereinheitlicht
     lastLoadedFileText: null,
     lastLoadedFileName: null,
     // Fallback-Daten
     rawCsvData: `gesetzKuerzel;gesetzName;paragraf;absatz;titel;inhalt;mangelVorgefunden;rechtsgrundlage;handlungsaufforderung\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 1;Beurteilung der Arbeitsbedingungen;"(1) Der Arbeitgeber hat durch eine Beurteilung der für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, welche Maßnahmen des Arbeitsschutzes erforderlich sind.";"Zum Zeitpunkt der Besichtigung konnte von Ihnen keine Gefährdungsbeurteilungen vorgelegt werden.";"Laut § 5 Arbeitsschutzgesetzes (ArbSchG) hat der Arbeitgeber durch eine Beurteilung die für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, bei Erfordernis notwendige Maßnahmen gegen diese Gefährdungen zu treffen und die Wirksamkeit dieser Maßnahmen fortlaufend zu prüfen.";"Bitte überarbeiten Sie eigenverantwortlich Ihre Gefährdungsbeurteilungen, dokumentieren Sie zukünftig die umgesetzten Maßnahmen und führen Sie Wirksamkeitskontrollen durch."\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 2;Beurteilung der Arbeitsbedingungen;"(2) Eine Beurteilung nach Absatz 1 ist unabhängig von der Zahl der Beschäftigten vorzunehmen.";;;`,
 
-    // --- NEU: Systemprüfung / Checkliste ---
+    // --- Systemprüfung / Checkliste ---
     sessions: [],
     nextSessionId: 1,
     currentSessionId: null,
@@ -24,6 +24,7 @@ export const state = {
       "Betriebsrundgang"
     ],
     QUESTIONS: [
+      // ... Deine Fragenliste bleibt 1:1 identisch ...
       {id:1,category:"Arbeitsschutzorganisation & Pflichtenübertragung",questionText:"Verantwortung, Aufgabenübertragung und Regelung der Kompetenzen im Arbeits- und Umweltschutz sind geregelt?",answerType:"JA_NEIN_ENTFAELLT"},
       {id:2,category:"Arbeitsschutzorganisation & Pflichtenübertragung",questionText:"Kennen Führungskräfte ihre Pflichten?",answerType:"AMPEL"},
       {id:3,category:"Arbeitsschutzorganisation & Pflichtenübertragung",questionText:"Ist die Kommunikation im Arbeits- und Umweltschutz geregelt und nachvollziehbar dokumentiert?",answerType:"AMPEL"},
@@ -87,6 +88,28 @@ export const state = {
       JA_NEIN_ENTFAELLT_INVERTED: "Invertiert (Ja)"
     }
 };
+
+// --- Lokaler Speicher (Auto-Save) ---
+export function saveToLocalStorage() {
+    try {
+        localStorage.setItem('arbeitsSafeDrafts', JSON.stringify(state.revisionsSchreibenListe));
+        localStorage.setItem('arbeitsSafeSessions', JSON.stringify(state.sessions));
+    } catch(e) {
+        console.warn('Speichern fehlgeschlagen', e);
+    }
+}
+
+export function loadFromLocalStorage() {
+    try {
+        const drafts = localStorage.getItem('arbeitsSafeDrafts');
+        if (drafts) state.revisionsSchreibenListe = JSON.parse(drafts);
+        
+        const sessions = localStorage.getItem('arbeitsSafeSessions');
+        if (sessions) state.sessions = JSON.parse(sessions);
+    } catch(e) {
+        console.warn('Laden fehlgeschlagen', e);
+    }
+}
 
 export function parseCSV(text) {
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');

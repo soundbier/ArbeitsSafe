@@ -1,116 +1,224 @@
-/* Forms / Controls (Tab 2) */
+/* ==========================================
+   FORMS & CONTROLS (TAB 2)
+   ========================================== */
 .controls-toolbar {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; padding: 24px 30px; align-items: center;
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1.25rem; 
+    padding: 24px 30px; 
+    align-items: center;
 }
-@media (max-width: 900px) { .controls-toolbar { grid-template-columns: 1fr; padding: 15px; gap: 1rem; } }
+@media (max-width: 900px) { 
+    .controls-toolbar { grid-template-columns: 1fr; padding: 15px; gap: 1rem; } 
+}
 .search-full-width { grid-column: span 2; }
-@media (max-width: 900px) { .search-full-width { grid-column: span 1; } }
-.control-field { display: flex; flex-direction: column; gap: 0.4rem; }
-.control-field label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-select, input[type="text"] {
-    width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--card-bg); color: var(--text-main); transition: all 0.2s; min-height: 44px;
+@media (max-width: 900px) { 
+    .search-full-width { grid-column: span 1; } 
 }
-select:focus, input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-alpha); }
-select:disabled { background-color: var(--bg-gradient-start); color: var(--disabled-text); cursor: not-allowed; }
+
+.control-field { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.4rem; 
+}
+.control-field label { 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+    color: var(--text-muted); 
+}
+
+select, input[type="text"] {
+    width: 100%; 
+    padding: 0.75rem 1rem; 
+    font-size: 0.95rem; 
+    border: 1px solid var(--border-color); 
+    border-radius: 8px; 
+    background-color: var(--card-bg); 
+    color: var(--text-main); 
+    transition: all 0.2s; 
+    min-height: 44px;
+}
+select:focus, input[type="text"]:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 3px var(--primary-alpha); 
+}
+select:disabled { 
+    background-color: var(--bg-gradient-start); 
+    color: var(--disabled-text); 
+    cursor: not-allowed; 
+}
 
 .filter-checkbox-wrapper {
-    display: flex; align-items: center; gap: 0.5rem; background-color: var(--bg-gradient-start); border: 1px solid var(--border-color); padding: 0.75rem 1rem; border-radius: 8px; min-height: 44px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-main); user-select: none; margin-top: 1.4rem; transition: all 0.2s;
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    background-color: var(--bg-gradient-start); 
+    border: 1px solid var(--border-color); 
+    padding: 0.75rem 1rem; 
+    border-radius: 8px; 
+    min-height: 44px; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    font-weight: 600; 
+    color: var(--text-main); 
+    user-select: none; 
+    margin-top: 1.4rem; 
+    transition: all 0.2s;
 }
-@media (max-width: 900px) { .filter-checkbox-wrapper { margin-top: 0.5rem; } }
-.filter-checkbox-wrapper:hover { border-color: var(--primary-light); background-color: var(--bg-hover); }
-.filter-checkbox-wrapper input { width: 1.2rem; height: 1.2rem; accent-color: var(--primary); cursor: pointer; }
+@media (max-width: 900px) { 
+    .filter-checkbox-wrapper { margin-top: 0.5rem; } 
+}
+.filter-checkbox-wrapper:hover { 
+    border-color: var(--primary-light); 
+    background-color: var(--bg-hover); 
+}
+.filter-checkbox-wrapper input { 
+    width: 1.2rem; 
+    height: 1.2rem; 
+    accent-color: var(--primary); 
+    cursor: pointer; 
+}
 
-/* Law Cards (Tab 2) */
-.law-card { padding: 30px; transition: box-shadow 0.2s; }
-@media (max-width: 900px) { .law-card { padding: 15px; } }
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; }
-.law-title-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; margin-left: 0.5rem; }
-.paragraph-heading { font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
-.paragraph-box {
-    background-color: var(--bg-gradient-start); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; transition: all 0.2s ease-in-out;
-}
-@media (max-width: 900px) { .paragraph-box { padding: 15px; } }
-.paragraph-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 10px; }
-.absatz-tag { font-weight: 700; font-size: 0.85rem; color: var(--primary); background-color: var(--primary-light); padding: 0.25rem 0.6rem; border-radius: 6px; }
-.action-buttons-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.text-content-wrapper { margin-bottom: 1rem; }
-.text-clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.paragraph-text { font-size: 0.95rem; color: var(--text-dark); white-space: pre-line; line-height: 1.6; margin-bottom: 0; }
-.revision-preview-box { background-color: var(--card-bg); border: 1px solid var(--border-highlight); border-left: 4px solid var(--primary); border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.9rem; color: var(--text-main); white-space: pre-line; line-height: 1.6; }
-
-/* Document View (Tab 3) */
-.document-view {
-    background-color: var(--card-bg); border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); padding: 40px 50px; display: flex; flex-direction: column; gap: 1.5rem;
-}
-@media (max-width: 900px) { .document-view { padding: 20px 15px; } }
-.doc-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--text-main); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; }
-.doc-header h3 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.5px; }
-.doc-items-list { display: flex; flex-direction: column; }
-.doc-item {
-    padding: 1.5rem 0; border-bottom: 1px dashed var(--border-color); position: relative; transition: background 0.2s;
-}
-.doc-item:last-child { border-bottom: none; }
-.doc-item:hover .doc-item-actions { opacity: 1; right: 15px; }
-@media (max-width: 900px) { .doc-item:hover { padding: 1.5rem 0; margin: 0; border-radius: 0; background-color: transparent; } }
-
-.doc-item-title-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-.doc-item-num { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
-.doc-title-input {
-    flex-grow: 1; min-width: 200px; font-size: 1.1rem; font-weight: 700; color: var(--text-main); border: 1px solid transparent; background: transparent; padding: 0.2rem 0.5rem; border-radius: 4px; transition: all 0.2s; margin-left: -0.5rem;
-}
-.doc-title-input:hover, .doc-title-input:focus { border-color: var(--primary-light); background: var(--bg-hover); outline: none; }
-.doc-editable-text {
-    font-size: 1rem; color: var(--text-darker); white-space: pre-wrap; line-height: 1.6; text-align: justify; outline: none; padding: 0.5rem; margin-left: -0.5rem; border-radius: 4px; border: 1px solid transparent; transition: all 0.2s;
-}
-.doc-editable-text:hover { background-color: var(--bg-hover); cursor: text; }
-.doc-editable-text:focus { border-color: var(--primary-light); background-color: var(--card-bg); box-shadow: 0 0 0 3px var(--primary-alpha); }
-
-.doc-item-actions {
-    opacity: 0; position: absolute; top: 1.5rem; right: 0; background: var(--bg-gradient-start); padding-left: 10px; box-shadow: -10px 0 10px var(--bg-gradient-start); display: flex; gap: 0.35rem; transition: opacity 0.2s;
-}
-@media (max-width: 900px) { .doc-item-actions { opacity: 1; position: static; box-shadow: none; padding: 10px 0 0 0; justify-content: flex-end; background: transparent; } }
-
-.doc-empty { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 1.1rem; border: 2px dashed var(--border-color); border-radius: 8px; margin-top: 2rem; }
-.doc-footer { display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); flex-wrap: wrap; }
 
 /* ==========================================
-   MOBILE OPTIMIERUNG (SEARCH & DOC)
+   DATENBANK KARTEN (NEUES LAYOUT)
    ========================================== */
+.result-card {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+}
+.result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    border-color: var(--primary-light);
+}
+.result-card.has-textbaustein {
+    border-left: 4px solid var(--primary);
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.result-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+.result-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.result-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.result-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-content {
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.baustein-section {
+    background: var(--bg-gradient-start);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.baustein-section .result-content {
+    color: var(--primary);
+    font-weight: 500;
+    font-style: italic;
+}
+
+.result-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+
+/* ==========================================
+   ENTWURF / SCHREIBEN (TAB 3)
+   ========================================== */
+.document-view {
+    background-color: var(--card-bg); 
+    border-radius: 12px; 
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); 
+    padding: 40px 50px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem;
+}
+@media (max-width: 900px) { 
+    .document-view { padding: 20px 15px; } 
+}
+
+.schreiben-item {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.schreiben-item:hover {
+    border-color: var(--primary-light);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.edit-textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-main);
+    background: var(--card-bg);
+    resize: vertical;
+    transition: all 0.2s;
+}
+.edit-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-alpha);
+}
+
+/* Mobile Overrides für Boxen */
 @media (max-width: 600px) {
-    /* 1. Touch-Targets für Buttons bei den Gesetzestexten */
-    .action-icon-btn {
-        min-height: 44px;
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-    }
-
-    .action-buttons-group {
-        width: 100%;
-        justify-content: flex-start;
-        gap: 8px;
-    }
-
-    /* 2. Aktions-Buttons im Revisionsschreiben-Entwurf flexibel & daumenfreundlich */
-    .doc-item-actions {
-        position: static;
-        opacity: 1;
-        margin-top: 10px;
-        justify-content: flex-end;
-    }
-
-    .doc-item-actions .action-icon-btn {
-        min-height: 40px;
-        padding: 6px 12px;
-    }
-
-    /* 3. Footer-Buttons im Entwurf groß und gestapelt */
-    .doc-footer {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .doc-footer button {
-        width: 100%;
-        min-height: 48px;
-    }
+    .result-card, .schreiben-item { padding: 1rem; }
+    .result-header { flex-direction: column; }
 }

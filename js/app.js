@@ -35,13 +35,13 @@ function toggleToSchreiben(itemId) {
         state.revisionsSchreibenListe.splice(idx, 1); 
     } else { 
         let newItem = { ...item };
-        newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
+        newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n");
         state.revisionsSchreibenListe.push(newItem); 
     }
     
     saveToLocalStorage();
-    renderResults();    // Buttons in der Suche updaten
-    renderSchreiben();  // Entwurf-Tab updaten
+    renderResults();
+    renderSchreiben();
 }
 
 function removeFromSchreiben(id) { 

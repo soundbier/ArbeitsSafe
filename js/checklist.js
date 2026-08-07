@@ -1,4 +1,4 @@
-import { state } from './data.js';
+import { state, STATUS_COLORS } from './data.js';
 
 /* ---------- Lokaler State ---------- */
 let currentView = 'list'; 

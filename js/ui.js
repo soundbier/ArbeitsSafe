@@ -1,4 +1,5 @@
-import { state } from './data.js';
+import { state, saveToLocalStorage } from './data.js';
+import { toggleToSchreiben, removeFromSchreiben } from './app.js';
 
 /* ==========================================
    DOM ELEMENTE
@@ -109,7 +110,7 @@ export function renderResults() {
     const absVal = DOM.absatzFilter.value;
     const searchVal = DOM.searchInput.value.trim().toLowerCase();
 
-    // --- LOGIK-STOPPER 1: Gar keine Auswahl getroffen ---
+    // Logik-Stopper
     if (!lawVal && !searchVal) {
         DOM.resultsContainer.innerHTML = `
             <div class="empty-state card-base">
@@ -120,7 +121,6 @@ export function renderResults() {
         return;
     }
 
-    // --- LOGIK-STOPPER 2: Nur Gesetz gewählt, aber kein Paragraf ---
     if (lawVal && !paraVal && !searchVal) {
         DOM.resultsContainer.innerHTML = `
             <div class="empty-state card-base">
@@ -133,12 +133,10 @@ export function renderResults() {
 
     let results = state.gesetzeData;
     
-    // Filter strikt anwenden
     if (lawVal) results = results.filter(r => (r.gesetzKuerzel || r.Gesetz) === lawVal);
     if (paraVal) results = results.filter(r => (r.paragraf || r.Paragraf) === paraVal);
     if (absVal) results = results.filter(r => (r.absatz || r.Absatz) === absVal);
     
-    // Suche anwenden
     if (searchVal) {
         results = results.filter(r => {
             const text = (r.inhalt || r.Rechtstext || '').toLowerCase();
@@ -148,12 +146,10 @@ export function renderResults() {
         });
     }
     
-    // Baustein-Filter anwenden
     if (DOM.hasBausteinFilter.checked) {
         results = results.filter(r => r.Textbaustein || r.mangelVorgefunden || r.rechtsgrundlage || r.handlungsaufforderung);
     }
 
-    // Falls die Filterkombination keine Treffer hat
     if (results.length === 0) {
         DOM.resultsContainer.innerHTML = `
             <div class="empty-state card-base">
@@ -164,7 +160,6 @@ export function renderResults() {
         return;
     }
 
-    // Ergebnisse rendern
     DOM.resultsContainer.innerHTML = '';
     
     results.forEach(row => {
@@ -232,7 +227,7 @@ export function renderResults() {
         innerHtml += `
             <div class="result-actions">
                 ${hasBaustein ? `
-                    <button class="action-icon-btn ${isAdded ? 'added' : ''}" data-id="${row.id || row._internalId}">
+                    <button class="action-icon-btn ${isAdded ? 'added' : ''}" data-action="toggle-schreiben" data-id="${row.id || row._internalId}">
                         ${isAdded ? '<span>✓</span> Im Entwurf' : '<span>+</span> Zum Entwurf'}
                     </button>
                 ` : `<button class="action-icon-btn" disabled style="opacity:0.4; cursor:not-allowed;">Kein Baustein verfügbar</button>`}
@@ -241,20 +236,6 @@ export function renderResults() {
 
         card.innerHTML = innerHtml;
         DOM.resultsContainer.appendChild(card);
-    });
-
-    document.querySelectorAll('.action-icon-btn[data-id]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.currentTarget.getAttribute('data-id');
-            window.toggleToSchreiben(id); 
-        });
-    });
-
-    document.querySelectorAll('[data-copy-text]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const text = e.currentTarget.getAttribute('data-copy-text');
-            navigator.clipboard.writeText(text).then(() => showToast('Baustein kopiert!'));
-        });
     });
 }
 
@@ -290,6 +271,7 @@ export function renderSchreiben() {
         if(pBuchstabe) titleParts.push(`lit. ${pBuchstabe}`);
         
         const title = titleParts.join(' ');
+        const id = item.id || item._internalId;
         
         const div = document.createElement('div');
         div.className = 'schreiben-item card-base';
@@ -300,16 +282,16 @@ export function renderSchreiben() {
                     <span class="item-index" style="font-weight:bold;">${index + 1}.</span>
                     <span class="item-title" style="font-weight:bold;">${title}</span>
                 </div>
-                <button class="remove-btn btn-mini" onclick="window.removeFromSchreiben('${item.id || item._internalId}')" title="Entfernen" style="border:none; background:transparent; cursor:pointer; color:var(--text-muted);">
+                <button class="remove-item-btn btn-mini" data-id="${id}" title="Entfernen" style="border:none; background:transparent; cursor:pointer; color:var(--text-muted);">
                     <span aria-hidden="true">✕</span>
                 </button>
             </div>
             
             <div class="item-content">
-                <textarea class="edit-textarea" data-id="${item.id || item._internalId}" rows="4" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit; margin-bottom: 10px;">${item.editedText || item._editedText}</textarea>
+                <textarea class="edit-textarea" data-id="${id}" rows="4" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit; margin-bottom: 10px;">${item.editedText || item._editedText}</textarea>
             </div>
             
-            <button class="toggle-more-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.nextElementSibling.style.display === 'none' ? '<span>👁️</span> Originaltext anzeigen' : '<span>👁️</span> Originaltext ausblenden'">
+            <button class="toggle-original-btn">
                 <span>👁️</span> Originaltext anzeigen
             </button>
             <div class="original-text" style="display: none; background:var(--bg-gradient-start); padding:10px; border-radius:6px; margin-top:5px;">
@@ -319,18 +301,6 @@ export function renderSchreiben() {
         `;
         
         DOM.schreibenList.appendChild(div);
-    });
-
-    document.querySelectorAll('.edit-textarea').forEach(textarea => {
-        textarea.addEventListener('input', (e) => {
-            const id = e.target.getAttribute('data-id');
-            const item = state.revisionsSchreibenListe.find(d => (d.id || d._internalId) === id);
-            if (item) {
-                item.editedText = e.target.value;
-                item._editedText = e.target.value;
-                if(window.saveToLocalStorage) window.saveToLocalStorage();
-            }
-        });
     });
 }
 
@@ -348,3 +318,61 @@ function escapeQuotes(unsafe) {
     if (!unsafe) return '';
     return unsafe.toString().replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
+
+
+/* ==========================================
+   EVENT DELEGATION (Listenansicht & Entwurf)
+   ========================================== */
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Delegation für Tab 2: Ergebnisse
+    if (DOM.resultsContainer) {
+        DOM.resultsContainer.addEventListener('click', (e) => {
+            const addBtn = e.target.closest('[data-action="toggle-schreiben"]');
+            if (addBtn && !addBtn.disabled) {
+                toggleToSchreiben(addBtn.getAttribute('data-id'));
+            }
+            
+            const copyBtn = e.target.closest('[data-copy-text]');
+            if (copyBtn) {
+                navigator.clipboard.writeText(copyBtn.getAttribute('data-copy-text'))
+                    .then(() => showToast('Baustein kopiert!'));
+            }
+        });
+    }
+
+    // Delegation für Tab 3: Entwurf (Klicks)
+    if (DOM.schreibenList) {
+        DOM.schreibenList.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.remove-item-btn');
+            if (removeBtn) {
+                removeFromSchreiben(removeBtn.getAttribute('data-id'));
+            }
+
+            const toggleBtn = e.target.closest('.toggle-original-btn');
+            if (toggleBtn) {
+                const originalTextDiv = toggleBtn.nextElementSibling;
+                if (originalTextDiv.style.display === 'none') {
+                    originalTextDiv.style.display = 'block';
+                    toggleBtn.innerHTML = '<span>👁️</span> Originaltext ausblenden';
+                } else {
+                    originalTextDiv.style.display = 'none';
+                    toggleBtn.innerHTML = '<span>👁️</span> Originaltext anzeigen';
+                }
+            }
+        });
+
+        // Delegation für Tab 3: Entwurf (Eingaben speichern)
+        DOM.schreibenList.addEventListener('input', (e) => {
+            if (e.target.classList.contains('edit-textarea')) {
+                const id = e.target.getAttribute('data-id');
+                const item = state.revisionsSchreibenListe.find(d => (d.id || d._internalId) === id);
+                if (item) {
+                    item.editedText = e.target.value;
+                    item._editedText = e.target.value;
+                    saveToLocalStorage();
+                }
+            }
+        });
+    }
+});

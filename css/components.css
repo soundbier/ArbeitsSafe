@@ -102,6 +102,13 @@
    MOBILE OPTIMIERUNG (COMPONENTS)
    ========================================== */
 @media (max-width: 600px) {
+    /* Globale Buttons kompakter */
+    .btn {
+        min-height: 38px !important;
+        padding: 8px 12px !important;
+        font-size: 0.9rem !important;
+    }
+
     /* --- HEADER FIX --- */
     .tool-header {
         padding: 10px 14px !important;
@@ -187,6 +194,6 @@
     }
 
     .modal-actions button {
-        min-height: 48px;
+        min-height: 44px !important;
     }
 }

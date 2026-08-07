@@ -72,6 +72,7 @@ select:disabled { background-color: var(--bg-gradient-start); color: var(--disab
 
 .doc-empty { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 1.1rem; border: 2px dashed var(--border-color); border-radius: 8px; margin-top: 2rem; }
 .doc-footer { display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); flex-wrap: wrap; }
+
 /* ==========================================
    MOBILE OPTIMIERUNG (SEARCH & DOC)
    ========================================== */
@@ -89,7 +90,7 @@ select:disabled { background-color: var(--bg-gradient-start); color: var(--disab
         gap: 8px;
     }
 
-    /* 2. Aktions-Buttons im Revisionsschreiben-Entwurf immer sichtbar & groß anzeigen */
+    /* 2. Aktions-Buttons im Revisionsschreiben-Entwurf flexibel & daumenfreundlich */
     .doc-item-actions {
         position: static;
         opacity: 1;
@@ -100,5 +101,16 @@ select:disabled { background-color: var(--bg-gradient-start); color: var(--disab
     .doc-item-actions .action-icon-btn {
         min-height: 40px;
         padding: 6px 12px;
+    }
+
+    /* 3. Footer-Buttons im Entwurf groß und gestapelt */
+    .doc-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .doc-footer button {
+        width: 100%;
+        min-height: 48px;
     }
 }

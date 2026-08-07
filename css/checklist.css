@@ -1,631 +1,542 @@
-import { state, saveToLocalStorage } from './data.js';
+/* ==========================================
+   CHECKLISTE & BEGEHUNGEN (Systemprüfung)
+   ========================================== */
 
-/* Checklisten Logik - Integriert ins Hauptsystem */
-
-// Init
-export function initChecklist() {
-    renderMainView();
+/* --- Listen-Ansicht (Begehungen) --- */
+.session-list-header {
+    margin-bottom: 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-// --- Hilfsfunktionen für Kategorien & Nummern ---
-function pad(num) { return num < 10 ? '0'+num : num.toString(); }
-
-function buildNumbering(items){
-  const catSeen = []; const catCounters = {}; const numberMap = {}; const catIndexMap = {};
-  items.forEach(it => {
-    if (!catSeen.includes(it.category)) { catSeen.push(it.category); catCounters[it.category] = 0; catIndexMap[it.category] = catSeen.length; }
-    catCounters[it.category]++;
-    numberMap[it._numKey] = catIndexMap[it.category] + '.' + pad(catCounters[it.category]);
-  });
-  return { numberMap, catIndexMap };
+.session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
 }
 
-let toastTimer = null;
-function showChecklistToast(msg, withUndo){
-  const textEl = document.getElementById('toastText') || document.getElementById('toastMessage');
-  if(textEl) textEl.textContent = msg; 
-  const undoBtn = document.getElementById('toastUndoBtn');
-  if(undoBtn) undoBtn.style.display = withUndo ? 'inline-block' : 'none';
-  document.getElementById('toastMessage').classList.add('show'); 
-  clearTimeout(toastTimer); 
-  toastTimer = setTimeout(hideChecklistToast, 3200);
-}
-function hideChecklistToast(){ document.getElementById('toastMessage').classList.remove('show'); }
-
-window.hideChecklistToast = hideChecklistToast;
-
-// --- State Management für Checkliste ---
-function addSession(locationName, dateString) {
-  const newSession = {
-    id: Date.now().toString(),
-    location: locationName,
-    date: dateString,
-    createdAt: new Date().toISOString(),
-    items: JSON.parse(JSON.stringify(state.checklistQuestions || [])) 
-  };
-  
-  // Vorbereiten der Items mit eindeutigen IDs für diese Session (falls nicht vorhanden)
-  newSession.items.forEach((item, idx) => {
-      item.snapshotId = 'snap_' + idx;
-      item._numKey = item.category + '_' + idx; 
-  });
-  
-  state.sessions.unshift(newSession);
-  saveToLocalStorage();
-  return newSession.id;
+.session-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
-function updateSessionItem(sessionId, snapshotId, updates) {
-  const session = state.sessions.find(s => s.id === sessionId);
-  if(!session) return;
-  const item = session.items.find(i => i.snapshotId === snapshotId);
-  if(item) {
-    Object.assign(item, updates);
-    saveToLocalStorage();
-    renderSessionDetail(sessionId);
-  }
+.session-card:hover {
+    border-color: var(--primary-light);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
 }
 
-// Global für UI Interaktion
-let currentFilter = 'ALL'; 
-let collapsedCategories = {}; 
-
-function calcProgress(session) {
-  if(!session || !session.items || session.items.length === 0) return { total:0, done:0, pct:0 };
-  let total = 0; let done = 0;
-  session.items.forEach(q => {
-    if(q.type === 'BOOL' || q.type === 'TRAFFIC_LIGHT') {
-      total++;
-      if(q.status !== 'UNANSWERED') done++;
-    } else if(q.type === 'MULTIPLE' && q.subQuestions) {
-      q.subQuestions.forEach(sq => {
-        total++;
-        if(sq.status !== 'UNANSWERED') done++;
-      });
-    }
-  });
-  return { total, done, pct: total===0 ? 0 : Math.round((done/total)*100) };
+.session-card .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
-// --- RENDERING VIEWS ---
-
-export function renderMainView() {
-  const main = document.getElementById('auditMainArea');
-  const topSub = document.getElementById('topSub');
-  const topTitle = document.getElementById('topTitle');
-  
-  document.getElementById('backBtn').style.display = 'none';
-  document.getElementById('loadStateBtn').style.display = 'inline-block';
-  document.getElementById('saveStateBtn').style.display = 'inline-block';
-  document.getElementById('manageBtn').style.display = 'inline-block';
-  document.getElementById('menuBtn').style.display = 'none';
-  document.getElementById('exportBar').style.display = 'none';
-  
-  topSub.textContent = 'Übersicht';
-  topTitle.textContent = 'Begehungen';
-  state.currentSessionId = null;
-
-  let html = `
-    <div class="session-list-header">
-      <p>Ihre laufenden & abgeschlossenen Prüfungen</p>
-    </div>
-    <div class="session-grid">
-  `;
-
-  if(state.sessions.length === 0) {
-    html += `
-      <div class="empty-state card-base">
-        <p class="bold-text">Keine Begehungen vorhanden</p>
-        <p>Starten Sie eine neue Systemprüfung, um Fragenkataloge für einen Bereich abzuarbeiten.</p>
-      </div>
-    `;
-  } else {
-    state.sessions.forEach(s => {
-      const p = calcProgress(s);
-      html += `
-        <div class="session-card" onclick="openSession('${s.id}')">
-          <div class="meta">
-            <div class="loc">${escapeHtml(s.location)}</div>
-            <div class="when">${new Date(s.date).toLocaleDateString('de-DE')} • ${p.done}/${p.total} bearbeitet</div>
-          </div>
-          <div class="progress-pill">${p.pct}%</div>
-          <button class="del" onclick="event.stopPropagation(); openConfirmDelete('session', '${s.id}')" title="Löschen">✕</button>
-        </div>
-      `;
-    });
-  }
-
-  html += `</div>
-    <button class="fab" onclick="openNewLocModal()">+ Neue Begehung</button>
-  `;
-
-  main.innerHTML = html;
+.session-card .loc {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
 }
 
-window.openSession = function(id) {
-  state.currentSessionId = id;
-  currentFilter = 'ALL';
-  renderSessionDetail(id);
-};
-
-window.goToList = function() {
-  renderMainView();
-};
-
-function renderSessionDetail(id) {
-  const session = state.sessions.find(s => s.id === id);
-  if(!session) { renderMainView(); return; }
-
-  const main = document.getElementById('auditMainArea');
-  const topSub = document.getElementById('topSub');
-  const topTitle = document.getElementById('topTitle');
-  
-  document.getElementById('backBtn').style.display = 'inline-block';
-  document.getElementById('loadStateBtn').style.display = 'none';
-  document.getElementById('saveStateBtn').style.display = 'none';
-  document.getElementById('manageBtn').style.display = 'none';
-  document.getElementById('menuBtn').style.display = 'inline-block';
-  document.getElementById('exportBar').style.display = 'block';
-
-  topSub.textContent = new Date(session.date).toLocaleDateString('de-DE');
-  topTitle.textContent = session.location;
-
-  const p = calcProgress(session);
-  const { numberMap, catIndexMap } = buildNumbering(session.items);
-
-  let html = `
-    <div class="checklist-toolbar">
-      <div class="progress-row">
-        <span class="label">${p.done} / ${p.total} ERFASST</span>
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" style="width: ${p.pct}%"></div>
-        </div>
-      </div>
-      <div class="filter-row">
-        <button class="filter-chip ${currentFilter==='ALL'?'active':''}" onclick="setFilter('ALL')">Gesamt</button>
-        <button class="filter-chip ${currentFilter==='OPEN'?'active':''}" onclick="setFilter('OPEN')">Offen</button>
-        <button class="filter-chip ${currentFilter==='ISSUES'?'active':''}" onclick="setFilter('ISSUES')">Befunde</button>
-      </div>
-    </div>
-  `;
-
-  let currentCat = null;
-  let itemsInCurrentCat = 0;
-  let catHtml = '';
-
-  const finalizeCategory = () => {
-    if(currentCat && itemsInCurrentCat > 0) {
-      const isCol = collapsedCategories[currentCat];
-      const catNum = catIndexMap[currentCat];
-      html += `
-        <div class="category-header" onclick="toggleCategory('${currentCat}')">
-          <span class="chev">${isCol ? '[+]' : '[-]'}</span>
-          <span>${catNum}. ${escapeHtml(currentCat)}</span>
-          <span class="cnt">${itemsInCurrentCat} POSITONEN</span>
-        </div>
-      `;
-      if(!isCol) html += catHtml;
-    }
-  };
-
-  session.items.forEach(q => {
-    // Filter logic
-    let show = false;
-    if(currentFilter === 'ALL') show = true;
-    else if(currentFilter === 'OPEN') {
-      if(q.type === 'MULTIPLE') {
-        show = q.subQuestions.some(sq => sq.status === 'UNANSWERED');
-      } else {
-        show = q.status === 'UNANSWERED';
-      }
-    } else if(currentFilter === 'ISSUES') {
-      if(q.type === 'MULTIPLE') {
-        show = q.subQuestions.some(sq => ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(sq.status)) || !!q.remark;
-      } else {
-        show = ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(q.status) || !!q.remark;
-      }
-    }
-
-    if(show) {
-      if(q.category !== currentCat) {
-        finalizeCategory();
-        currentCat = q.category;
-        catHtml = '';
-        itemsInCurrentCat = 0;
-      }
-      
-      itemsInCurrentCat++;
-      
-      let opts = [];
-      if(q.type==='BOOL') opts = [['JA','JA'],['NEIN','NEIN'],['ENTFAELLT','ENTFÄLLT']];
-      if(q.type==='BOOL_INV') opts = [['NEIN_INV','JA'],['JA_INV','NEIN'],['ENTFAELLT','ENTFÄLLT']];
-      if(q.type==='TRAFFIC_LIGHT') opts = [['AMPEL_GRUEN','GRÜN'],['AMPEL_GELB','GELB'],['AMPEL_ROT','ROT'],['ENTFAELLT','ENTFÄLLT']];
-      if(q.type==='MULTIPLE') opts = [['JA','JA'],['NEIN','NEIN'],['ENTFAELLT','ENTFÄLLT']]; 
-
-      if(q.type !== 'MULTIPLE') {
-          const mainOpts = opts.filter(([val]) => val !== 'ENTFAELLT');
-          const hasEntfaellt = opts.some(([val]) => val === 'ENTFAELLT');
-          
-          const num = numberMap[q.snapshotId];
-          
-          html += `
-          <div class="question-row">
-            <div class="question-text"><span class="num">${num}</span>${escapeHtml(q.questionText)}</div>
-            <div class="question-controls">
-              <div class="answer-chips">
-                ${mainOpts.map(([val,label]) => `
-                  <button class="answer-chip ${q.status===val?'sel':''}" data-val="${val}"
-                    onclick="setAnswerStatus('${q.snapshotId}', '${val}')">${label}</button>
-                `).join('')}
-              </div>
-              <div class="row-actions">
-                ${hasEntfaellt ? `
-                  <button class="answer-chip ${q.status==='ENTFAELLT'?'sel':''}" data-val="ENTFAELLT"
-                    onclick="setAnswerStatus('${q.snapshotId}', 'ENTFAELLT')">ENTFÄLLT</button>
-                ` : ''}
-                <button class="ghost-btn ${q.remark? 'has-remark':''}" onclick="openRemarkModal('${q.snapshotId}')">
-                  ${q.remark ? '[ 📝 BEARBEITEN ]' : '[ + BEMERKUNG ]'}
-                </button>
-              </div>
-            </div>
-          </div>`;
-      } else {
-          const mainOpts = opts.filter(([val]) => val !== 'ENTFAELLT');
-          const hasEntfaellt = opts.some(([val]) => val === 'ENTFAELLT');
-          const num = numberMap[q.snapshotId];
-
-          html += `
-          <div class="question-row" style="padding-bottom: 8px; border-bottom: none;">
-            <div class="question-text"><span class="num">${num}</span>${escapeHtml(q.questionText)}</div>
-            <div class="row-actions" style="margin-left: 32px; margin-top: 8px;">
-               <button class="ghost-btn ${q.remark? 'has-remark':''}" onclick="openRemarkModal('${q.snapshotId}')">
-                  ${q.remark ? '[ 📝 BEARBEITEN ]' : '[ + BEMERKUNG ]'}
-                </button>
-            </div>
-          </div>`;
-
-          if (q.subQuestions) {
-             html += `<div class="sub-questions-container">`;
-             q.subQuestions.forEach((sq, sIdx) => {
-                 let subLetter = String.fromCharCode(97 + sIdx);
-                 html += `
-                 <div class="sub-question-row">
-                   <div class="question-text"><span class="num">${num}${subLetter}</span>${escapeHtml(sq.text)}</div>
-                   <div class="question-controls">
-                     <div class="answer-chips">
-                       ${mainOpts.map(([val,label]) => `
-                         <button class="answer-chip ${sq.status===val?'sel':''}" data-val="${val}"
-                           onclick="setAnswerStatus('${q.snapshotId}', '${val}', ${sIdx})">${label}</button>
-                       `).join('')}
-                     </div>
-                     <div class="row-actions">
-                       ${hasEntfaellt ? `
-                         <button class="answer-chip ${sq.status==='ENTFAELLT'?'sel':''}" data-val="ENTFAELLT"
-                           onclick="setAnswerStatus('${q.snapshotId}', 'ENTFAELLT', ${sIdx})">ENTFÄLLT</button>
-                       ` : ''}
-                     </div>
-                   </div>
-                 </div>`;
-             });
-             html += `</div>`;
-          }
-      }
-    }
-  });
-  finalizeCategory();
-  
-  if (html.indexOf('category-header') === -1) {
-     html += `<div class="empty-state" style="padding: 40px 24px;">Keine Positionen in dieser Ansicht.</div>`;
-  }
-
-  main.innerHTML = html;
+.session-card .when {
+    font-size: 0.9rem;
+    color: var(--text-muted);
 }
 
-window.setFilter = function(f) {
-  currentFilter = f;
-  if(state.currentSessionId) renderSessionDetail(state.currentSessionId);
-};
+.progress-pill {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.4rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 1px solid var(--primary-alpha);
+}
 
-window.toggleCategory = function(cat) {
-  collapsedCategories[cat] = !collapsedCategories[cat];
-  if(state.currentSessionId) renderSessionDetail(state.currentSessionId);
-};
+.session-card .del {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: 0.2s ease;
+    box-shadow: 0 4px 6px rgba(220,38,38,0.3);
+}
 
-// Undo system
-let lastAction = null; 
-window.undoLastAction = function() {
-  if(!lastAction || !state.currentSessionId) return;
-  const session = state.sessions.find(s => s.id === state.currentSessionId);
-  if(!session) return;
+.session-card:hover .del {
+    opacity: 1;
+}
 
-  const item = session.items.find(i => i.snapshotId === lastAction.snapshotId);
-  if(item) {
-    if(lastAction.sIdx !== undefined && item.subQuestions) {
-      item.subQuestions[lastAction.sIdx].status = lastAction.oldVal;
-    } else {
-      item.status = lastAction.oldVal;
-    }
-    saveToLocalStorage();
-    renderSessionDetail(state.currentSessionId);
-    hideChecklistToast();
-  }
-  lastAction = null;
-};
+.fab {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 28px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.4);
+    cursor: pointer;
+    transition: 0.2s;
+    z-index: 100;
+}
 
-window.setAnswerStatus = function(snapshotId, val, sIdx) {
-  const session = state.sessions.find(s => s.id === state.currentSessionId);
-  if(!session) return;
-  const item = session.items.find(i => i.snapshotId === snapshotId);
-  if(item) {
-    let oldVal;
-    if(sIdx !== undefined && item.subQuestions) {
-      oldVal = item.subQuestions[sIdx].status;
-      item.subQuestions[sIdx].status = val;
-    } else {
-      oldVal = item.status;
-      item.status = val;
+.fab:hover {
+    background: var(--primary-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 25px -5px rgba(2, 132, 199, 0.5);
+}
+
+
+/* --- Detail-Ansicht (Checkliste) --- */
+.checklist-toolbar {
+    background: var(--card-bg);
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: sticky;
+    top: 70px;
+    z-index: 20;
+}
+
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.progress-row .label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 120px;
+}
+
+.progress-bar-track {
+    flex-grow: 1;
+    height: 10px;
+    background: var(--secondary-bg);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 5px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    background: var(--bg-hover);
+    color: var(--text-dark);
+}
+
+.filter-chip.active {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+
+/* --- Kategorien & Fragen --- */
+.category-header {
+    background: var(--bg-gradient-start);
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-darker);
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: -1px;
+}
+
+.category-header:hover {
+    background: var(--primary-light);
+}
+
+.category-header .chev {
+    color: var(--primary);
+    font-family: monospace;
+    font-size: 1.2rem;
+}
+
+.category-header .cnt {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--card-bg);
+    padding: 0.3rem 0.8rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.status-indicator {
+    color: var(--success-text);
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.bulk-action-bar {
+    padding: 0.5rem 2rem;
+    background: var(--bg-hover);
+    border-bottom: 1px solid var(--border-color);
+    text-align: right;
+}
+
+.bulk-action-bar button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.bulk-action-bar button:hover {
+    color: var(--text-dark);
+    text-decoration: underline;
+}
+
+.question-row {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px dashed var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.question-row:last-child {
+    border-bottom: none;
+}
+
+.question-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.question-text .num {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 0.15rem;
+    font-weight: 700;
+    min-width: 35px;
+}
+
+.question-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-left: calc(35px + 1rem); /* Ausrichtung an Text, nicht an Nummer */
+}
+
+.answer-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.answer-chip {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-dark);
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.answer-chip:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-light);
+}
+
+/* Dynamische Farben für ausgewählte Antworten */
+.answer-chip.sel[data-val="JA"],
+.answer-chip.sel[data-val="AMPEL_GRUEN"],
+.answer-chip.sel[data-val="NEIN_INV"] {
+    background: var(--success-bg);
+    border-color: var(--success-border);
+    color: var(--success-text);
+}
+
+.answer-chip.sel[data-val="NEIN"],
+.answer-chip.sel[data-val="AMPEL_ROT"],
+.answer-chip.sel[data-val="JA_INV"] {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.answer-chip.sel[data-val="AMPEL_GELB"] {
+    background: #fef9c3;
+    border-color: #fef08a;
+    color: #d97706;
+}
+
+.answer-chip.sel[data-val="ENTFAELLT"] {
+    background: var(--secondary-bg);
+    border-color: var(--secondary-hover);
+    color: var(--text-dark);
+}
+
+.row-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.ghost-btn {
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ghost-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-dark);
+}
+
+.ghost-btn.has-remark {
+    background: var(--primary-light);
+    border: 1px solid var(--primary-alpha);
+    color: var(--primary);
+}
+
+.sub-questions-container {
+    margin-left: calc(35px + 1rem);
+    padding: 1rem 0 0 1rem;
+    border-left: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.sub-question-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sub-question-row .question-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+
+/* --- Manage / Katalog Ansicht --- */
+.manage-cat {
+    border-bottom: 2px solid var(--border-color);
+}
+
+.manage-cat-header {
+    background: var(--bg-gradient-start);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.manage-cat-header .cat-name {
+    flex-grow: 1;
+    background: transparent;
+    border: 1px solid transparent;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-main);
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+}
+
+.manage-cat-header .cat-name:focus, .manage-cat-header .cat-name:hover {
+    background: var(--card-bg);
+    border-color: var(--primary-light);
+    outline: none;
+}
+
+.text-btn-del {
+    background: transparent;
+    border: none;
+    color: #dc2626;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.text-btn-del:hover {
+    background: #fef2f2;
+}
+
+.manage-q-row {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.qnum {
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 30px;
+}
+
+.qbody {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.qtext-edit {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 70px;
+}
+
+.qmeta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.type-edit {
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+.add-question-row {
+    padding: 1.5rem 2rem;
+    background: var(--bg-hover);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.add-category-bar {
+    padding: 2rem;
+    text-align: center;
+}
+
+
+/* ==========================================
+   MOBILE OPTIMIERUNG
+   ========================================== */
+@media (max-width: 600px) {
+    .session-grid {
+        grid-template-columns: 1fr;
     }
     
-    lastAction = { snapshotId, sIdx, oldVal };
-    saveToLocalStorage();
-    renderSessionDetail(state.currentSessionId);
-    
-    let msg = 'Gespeichert';
-    if(val==='JA' || val==='NEIN_INV' || val==='AMPEL_GRUEN') msg = 'Positiv markiert';
-    else if(val==='NEIN' || val==='JA_INV' || val==='AMPEL_ROT' || val==='AMPEL_GELB') msg = 'Als Befund markiert';
-    else if(val==='ENTFAELLT') msg = 'Entfällt';
-    
-    showChecklistToast(msg, true);
-  }
-};
-
-// --- Modals & Actions ---
-
-window.openNewLocModal = function() {
-  document.getElementById('locInput').value = '';
-  document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
-  document.getElementById('newLocModal').classList.add('open');
-};
-
-window.closeNewLocModal = function() {
-  document.getElementById('newLocModal').classList.remove('open');
-};
-
-window.createNewLocation = function() {
-  const loc = document.getElementById('locInput').value.trim();
-  const dt = document.getElementById('dateInput').value;
-  if(!loc) { alert('Bitte Ort eingeben'); return; }
-  const id = addSession(loc, dt);
-  closeNewLocModal();
-  openSession(id);
-};
-
-window.openRemarkModal = function(snapshotId, sIdx = -1) {
-  const session = state.sessions.find(s => s.id === state.currentSessionId);
-  if(!session) return;
-  const item = session.items.find(i => i.snapshotId === snapshotId);
-  if(item) {
-    document.getElementById('remarkSnapshotId').value = snapshotId;
-    document.getElementById('remarkSIdx').value = sIdx;
-    
-    let currentRemark = item.remark || '';
-    if(sIdx !== -1 && item.subQuestions) {
-       currentRemark = item.subQuestions[sIdx].remark || '';
-    }
-    
-    document.getElementById('remarkText').value = currentRemark;
-    document.getElementById('remarkModal').classList.add('open');
-    setTimeout(() => document.getElementById('remarkText').focus(), 100);
-  }
-};
-
-window.closeRemarkModal = function() {
-  document.getElementById('remarkModal').classList.remove('open');
-};
-
-window.saveRemark = function() {
-  const snapshotId = document.getElementById('remarkSnapshotId').value;
-  const sIdx = parseInt(document.getElementById('remarkSIdx').value);
-  const text = document.getElementById('remarkText').value.trim();
-  
-  const session = state.sessions.find(s => s.id === state.currentSessionId);
-  if(session) {
-    const item = session.items.find(i => i.snapshotId === snapshotId);
-    if(item) {
-       if(sIdx !== -1 && item.subQuestions) {
-          item.subQuestions[sIdx].remark = text;
-       } else {
-          item.remark = text;
-       }
-       saveToLocalStorage();
-       renderSessionDetail(state.currentSessionId);
-       showChecklistToast('Bemerkung gespeichert', false);
-    }
-  }
-  closeRemarkModal();
-};
-
-let deleteTargetType = null;
-let deleteTargetId = null;
-window.openConfirmDelete = function(type, id) {
-  deleteTargetType = type;
-  deleteTargetId = id;
-  const m = document.getElementById('confirmDeleteModal');
-  const title = document.getElementById('confirmDeleteTitle');
-  const desc = document.getElementById('confirmDeleteDesc');
-  
-  if(type === 'session') {
-    title.textContent = 'Begehung löschen?';
-    desc.textContent = 'Diese Begehung und alle erfassten Antworten werden unwiderruflich gelöscht.';
-  } else if(type === 'question') {
-    title.textContent = 'Frage löschen?';
-    desc.textContent = 'Diese Frage wird aus dem Katalog entfernt.';
-  } else if(type === 'category') {
-    title.textContent = 'Kategorie löschen?';
-    desc.textContent = 'Alle Fragen in dieser Kategorie werden entfernt.';
-  }
-  
-  m.classList.add('open');
-};
-
-window.closeConfirmDelete = function() {
-  document.getElementById('confirmDeleteModal').classList.remove('open');
-  deleteTargetType = null;
-  deleteTargetId = null;
-};
-
-window.executeConfirmDelete = function() {
-  if(!deleteTargetType || deleteTargetId === null) return;
-  
-  if(deleteTargetType === 'session') {
-    state.sessions = state.sessions.filter(s => s.id !== deleteTargetId);
-    if(state.currentSessionId === deleteTargetId) state.currentSessionId = null;
-    saveToLocalStorage();
-    renderMainView();
-    showChecklistToast('Begehung gelöscht', false);
-  } else if(deleteTargetType === 'question') {
-    state.checklistQuestions = state.checklistQuestions.filter(q => q.id !== deleteTargetId);
-    saveToLocalStorage();
-    renderManageList();
-  } else if(deleteTargetType === 'category') {
-    state.checklistQuestions = state.checklistQuestions.filter(q => q.category !== deleteTargetId);
-    saveToLocalStorage();
-    renderManageList();
-  }
-  
-  closeConfirmDelete();
-};
-
-
-// --- EXPORT & IMPORT ---
-
-window.exportState = function() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-  const dlAnchorElem = document.createElement('a');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "arbeitssafe_backup_" + new Date().toISOString().split('T')[0] + ".json");
-  dlAnchorElem.click();
-};
-
-window.importState = function(event) {
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const imported = JSON.parse(e.target.result);
-      if(imported.sessions && imported.checklistQuestions) {
-        Object.assign(state, imported);
-        saveToLocalStorage();
-        renderMainView();
-        showChecklistToast('Daten erfolgreich geladen', false);
-      } else {
-        alert('Ungültiges Dateiformat');
-      }
-    } catch(err) {
-      alert('Fehler beim Lesen der Datei');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-};
-
-// TEXT EXPORT
-let currentExportType = 'ALL';
-window.openExportModal = function() {
-  currentExportType = 'ALL';
-  updateExportModalUI();
-  generateExportText();
-  document.getElementById('exportModal').classList.add('open');
-};
-
-window.closeExportModal = function() {
-  document.getElementById('exportModal').classList.remove('open');
-};
-
-window.setExportType = function(type) {
-  currentExportType = type;
-  updateExportModalUI();
-  generateExportText();
-};
-
-function updateExportModalUI() {
-  const btns = document.querySelectorAll('#exportTypeSegment button');
-  btns[0].className = currentExportType === 'ALL' ? 'active' : '';
-  btns[1].className = currentExportType === 'DEFECTS' ? 'active' : '';
-}
-
-function generateExportText() {
-  const session = state.sessions.find(s => s.id === state.currentSessionId);
-  if(!session) return;
-  
-  let out = `Begehung: ${session.location}\nDatum: ${new Date(session.date).toLocaleDateString('de-DE')}\n\n`;
-  
-  const { numberMap } = buildNumbering(session.items);
-  let currentCat = null;
-
-  session.items.forEach(q => {
-    let hasIssues = false;
-    let isUnanswered = false;
-    
-    if(q.type === 'MULTIPLE') {
-       hasIssues = q.subQuestions.some(sq => ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(sq.status)) || !!q.remark;
-       isUnanswered = q.subQuestions.some(sq => sq.status === 'UNANSWERED');
-    } else {
-       hasIssues = ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(q.status) || !!q.remark;
-       isUnanswered = q.status === 'UNANSWERED';
+    .checklist-toolbar {
+        top: 0;
+        margin: -15px -15px 15px -15px;
+        padding: 1rem;
+        border-radius: 12px 12px 0 0;
     }
 
-    let include = false;
-    if(currentExportType === 'ALL') include = true;
-    else if(currentExportType === 'DEFECTS') include = hasIssues || isUnanswered;
-
-    if(include) {
-      if(q.category !== currentCat) {
-        out += `\n=== ${q.category.toUpperCase()} ===\n`;
-        currentCat = q.category;
-      }
-      
-      const num = numberMap[q.snapshotId];
-      
-      if(q.type !== 'MULTIPLE') {
-          let statText = q.status;
-          if(statText === 'JA_INV') statText = 'NEIN (Befund)';
-          if(statText === 'NEIN_INV') statText = 'JA';
-          
-          out += `${num} ${q.questionText} [${statText}]\n`;
-          if(q.remark) out += `   -> Bemerkung: ${q.remark}\n`;
-      } else {
-          out += `${num} ${q.questionText}\n`;
-          if(q.remark) out += `   -> Hauptbemerkung: ${q.remark}\n`;
-          if(q.subQuestions) {
-             q.subQuestions.forEach((sq, sIdx) => {
-                 let sstat = sq.status;
-                 let subLetter = String.fromCharCode(97 + sIdx);
-                 out += `   ${subLetter}) ${sq.text} [${sstat}]\n`;
-             });
-          }
-      }
+    .category-header, 
+    .question-row {
+        padding: 1rem;
     }
-  });
 
-  document.getElementById('exportPreview').innerText = out;
-}
+    .question-controls {
+        margin-left: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
 
-window.copyExportText = function() {
-  const text = document.getElementById('exportPreview').innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    showChecklistToast('In Zwischenablage kopiert', false);
-    closeExportModal();
-  });
-};
+    .answer-chips {
+        width: 100%;
+    }
+    
+    .answer-chip {
+        flex: 1 1 auto;
+        text-align: center;
+    }
 
-function escapeHtml(unsafe) {
-    if (!unsafe) return '';
-    return unsafe.toString()
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
+    .sub-questions-container {
+        margin-left: 0;
+        padding-left: 0.75rem;
+    }
+
+    .fab {
+        bottom: 90px; /* Ausreichend Abstand zur Mobile-Bottom-Navigation */
+        right: 15px;
+        padding: 14px 20px;
+    }
 }

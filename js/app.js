@@ -1,8 +1,13 @@
 import { state, parseCSV, saveToLocalStorage, loadFromLocalStorage } from './data.js';
 import { DOM, updateDropdowns, renderResults, renderSchreiben, switchTab, showToast } from './ui.js';
+import { 
+    openNewSessionModal, createNewLocation, saveRemark, undoLastChange, 
+    openConfirmDelete, executeConfirmDelete, closeOverlay, exportState, 
+    importState, goToList, openManageQuestions, openExportModal 
+} from './checklist.js';
 
 // --- Haupt-Logik ---
-function initData(csvString, fileName = null) {
+export function initData(csvString, fileName = null) {
     state.lastLoadedFileText = csvString; 
     state.lastLoadedFileName = fileName;
     
@@ -25,7 +30,7 @@ function initData(csvString, fileName = null) {
     renderSchreiben();
 }
 
-function toggleToSchreiben(itemId) {
+export function toggleToSchreiben(itemId) {
     const item = state.gesetzeData.find(i => i.id === itemId); 
     if (!item) return;
     
@@ -44,7 +49,7 @@ function toggleToSchreiben(itemId) {
     renderSchreiben();
 }
 
-function removeFromSchreiben(id) { 
+export function removeFromSchreiben(id) { 
     toggleToSchreiben(id); 
 }
 
@@ -77,55 +82,18 @@ function copyComposedSchreiben() {
     });
 }
 
-
-// --- Exponieren an window für Inline-onclick im HTML ---
+// --- TEMPORÄR FÜR UI.JS (Wird im nächsten Schritt entfernt) ---
 window.toggleToSchreiben = toggleToSchreiben;
 window.removeFromSchreiben = removeFromSchreiben;
-window.clearSchreiben = clearSchreiben;
-window.copyComposedSchreiben = copyComposedSchreiben;
 window.saveToLocalStorage = saveToLocalStorage;
 
 
-// --- Event Listeners ---
-DOM.csvFileInput.addEventListener('change', e => { 
-    const f = e.target.files[0]; 
-    if(f){ 
-        const r = new FileReader(); 
-        r.onload = ev => initData(new TextDecoder('utf-8', {fatal:false}).decode(ev.target.result), f.name); 
-        r.readAsArrayBuffer(f); 
-    } 
-});
-
-DOM.reloadBtn.addEventListener('click', () => initData(state.lastLoadedFileText, state.lastLoadedFileName));
-DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
-DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
-DOM.absatzFilter.addEventListener('change', renderResults); 
-DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
-
-// Buttons im "Entwurf"-Tab
-if(DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.addEventListener('click', clearSchreiben);
-if(DOM.copySchreibenBtn) DOM.copySchreibenBtn.addEventListener('click', copyComposedSchreiben);
-
-// Debouncing für die Suchleiste (verhindert Ruckeln auf Mobile)
-let searchTimeout;
-DOM.searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(renderResults, 400);
-});
-
-// --- Tab Navigation ---
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        switchTab(e.currentTarget.dataset.tab);
-    });
-});
-
-// --- App Start ---
+// --- Event Listeners Setup ---
 window.addEventListener('DOMContentLoaded', () => {
     // Gespeicherte Daten laden
     loadFromLocalStorage();
     
-    // CSV laden
+    // Fallback-Logik CSV laden
     fetch('gesetze.csv')
         .then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
         .then(t => initData(t, "Datenbank geladen"))
@@ -137,17 +105,66 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             initData(state.rawCsvData); 
         });
-});
 
-// --- Service Worker Registrierung (PWA) ---
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw2.js')
-            .then(registration => {
-                console.log('[PWA] Service Worker erfolgreich registriert:', registration.scope);
-            })
-            .catch(error => {
-                console.error('[PWA] Service Worker Registrierung fehlgeschlagen:', error);
-            });
+    // 1. HEADER & FILE UPLOAD
+    DOM.csvFileInput.addEventListener('change', e => { 
+        const f = e.target.files[0]; 
+        if(f){ 
+            const r = new FileReader(); 
+            r.onload = ev => initData(new TextDecoder('utf-8', {fatal:false}).decode(ev.target.result), f.name); 
+            r.readAsArrayBuffer(f); 
+        } 
     });
-}
+    
+    const triggerCsvBtn = document.getElementById('triggerCsvUploadBtn');
+    if (triggerCsvBtn) triggerCsvBtn.addEventListener('click', () => DOM.csvFileInput.click());
+    if (DOM.reloadBtn) DOM.reloadBtn.addEventListener('click', () => initData(state.lastLoadedFileText, state.lastLoadedFileName));
+
+    // 2. TAB NAVIGATION
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab));
+    });
+
+    // 3. TAB 2: DATENBANK & SUCHE
+    if(DOM.lawFilter) DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+    if(DOM.paragraphFilter) DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+    if(DOM.absatzFilter) DOM.absatzFilter.addEventListener('change', renderResults); 
+    if(DOM.hasBausteinFilter) DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+
+    // Debouncing für die Suchleiste
+    let searchTimeout;
+    if (DOM.searchInput) {
+        DOM.searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(renderResults, 400);
+        });
+    }
+
+    // 4. TAB 3: ENTWURF
+    if(DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.addEventListener('click', clearSchreiben);
+    if(DOM.copySchreibenBtn) DOM.copySchreibenBtn.addEventListener('click', copyComposedSchreiben);
+
+    // 5. MODALS & CHECKLISTE (Zentrale Bindung der HTML IDs)
+    document.getElementById('fabBtn')?.addEventListener('click', openNewSessionModal);
+    document.getElementById('closeNewLocBtn')?.addEventListener('click', () => closeOverlay('newLocModal'));
+    document.getElementById('createNewLocBtn')?.addEventListener('click', createNewLocation);
+    
+    document.getElementById('saveRemarkBtn')?.addEventListener('click', saveRemark);
+    document.getElementById('closeRemarkBtn')?.addEventListener('click', () => closeOverlay('remarkModal'));
+    
+    document.getElementById('closeConfirmDeleteBtn')?.addEventListener('click', () => closeOverlay('confirmDeleteModal'));
+    document.getElementById('executeConfirmDeleteBtn')?.addEventListener('click', executeConfirmDelete);
+    
+    document.getElementById('toastUndoBtn')?.addEventListener('click', undoLastChange);
+    
+    document.getElementById('saveStateBtn')?.addEventListener('click', exportState);
+    document.getElementById('loadStateBtn')?.addEventListener('click', () => document.getElementById('auditFileInput').click());
+    document.getElementById('auditFileInput')?.addEventListener('change', importState);
+    
+    document.getElementById('backBtn')?.addEventListener('click', goToList);
+    document.getElementById('manageBtn')?.addEventListener('click', openManageQuestions);
+    document.getElementById('menuBtn')?.addEventListener('click', () => openConfirmDelete('session', state.currentSessionId));
+    
+    document.getElementById('openExportBtn')?.addEventListener('click', openExportModal);
+    document.getElementById('closeExportBtn')?.addEventListener('click', () => closeOverlay('exportModal'));
+});

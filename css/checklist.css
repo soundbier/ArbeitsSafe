@@ -1,230 +1,631 @@
-/* Checklist (Tab 1) */
-.session-list-header { padding: 24px 24px 12px; border-bottom: 1px solid var(--border-color); }
-.session-list-header p { color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
-.session-grid { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+import { state, saveToLocalStorage } from './data.js';
 
-.session-card {
-    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+/* Checklisten Logik - Integriert ins Hauptsystem */
+
+// Init
+export function initChecklist() {
+    renderMainView();
 }
-.session-card:hover { border-color: var(--primary-light); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-.session-card .meta { flex: 1; }
-.session-card .meta .loc { font-weight: 700; font-size: 16px; color: var(--text-main); text-transform: uppercase; }
-.session-card .meta .when { color: var(--text-muted); font-size: 13px; margin-top: 4px; font-weight: 500; }
-.session-card .progress-pill { font-size: 12px; background: var(--primary-light); color: var(--primary); border: none; padding: 4px 8px; font-weight: 700; white-space: nowrap; border-radius: 999px; }
-.session-card .del { color: #dc2626; background: transparent; border: 1px solid transparent; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; padding: 6px 8px; transition: 0.2s; }
-.session-card .del:hover { background: #fef2f2; border-color: #fca5a5; }
 
-.empty-state { text-align: left; padding: 40px 24px; color: var(--text-muted); }
-.empty-state p { margin: 0; font-size: 14px; }
-.empty-state .bold-text { font-weight: 700; font-size: 16px; text-transform: uppercase; margin-bottom: 8px; color: var(--text-main); }
+// --- Hilfsfunktionen für Kategorien & Nummern ---
+function pad(num) { return num < 10 ? '0'+num : num.toString(); }
 
-.fab {
-    position: fixed; bottom: 32px; right: 32px; background: var(--primary); color: #fff; border: none; border-radius: 999px; padding: 16px 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; z-index: 50; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); transition: transform 0.1s, box-shadow 0.1s;
+function buildNumbering(items){
+  const catSeen = []; const catCounters = {}; const numberMap = {}; const catIndexMap = {};
+  items.forEach(it => {
+    if (!catSeen.includes(it.category)) { catSeen.push(it.category); catCounters[it.category] = 0; catIndexMap[it.category] = catSeen.length; }
+    catCounters[it.category]++;
+    numberMap[it._numKey] = catIndexMap[it.category] + '.' + pad(catCounters[it.category]);
+  });
+  return { numberMap, catIndexMap };
 }
-.fab:active { transform: translate(0, 2px); box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4); }
-@media (max-width: 900px) { .fab { right: 24px; bottom: 80px; } }
 
-/* Checklist Toolbar */
-.checklist-toolbar { background: var(--card-bg); padding: 16px 24px; border-bottom: 1px solid var(--border-color); position: sticky; top: 70px; z-index: 20; }
-.progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.progress-row .label { font-size: 11px; color: var(--text-main); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.progress-bar-track { flex: 1; height: 6px; background: var(--bg-gradient-end); border-radius: 3px; overflow: hidden; }
-.progress-bar-fill { height: 100%; background: var(--success-text); transition: width 0.3s ease; }
-
-.filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.filter-chip {
-    border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-muted); border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: 0.2s;
+let toastTimer = null;
+function showChecklistToast(msg, withUndo){
+  const textEl = document.getElementById('toastText') || document.getElementById('toastMessage');
+  if(textEl) textEl.textContent = msg; 
+  const undoBtn = document.getElementById('toastUndoBtn');
+  if(undoBtn) undoBtn.style.display = withUndo ? 'inline-block' : 'none';
+  document.getElementById('toastMessage').classList.add('show'); 
+  clearTimeout(toastTimer); 
+  toastTimer = setTimeout(hideChecklistToast, 3200);
 }
-.filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+function hideChecklistToast(){ document.getElementById('toastMessage').classList.remove('show'); }
 
-/* Questions & Categories */
-.category-header {
-    background: var(--bg-gradient-start); color: var(--text-main); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 24px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; margin-top: 16px; transition: background 0.1s;
-    /* Sticky category header for better context */
-    position: sticky;
-    top: 130px; /* Desktop fallback */
-    z-index: 15;
+window.hideChecklistToast = hideChecklistToast;
+
+// --- State Management für Checkliste ---
+function addSession(locationName, dateString) {
+  const newSession = {
+    id: Date.now().toString(),
+    location: locationName,
+    date: dateString,
+    createdAt: new Date().toISOString(),
+    items: JSON.parse(JSON.stringify(state.checklistQuestions || [])) 
+  };
+  
+  // Vorbereiten der Items mit eindeutigen IDs für diese Session (falls nicht vorhanden)
+  newSession.items.forEach((item, idx) => {
+      item.snapshotId = 'snap_' + idx;
+      item._numKey = item.category + '_' + idx; 
+  });
+  
+  state.sessions.unshift(newSession);
+  saveToLocalStorage();
+  return newSession.id;
 }
-.category-header:hover { background: var(--border-color); }
-.category-header .chev { font-size: 14px; font-weight: 700; color: var(--primary); }
-.category-header .cnt { margin-left: auto; font-weight: 700; font-size: 12px; color: var(--text-muted); }
-.category-header .status-indicator { color: var(--success-text); font-size: 11px; letter-spacing: 1px; margin-left: 8px; }
 
-.question-row {
-    background: var(--card-bg); padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px; border-left: 4px solid transparent;
+function updateSessionItem(sessionId, snapshotId, updates) {
+  const session = state.sessions.find(s => s.id === sessionId);
+  if(!session) return;
+  const item = session.items.find(i => i.snapshotId === snapshotId);
+  if(item) {
+    Object.assign(item, updates);
+    saveToLocalStorage();
+    renderSessionDetail(sessionId);
+  }
 }
-.question-row:focus-within { border-left-color: var(--primary); }
 
-.sub-questions-container { background: var(--bg-hover); border-bottom: 1px solid var(--border-color); }
-.sub-question-row {
-    padding: 12px 20px 12px 50px; border-bottom: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 10px;
+// Global für UI Interaktion
+let currentFilter = 'ALL'; 
+let collapsedCategories = {}; 
+
+function calcProgress(session) {
+  if(!session || !session.items || session.items.length === 0) return { total:0, done:0, pct:0 };
+  let total = 0; let done = 0;
+  session.items.forEach(q => {
+    if(q.type === 'BOOL' || q.type === 'TRAFFIC_LIGHT') {
+      total++;
+      if(q.status !== 'UNANSWERED') done++;
+    } else if(q.type === 'MULTIPLE' && q.subQuestions) {
+      q.subQuestions.forEach(sq => {
+        total++;
+        if(sq.status !== 'UNANSWERED') done++;
+      });
+    }
+  });
+  return { total, done, pct: total===0 ? 0 : Math.round((done/total)*100) };
 }
-.sub-question-row:last-child { border-bottom: none; }
-@media (max-width: 600px) { .sub-question-row { padding-left: 14px; } }
 
-.question-text { font-size: 14px; line-height: 1.4; color: var(--text-main); font-weight: 500; display: flex; }
-.question-text .num { color: var(--primary); font-weight: 800; min-width: 32px; }
-.sub-question-row .question-text { font-size: 13px; color: var(--text-dark); }
+// --- RENDERING VIEWS ---
 
-.question-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-left: 32px; }
-.sub-question-row .question-controls { margin-left: 32px; }
-@media (max-width: 600px) { .question-controls, .sub-question-row .question-controls { margin-left: 0; } }
+export function renderMainView() {
+  const main = document.getElementById('auditMainArea');
+  const topSub = document.getElementById('topSub');
+  const topTitle = document.getElementById('topTitle');
+  
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('loadStateBtn').style.display = 'inline-block';
+  document.getElementById('saveStateBtn').style.display = 'inline-block';
+  document.getElementById('manageBtn').style.display = 'inline-block';
+  document.getElementById('menuBtn').style.display = 'none';
+  document.getElementById('exportBar').style.display = 'none';
+  
+  topSub.textContent = 'Übersicht';
+  topTitle.textContent = 'Begehungen';
+  state.currentSessionId = null;
 
-/* Segmented Control for answers (Desktop & Mobile) */
-.answer-chips { display: flex; width: 100%; max-width: 400px; gap: 0; background: var(--card-bg); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
-.answer-chip {
-    flex: 1; border: none; border-right: 1px solid var(--border-color); background: transparent; padding: 8px 10px; border-radius: 0; font-size: 11px; cursor: pointer; font-weight: 700; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.5px; transition: 0.1s; text-align: center;
+  let html = `
+    <div class="session-list-header">
+      <p>Ihre laufenden & abgeschlossenen Prüfungen</p>
+    </div>
+    <div class="session-grid">
+  `;
+
+  if(state.sessions.length === 0) {
+    html += `
+      <div class="empty-state card-base">
+        <p class="bold-text">Keine Begehungen vorhanden</p>
+        <p>Starten Sie eine neue Systemprüfung, um Fragenkataloge für einen Bereich abzuarbeiten.</p>
+      </div>
+    `;
+  } else {
+    state.sessions.forEach(s => {
+      const p = calcProgress(s);
+      html += `
+        <div class="session-card" onclick="openSession('${s.id}')">
+          <div class="meta">
+            <div class="loc">${escapeHtml(s.location)}</div>
+            <div class="when">${new Date(s.date).toLocaleDateString('de-DE')} • ${p.done}/${p.total} bearbeitet</div>
+          </div>
+          <div class="progress-pill">${p.pct}%</div>
+          <button class="del" onclick="event.stopPropagation(); openConfirmDelete('session', '${s.id}')" title="Löschen">✕</button>
+        </div>
+      `;
+    });
+  }
+
+  html += `</div>
+    <button class="fab" onclick="openNewLocModal()">+ Neue Begehung</button>
+  `;
+
+  main.innerHTML = html;
 }
-.answer-chips .answer-chip:last-child { border-right: none; }
 
-.sub-question-row .answer-chip { padding: 6px 8px; font-size: 10px; }
+window.openSession = function(id) {
+  state.currentSessionId = id;
+  currentFilter = 'ALL';
+  renderSessionDetail(id);
+};
 
-/* Selection States */
-.answer-chip[data-val="JA"].sel, .answer-chip[data-val="AMPEL_GRUEN"].sel { background: var(--success-bg); color: var(--success-text); }
-.answer-chip[data-val="NEIN"].sel, .answer-chip[data-val="AMPEL_ROT"].sel, .answer-chip[data-val="JA_INV"].sel { background: #fef2f2; color: #dc2626; }
-.answer-chip[data-val="ENTFAELLT"].sel { background: var(--bg-gradient-end); color: var(--text-muted); }
-.answer-chip[data-val="AMPEL_GELB"].sel { background: #fef9c3; color: #d97706; }
-.answer-chip[data-val="NEIN_INV"].sel { background: var(--success-bg); color: var(--success-text); }
+window.goToList = function() {
+  renderMainView();
+};
 
-/* Row Actions (ENTFÄLLT & BEMERKUNG) */
-.row-actions { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 400px; }
-/* Standalone ENTFÄLLT should look like a slim full-width button */
-.row-actions .answer-chip[data-val="ENTFAELLT"] { border: 1px solid var(--border-color); border-radius: 6px; border-right: 1px solid var(--border-color); }
+function renderSessionDetail(id) {
+  const session = state.sessions.find(s => s.id === id);
+  if(!session) { renderMainView(); return; }
 
-.ghost-btn {
-    border: 1px dashed var(--border-color); background: transparent; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; width: 100%; text-align: center; display: inline-flex; justify-content: center; align-items: center; gap: 6px;
-}
-.ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
-.ghost-btn.has-remark { border-color: var(--primary); border-style: solid; color: var(--primary); background: var(--primary-light); }
+  const main = document.getElementById('auditMainArea');
+  const topSub = document.getElementById('topSub');
+  const topTitle = document.getElementById('topTitle');
+  
+  document.getElementById('backBtn').style.display = 'inline-block';
+  document.getElementById('loadStateBtn').style.display = 'none';
+  document.getElementById('saveStateBtn').style.display = 'none';
+  document.getElementById('manageBtn').style.display = 'none';
+  document.getElementById('menuBtn').style.display = 'inline-block';
+  document.getElementById('exportBar').style.display = 'block';
 
-.bulk-action-bar {
-    padding: 12px 24px; background: var(--bg-gradient-start); border-bottom: 1px solid var(--border-color); display:flex; justify-content:flex-end;
-}
-.bulk-action-bar button { background: transparent; border: 1px dashed var(--text-muted); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-.bulk-action-bar button:hover { background: var(--border-color); color: var(--text-main); }
+  topSub.textContent = new Date(session.date).toLocaleDateString('de-DE');
+  topTitle.textContent = session.location;
 
-.export-output { width: 100%; min-height: 240px; max-height: 50vh; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 16px; background: #fff; color: var(--text-main); }
+  const p = calcProgress(session);
+  const { numberMap, catIndexMap } = buildNumbering(session.items);
 
-/* Manage List */
-.manage-cat { background: transparent; border-bottom: 1px solid var(--border-color); }
-.manage-cat-header {
-    display: flex; align-items: center; gap: 12px; padding: 16px 24px; cursor: pointer; user-select: none; border-top: 1px solid var(--border-color); margin-top: 16px;
-}
-.manage-cat-header input.cat-name { flex: 1; border: none; background: transparent; font-weight: 800; font-size: 13px; text-transform: uppercase; color: var(--text-main); padding: 4px 0; outline: none; }
-.manage-cat-header .cnt { font-size: 11px; color: var(--text-muted); font-weight: 700; }
-.text-btn-del { border: 1px solid transparent; background: transparent; color: #dc2626; font-size: 10px; font-weight: 800; cursor: pointer; padding: 4px 8px; text-transform: uppercase; border-radius: 4px; }
-.text-btn-del:hover { background: #fef2f2; }
+  let html = `
+    <div class="checklist-toolbar">
+      <div class="progress-row">
+        <span class="label">${p.done} / ${p.total} ERFASST</span>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width: ${p.pct}%"></div>
+        </div>
+      </div>
+      <div class="filter-row">
+        <button class="filter-chip ${currentFilter==='ALL'?'active':''}" onclick="setFilter('ALL')">Gesamt</button>
+        <button class="filter-chip ${currentFilter==='OPEN'?'active':''}" onclick="setFilter('OPEN')">Offen</button>
+        <button class="filter-chip ${currentFilter==='ISSUES'?'active':''}" onclick="setFilter('ISSUES')">Befunde</button>
+      </div>
+    </div>
+  `;
 
-.manage-q-row {
-    padding: 16px 24px; border-bottom: 1px dashed var(--border-color); display: flex; gap: 16px; align-items: flex-start; background: var(--card-bg);
-}
-.manage-q-row .qnum { font-weight: 800; color: var(--primary); font-size: 13px; padding-top: 8px; min-width: 40px; }
-.manage-q-row .qbody { flex: 1; display: flex; flex-direction: column; gap: 12px; }
-.manage-q-row textarea.qtext-edit { width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-size: 14px; resize: vertical; min-height: 50px; }
-.manage-q-row .qmeta-row { display: flex; gap: 12px; align-items: center; }
-.manage-q-row select.type-edit { border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
+  let currentCat = null;
+  let itemsInCurrentCat = 0;
+  let catHtml = '';
 
-.add-question-row { padding: 16px 24px 24px; display: flex; gap: 12px; flex-wrap: wrap; background: var(--bg-hover); border-bottom: 1px solid var(--border-color); }
-.add-category-bar { padding: 32px 24px; text-align: center; }
+  const finalizeCategory = () => {
+    if(currentCat && itemsInCurrentCat > 0) {
+      const isCol = collapsedCategories[currentCat];
+      const catNum = catIndexMap[currentCat];
+      html += `
+        <div class="category-header" onclick="toggleCategory('${currentCat}')">
+          <span class="chev">${isCol ? '[+]' : '[-]'}</span>
+          <span>${catNum}. ${escapeHtml(currentCat)}</span>
+          <span class="cnt">${itemsInCurrentCat} POSITONEN</span>
+        </div>
+      `;
+      if(!isCol) html += catHtml;
+    }
+  };
 
-/* ==========================================
-   MOBILE OPTIMIERUNG (CHECKLIST)
-   ========================================== */
-@media (max-width: 600px) {
-    /* 1. Topbar & Header-Buttons */
-    .document-view .topbar {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 10px !important;
-        padding: 12px 14px !important;
+  session.items.forEach(q => {
+    // Filter logic
+    let show = false;
+    if(currentFilter === 'ALL') show = true;
+    else if(currentFilter === 'OPEN') {
+      if(q.type === 'MULTIPLE') {
+        show = q.subQuestions.some(sq => sq.status === 'UNANSWERED');
+      } else {
+        show = q.status === 'UNANSWERED';
+      }
+    } else if(currentFilter === 'ISSUES') {
+      if(q.type === 'MULTIPLE') {
+        show = q.subQuestions.some(sq => ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(sq.status)) || !!q.remark;
+      } else {
+        show = ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(q.status) || !!q.remark;
+      }
     }
 
-    .topbar-left { width: 100%; }
-    .topbar-left h2 { font-size: 1.05rem !important; }
+    if(show) {
+      if(q.category !== currentCat) {
+        finalizeCategory();
+        currentCat = q.category;
+        catHtml = '';
+        itemsInCurrentCat = 0;
+      }
+      
+      itemsInCurrentCat++;
+      
+      let opts = [];
+      if(q.type==='BOOL') opts = [['JA','JA'],['NEIN','NEIN'],['ENTFAELLT','ENTFÄLLT']];
+      if(q.type==='BOOL_INV') opts = [['NEIN_INV','JA'],['JA_INV','NEIN'],['ENTFAELLT','ENTFÄLLT']];
+      if(q.type==='TRAFFIC_LIGHT') opts = [['AMPEL_GRUEN','GRÜN'],['AMPEL_GELB','GELB'],['AMPEL_ROT','ROT'],['ENTFAELLT','ENTFÄLLT']];
+      if(q.type==='MULTIPLE') opts = [['JA','JA'],['NEIN','NEIN'],['ENTFAELLT','ENTFÄLLT']]; 
 
-    .topbar-right {
-        width: 100% !important;
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 6px !important;
+      if(q.type !== 'MULTIPLE') {
+          const mainOpts = opts.filter(([val]) => val !== 'ENTFAELLT');
+          const hasEntfaellt = opts.some(([val]) => val === 'ENTFAELLT');
+          
+          const num = numberMap[q.snapshotId];
+          
+          html += `
+          <div class="question-row">
+            <div class="question-text"><span class="num">${num}</span>${escapeHtml(q.questionText)}</div>
+            <div class="question-controls">
+              <div class="answer-chips">
+                ${mainOpts.map(([val,label]) => `
+                  <button class="answer-chip ${q.status===val?'sel':''}" data-val="${val}"
+                    onclick="setAnswerStatus('${q.snapshotId}', '${val}')">${label}</button>
+                `).join('')}
+              </div>
+              <div class="row-actions">
+                ${hasEntfaellt ? `
+                  <button class="answer-chip ${q.status==='ENTFAELLT'?'sel':''}" data-val="ENTFAELLT"
+                    onclick="setAnswerStatus('${q.snapshotId}', 'ENTFAELLT')">ENTFÄLLT</button>
+                ` : ''}
+                <button class="ghost-btn ${q.remark? 'has-remark':''}" onclick="openRemarkModal('${q.snapshotId}')">
+                  ${q.remark ? '[ 📝 BEARBEITEN ]' : '[ + BEMERKUNG ]'}
+                </button>
+              </div>
+            </div>
+          </div>`;
+      } else {
+          const mainOpts = opts.filter(([val]) => val !== 'ENTFAELLT');
+          const hasEntfaellt = opts.some(([val]) => val === 'ENTFAELLT');
+          const num = numberMap[q.snapshotId];
+
+          html += `
+          <div class="question-row" style="padding-bottom: 8px; border-bottom: none;">
+            <div class="question-text"><span class="num">${num}</span>${escapeHtml(q.questionText)}</div>
+            <div class="row-actions" style="margin-left: 32px; margin-top: 8px;">
+               <button class="ghost-btn ${q.remark? 'has-remark':''}" onclick="openRemarkModal('${q.snapshotId}')">
+                  ${q.remark ? '[ 📝 BEARBEITEN ]' : '[ + BEMERKUNG ]'}
+                </button>
+            </div>
+          </div>`;
+
+          if (q.subQuestions) {
+             html += `<div class="sub-questions-container">`;
+             q.subQuestions.forEach((sq, sIdx) => {
+                 let subLetter = String.fromCharCode(97 + sIdx);
+                 html += `
+                 <div class="sub-question-row">
+                   <div class="question-text"><span class="num">${num}${subLetter}</span>${escapeHtml(sq.text)}</div>
+                   <div class="question-controls">
+                     <div class="answer-chips">
+                       ${mainOpts.map(([val,label]) => `
+                         <button class="answer-chip ${sq.status===val?'sel':''}" data-val="${val}"
+                           onclick="setAnswerStatus('${q.snapshotId}', '${val}', ${sIdx})">${label}</button>
+                       `).join('')}
+                     </div>
+                     <div class="row-actions">
+                       ${hasEntfaellt ? `
+                         <button class="answer-chip ${sq.status==='ENTFAELLT'?'sel':''}" data-val="ENTFAELLT"
+                           onclick="setAnswerStatus('${q.snapshotId}', 'ENTFAELLT', ${sIdx})">ENTFÄLLT</button>
+                       ` : ''}
+                     </div>
+                   </div>
+                 </div>`;
+             });
+             html += `</div>`;
+          }
+      }
     }
+  });
+  finalizeCategory();
+  
+  if (html.indexOf('category-header') === -1) {
+     html += `<div class="empty-state" style="padding: 40px 24px;">Keine Positionen in dieser Ansicht.</div>`;
+  }
 
-    .topbar-right .btn-mini-text {
-        flex: 1 1 auto !important;
-        white-space: nowrap !important;
-        font-size: 10px !important;
-        padding: 8px 6px !important;
-        min-height: 38px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+  main.innerHTML = html;
+}
+
+window.setFilter = function(f) {
+  currentFilter = f;
+  if(state.currentSessionId) renderSessionDetail(state.currentSessionId);
+};
+
+window.toggleCategory = function(cat) {
+  collapsedCategories[cat] = !collapsedCategories[cat];
+  if(state.currentSessionId) renderSessionDetail(state.currentSessionId);
+};
+
+// Undo system
+let lastAction = null; 
+window.undoLastAction = function() {
+  if(!lastAction || !state.currentSessionId) return;
+  const session = state.sessions.find(s => s.id === state.currentSessionId);
+  if(!session) return;
+
+  const item = session.items.find(i => i.snapshotId === lastAction.snapshotId);
+  if(item) {
+    if(lastAction.sIdx !== undefined && item.subQuestions) {
+      item.subQuestions[lastAction.sIdx].status = lastAction.oldVal;
+    } else {
+      item.status = lastAction.oldVal;
     }
+    saveToLocalStorage();
+    renderSessionDetail(state.currentSessionId);
+    hideChecklistToast();
+  }
+  lastAction = null;
+};
 
-    /* 2. Sticky Toolbar & Category Headers */
-    .checklist-toolbar {
-        top: 0 !important;
-        padding: 12px 14px !important;
-    }
-
-    .category-header {
-        position: sticky;
-        top: 61px; /* Entspricht ungefähr der Höhe der sticky Toolbar */
-        z-index: 15;
-        padding: 10px 14px; /* Flacherer Header */
-    }
-
-    /* 3. Kompaktere Trefferflächen und Segmented Controls */
-    .answer-chips {
-        max-width: 100%;
-        margin-bottom: 4px;
-    }
-
-    .answer-chip, 
-    .filter-chip, 
-    .ghost-btn {
-        min-height: 38px; /* Kompakt, aber weiterhin sehr gut antippbar */
-        padding: 8px 12px;
-        font-size: 11px;
-    }
-
-    .sub-question-row .answer-chip {
-        min-height: 34px;
-        padding: 6px 10px;
-    }
-
-    /* Weniger Padding in den Question Cards für mehr Sichtbarkeit pro Bildschirm */
-    .question-row {
-        padding: 12px 14px;
+window.setAnswerStatus = function(snapshotId, val, sIdx) {
+  const session = state.sessions.find(s => s.id === state.currentSessionId);
+  if(!session) return;
+  const item = session.items.find(i => i.snapshotId === snapshotId);
+  if(item) {
+    let oldVal;
+    if(sIdx !== undefined && item.subQuestions) {
+      oldVal = item.subQuestions[sIdx].status;
+      item.subQuestions[sIdx].status = val;
+    } else {
+      oldVal = item.status;
+      item.status = val;
     }
     
-    .sub-question-row {
-        padding: 10px 14px 10px 24px;
+    lastAction = { snapshotId, sIdx, oldVal };
+    saveToLocalStorage();
+    renderSessionDetail(state.currentSessionId);
+    
+    let msg = 'Gespeichert';
+    if(val==='JA' || val==='NEIN_INV' || val==='AMPEL_GRUEN') msg = 'Positiv markiert';
+    else if(val==='NEIN' || val==='JA_INV' || val==='AMPEL_ROT' || val==='AMPEL_GELB') msg = 'Als Befund markiert';
+    else if(val==='ENTFAELLT') msg = 'Entfällt';
+    
+    showChecklistToast(msg, true);
+  }
+};
+
+// --- Modals & Actions ---
+
+window.openNewLocModal = function() {
+  document.getElementById('locInput').value = '';
+  document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+  document.getElementById('newLocModal').classList.add('open');
+};
+
+window.closeNewLocModal = function() {
+  document.getElementById('newLocModal').classList.remove('open');
+};
+
+window.createNewLocation = function() {
+  const loc = document.getElementById('locInput').value.trim();
+  const dt = document.getElementById('dateInput').value;
+  if(!loc) { alert('Bitte Ort eingeben'); return; }
+  const id = addSession(loc, dt);
+  closeNewLocModal();
+  openSession(id);
+};
+
+window.openRemarkModal = function(snapshotId, sIdx = -1) {
+  const session = state.sessions.find(s => s.id === state.currentSessionId);
+  if(!session) return;
+  const item = session.items.find(i => i.snapshotId === snapshotId);
+  if(item) {
+    document.getElementById('remarkSnapshotId').value = snapshotId;
+    document.getElementById('remarkSIdx').value = sIdx;
+    
+    let currentRemark = item.remark || '';
+    if(sIdx !== -1 && item.subQuestions) {
+       currentRemark = item.subQuestions[sIdx].remark || '';
+    }
+    
+    document.getElementById('remarkText').value = currentRemark;
+    document.getElementById('remarkModal').classList.add('open');
+    setTimeout(() => document.getElementById('remarkText').focus(), 100);
+  }
+};
+
+window.closeRemarkModal = function() {
+  document.getElementById('remarkModal').classList.remove('open');
+};
+
+window.saveRemark = function() {
+  const snapshotId = document.getElementById('remarkSnapshotId').value;
+  const sIdx = parseInt(document.getElementById('remarkSIdx').value);
+  const text = document.getElementById('remarkText').value.trim();
+  
+  const session = state.sessions.find(s => s.id === state.currentSessionId);
+  if(session) {
+    const item = session.items.find(i => i.snapshotId === snapshotId);
+    if(item) {
+       if(sIdx !== -1 && item.subQuestions) {
+          item.subQuestions[sIdx].remark = text;
+       } else {
+          item.remark = text;
+       }
+       saveToLocalStorage();
+       renderSessionDetail(state.currentSessionId);
+       showChecklistToast('Bemerkung gespeichert', false);
+    }
+  }
+  closeRemarkModal();
+};
+
+let deleteTargetType = null;
+let deleteTargetId = null;
+window.openConfirmDelete = function(type, id) {
+  deleteTargetType = type;
+  deleteTargetId = id;
+  const m = document.getElementById('confirmDeleteModal');
+  const title = document.getElementById('confirmDeleteTitle');
+  const desc = document.getElementById('confirmDeleteDesc');
+  
+  if(type === 'session') {
+    title.textContent = 'Begehung löschen?';
+    desc.textContent = 'Diese Begehung und alle erfassten Antworten werden unwiderruflich gelöscht.';
+  } else if(type === 'question') {
+    title.textContent = 'Frage löschen?';
+    desc.textContent = 'Diese Frage wird aus dem Katalog entfernt.';
+  } else if(type === 'category') {
+    title.textContent = 'Kategorie löschen?';
+    desc.textContent = 'Alle Fragen in dieser Kategorie werden entfernt.';
+  }
+  
+  m.classList.add('open');
+};
+
+window.closeConfirmDelete = function() {
+  document.getElementById('confirmDeleteModal').classList.remove('open');
+  deleteTargetType = null;
+  deleteTargetId = null;
+};
+
+window.executeConfirmDelete = function() {
+  if(!deleteTargetType || deleteTargetId === null) return;
+  
+  if(deleteTargetType === 'session') {
+    state.sessions = state.sessions.filter(s => s.id !== deleteTargetId);
+    if(state.currentSessionId === deleteTargetId) state.currentSessionId = null;
+    saveToLocalStorage();
+    renderMainView();
+    showChecklistToast('Begehung gelöscht', false);
+  } else if(deleteTargetType === 'question') {
+    state.checklistQuestions = state.checklistQuestions.filter(q => q.id !== deleteTargetId);
+    saveToLocalStorage();
+    renderManageList();
+  } else if(deleteTargetType === 'category') {
+    state.checklistQuestions = state.checklistQuestions.filter(q => q.category !== deleteTargetId);
+    saveToLocalStorage();
+    renderManageList();
+  }
+  
+  closeConfirmDelete();
+};
+
+
+// --- EXPORT & IMPORT ---
+
+window.exportState = function() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+  const dlAnchorElem = document.createElement('a');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "arbeitssafe_backup_" + new Date().toISOString().split('T')[0] + ".json");
+  dlAnchorElem.click();
+};
+
+window.importState = function(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if(imported.sessions && imported.checklistQuestions) {
+        Object.assign(state, imported);
+        saveToLocalStorage();
+        renderMainView();
+        showChecklistToast('Daten erfolgreich geladen', false);
+      } else {
+        alert('Ungültiges Dateiformat');
+      }
+    } catch(err) {
+      alert('Fehler beim Lesen der Datei');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+};
+
+// TEXT EXPORT
+let currentExportType = 'ALL';
+window.openExportModal = function() {
+  currentExportType = 'ALL';
+  updateExportModalUI();
+  generateExportText();
+  document.getElementById('exportModal').classList.add('open');
+};
+
+window.closeExportModal = function() {
+  document.getElementById('exportModal').classList.remove('open');
+};
+
+window.setExportType = function(type) {
+  currentExportType = type;
+  updateExportModalUI();
+  generateExportText();
+};
+
+function updateExportModalUI() {
+  const btns = document.querySelectorAll('#exportTypeSegment button');
+  btns[0].className = currentExportType === 'ALL' ? 'active' : '';
+  btns[1].className = currentExportType === 'DEFECTS' ? 'active' : '';
+}
+
+function generateExportText() {
+  const session = state.sessions.find(s => s.id === state.currentSessionId);
+  if(!session) return;
+  
+  let out = `Begehung: ${session.location}\nDatum: ${new Date(session.date).toLocaleDateString('de-DE')}\n\n`;
+  
+  const { numberMap } = buildNumbering(session.items);
+  let currentCat = null;
+
+  session.items.forEach(q => {
+    let hasIssues = false;
+    let isUnanswered = false;
+    
+    if(q.type === 'MULTIPLE') {
+       hasIssues = q.subQuestions.some(sq => ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(sq.status)) || !!q.remark;
+       isUnanswered = q.subQuestions.some(sq => sq.status === 'UNANSWERED');
+    } else {
+       hasIssues = ['NEIN', 'AMPEL_ROT', 'AMPEL_GELB', 'JA_INV'].includes(q.status) || !!q.remark;
+       isUnanswered = q.status === 'UNANSWERED';
     }
 
-    .question-controls, .sub-question-row .question-controls {
-        margin-left: 0;
-        width: 100%;
-        gap: 6px;
-    }
+    let include = false;
+    if(currentExportType === 'ALL') include = true;
+    else if(currentExportType === 'DEFECTS') include = hasIssues || isUnanswered;
 
-    .row-actions {
-        width: 100%;
-        max-width: 100%;
-        align-items: stretch;
-        gap: 4px; /* Minimaler Abstand zwischen ENTFÄLLT und BEMERKUNG */
+    if(include) {
+      if(q.category !== currentCat) {
+        out += `\n=== ${q.category.toUpperCase()} ===\n`;
+        currentCat = q.category;
+      }
+      
+      const num = numberMap[q.snapshotId];
+      
+      if(q.type !== 'MULTIPLE') {
+          let statText = q.status;
+          if(statText === 'JA_INV') statText = 'NEIN (Befund)';
+          if(statText === 'NEIN_INV') statText = 'JA';
+          
+          out += `${num} ${q.questionText} [${statText}]\n`;
+          if(q.remark) out += `   -> Bemerkung: ${q.remark}\n`;
+      } else {
+          out += `${num} ${q.questionText}\n`;
+          if(q.remark) out += `   -> Hauptbemerkung: ${q.remark}\n`;
+          if(q.subQuestions) {
+             q.subQuestions.forEach((sq, sIdx) => {
+                 let sstat = sq.status;
+                 let subLetter = String.fromCharCode(97 + sIdx);
+                 out += `   ${subLetter}) ${sq.text} [${sstat}]\n`;
+             });
+          }
+      }
     }
+  });
 
-    .row-actions .ghost-btn, .row-actions .answer-chip {
-        width: 100%;
-        text-align: center;
-        border-radius: 6px;
-    }
+  document.getElementById('exportPreview').innerText = out;
+}
 
-    /* 4. FAB anheben, damit es nicht die Tab-Bar verdeckt */
-    .fab {
-        right: 16px !important;
-        bottom: 85px !important;
-        padding: 12px 18px !important;
-        font-size: 11px !important;
-    }
+window.copyExportText = function() {
+  const text = document.getElementById('exportPreview').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showChecklistToast('In Zwischenablage kopiert', false);
+    closeExportModal();
+  });
+};
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe.toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
 }

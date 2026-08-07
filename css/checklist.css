@@ -39,7 +39,11 @@
 
 /* Questions & Categories */
 .category-header {
-    background: var(--bg-gradient-start); color: var(--text-main); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 24px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; margin-top: 16px; transition: background 0.1s;
+    background: var(--bg-gradient-start); color: var(--text-main); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 24px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; margin-top: 16px; transition: background 0.1s;
+    /* Sticky category header for better context */
+    position: sticky;
+    top: 130px; /* Desktop fallback */
+    z-index: 15;
 }
 .category-header:hover { background: var(--border-color); }
 .category-header .chev { font-size: 14px; font-weight: 700; color: var(--primary); }
@@ -47,40 +51,48 @@
 .category-header .status-indicator { color: var(--success-text); font-size: 11px; letter-spacing: 1px; margin-left: 8px; }
 
 .question-row {
-    background: var(--card-bg); padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px; border-left: 4px solid transparent;
+    background: var(--card-bg); padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px; border-left: 4px solid transparent;
 }
 .question-row:focus-within { border-left-color: var(--primary); }
 
 .sub-questions-container { background: var(--bg-hover); border-bottom: 1px solid var(--border-color); }
 .sub-question-row {
-    padding: 14px 24px 14px 64px; border-bottom: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 10px;
+    padding: 12px 20px 12px 50px; border-bottom: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 10px;
 }
 .sub-question-row:last-child { border-bottom: none; }
-@media (max-width: 600px) { .sub-question-row { padding-left: 24px; } }
+@media (max-width: 600px) { .sub-question-row { padding-left: 14px; } }
 
-.question-text { font-size: 15px; line-height: 1.5; color: var(--text-main); font-weight: 500; display: flex; }
-.question-text .num { color: var(--primary); font-weight: 800; min-width: 40px; }
-.sub-question-row .question-text { font-size: 14px; color: var(--text-dark); }
+.question-text { font-size: 14px; line-height: 1.4; color: var(--text-main); font-weight: 500; display: flex; }
+.question-text .num { color: var(--primary); font-weight: 800; min-width: 32px; }
+.sub-question-row .question-text { font-size: 13px; color: var(--text-dark); }
 
-.question-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-left: 40px; }
-.sub-question-row .question-controls { margin-left: 40px; }
+.question-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-left: 32px; }
+.sub-question-row .question-controls { margin-left: 32px; }
 @media (max-width: 600px) { .question-controls, .sub-question-row .question-controls { margin-left: 0; } }
 
-.answer-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Segmented Control for answers (Desktop & Mobile) */
+.answer-chips { display: flex; width: 100%; max-width: 400px; gap: 0; background: var(--card-bg); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
 .answer-chip {
-    border: 1px solid var(--border-color); background: var(--card-bg); padding: 8px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 700; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.5px; transition: 0.1s;
+    flex: 1; border: none; border-right: 1px solid var(--border-color); background: transparent; padding: 8px 10px; border-radius: 0; font-size: 11px; cursor: pointer; font-weight: 700; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.5px; transition: 0.1s; text-align: center;
 }
-.sub-question-row .answer-chip { padding: 6px 12px; font-size: 11px; }
+.answer-chips .answer-chip:last-child { border-right: none; }
 
-.answer-chip[data-val="JA"].sel, .answer-chip[data-val="AMPEL_GRUEN"].sel { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
-.answer-chip[data-val="NEIN"].sel, .answer-chip[data-val="AMPEL_ROT"].sel, .answer-chip[data-val="JA_INV"].sel { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
-.answer-chip[data-val="ENTFAELLT"].sel { background: var(--bg-gradient-end); color: var(--text-muted); border-color: var(--border-color); }
-.answer-chip[data-val="AMPEL_GELB"].sel { background: #fef9c3; color: #d97706; border-color: #fde047; }
-.answer-chip[data-val="NEIN_INV"].sel { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+.sub-question-row .answer-chip { padding: 6px 8px; font-size: 10px; }
 
-.row-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+/* Selection States */
+.answer-chip[data-val="JA"].sel, .answer-chip[data-val="AMPEL_GRUEN"].sel { background: var(--success-bg); color: var(--success-text); }
+.answer-chip[data-val="NEIN"].sel, .answer-chip[data-val="AMPEL_ROT"].sel, .answer-chip[data-val="JA_INV"].sel { background: #fef2f2; color: #dc2626; }
+.answer-chip[data-val="ENTFAELLT"].sel { background: var(--bg-gradient-end); color: var(--text-muted); }
+.answer-chip[data-val="AMPEL_GELB"].sel { background: #fef9c3; color: #d97706; }
+.answer-chip[data-val="NEIN_INV"].sel { background: var(--success-bg); color: var(--success-text); }
+
+/* Row Actions (ENTFÄLLT & BEMERKUNG) */
+.row-actions { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 400px; }
+/* Standalone ENTFÄLLT should look like a slim full-width button */
+.row-actions .answer-chip[data-val="ENTFAELLT"] { border: 1px solid var(--border-color); border-radius: 6px; border-right: 1px solid var(--border-color); }
+
 .ghost-btn {
-    border: 1px dashed var(--border-color); background: transparent; padding: 8px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;
+    border: 1px dashed var(--border-color); background: transparent; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; width: 100%; text-align: center; display: inline-flex; justify-content: center; align-items: center; gap: 6px;
 }
 .ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
 .ghost-btn.has-remark { border-color: var(--primary); border-style: solid; color: var(--primary); background: var(--primary-light); }
@@ -119,7 +131,7 @@
    MOBILE OPTIMIERUNG (CHECKLIST)
    ========================================== */
 @media (max-width: 600px) {
-    /* 1. Topbar & Header-Buttons (Kein senkrechtes Text-Umbrechen mehr!) */
+    /* 1. Topbar & Header-Buttons */
     .document-view .topbar {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -127,13 +139,8 @@
         padding: 12px 14px !important;
     }
 
-    .topbar-left {
-        width: 100%;
-    }
-
-    .topbar-left h2 {
-        font-size: 1.05rem !important;
-    }
+    .topbar-left { width: 100%; }
+    .topbar-left h2 { font-size: 1.05rem !important; }
 
     .topbar-right {
         width: 100% !important;
@@ -144,7 +151,7 @@
 
     .topbar-right .btn-mini-text {
         flex: 1 1 auto !important;
-        white-space: nowrap !important; /* Verhindert das senkrechte Umbrechen */
+        white-space: nowrap !important;
         font-size: 10px !important;
         padding: 8px 6px !important;
         min-height: 38px !important;
@@ -153,56 +160,70 @@
         justify-content: center !important;
     }
 
-    /* 2. Sticky Toolbar direkt oben fixieren (Tabs sind unten) */
+    /* 2. Sticky Toolbar & Category Headers */
     .checklist-toolbar {
         top: 0 !important;
         padding: 12px 14px !important;
     }
 
-    /* 3. Fingerfreundliche Trefferflächen (mind. 44px) für Chips & Controls */
+    .category-header {
+        position: sticky;
+        top: 61px; /* Entspricht ungefähr der Höhe der sticky Toolbar */
+        z-index: 15;
+        padding: 10px 14px; /* Flacherer Header */
+    }
+
+    /* 3. Kompaktere Trefferflächen und Segmented Controls */
+    .answer-chips {
+        max-width: 100%;
+        margin-bottom: 4px;
+    }
+
     .answer-chip, 
     .filter-chip, 
     .ghost-btn {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 14px;
-        font-size: 12px;
+        min-height: 38px; /* Kompakt, aber weiterhin sehr gut antippbar */
+        padding: 8px 12px;
+        font-size: 11px;
     }
 
     .sub-question-row .answer-chip {
-        min-height: 40px;
-        padding: 6px 12px;
+        min-height: 34px;
+        padding: 6px 10px;
     }
 
-    .answer-chips {
-        gap: 8px;
+    /* Weniger Padding in den Question Cards für mehr Sichtbarkeit pro Bildschirm */
+    .question-row {
+        padding: 12px 14px;
     }
-
-    .question-row, .sub-question-row {
-        padding: 14px;
+    
+    .sub-question-row {
+        padding: 10px 14px 10px 24px;
     }
 
     .question-controls, .sub-question-row .question-controls {
         margin-left: 0;
         width: 100%;
+        gap: 6px;
     }
 
     .row-actions {
         width: 100%;
+        max-width: 100%;
         align-items: stretch;
+        gap: 4px; /* Minimaler Abstand zwischen ENTFÄLLT und BEMERKUNG */
     }
 
     .row-actions .ghost-btn, .row-actions .answer-chip {
         width: 100%;
         text-align: center;
+        border-radius: 6px;
     }
 
-    /* 4. Floating Action Button (FAB) über die Bottom-Bar anheben */
+    /* 4. FAB anheben, damit es nicht die Tab-Bar verdeckt */
     .fab {
         right: 16px !important;
-        bottom: 85px !important; /* Liegt exakt oberhalb der Tab-Navigation */
+        bottom: 85px !important;
         padding: 12px 18px !important;
         font-size: 11px !important;
     }

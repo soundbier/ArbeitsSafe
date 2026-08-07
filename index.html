@@ -31,16 +31,17 @@
                     <span aria-hidden="true">🔄</span>
                 </button>
                 <div class="upload-wrapper">
-                    <button type="button" class="btn-mini" title="Andere CSV laden">
+                    <!-- CSV Hinzufügen Button (löst Klick auf Input aus) -->
+                    <button type="button" class="btn-mini" id="triggerCsvUploadBtn" title="Andere CSV laden">
                         <span aria-hidden="true">📁</span>
                     </button>
-                    <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
+                    <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen" style="display:none;">
                 </div>
             </div>
         </header>
 
         <!-- Error Container -->
-        <div id="errorContainer" aria-live="polite"></div>
+        <div id="errorContainer" aria-live="polite" style="display:none;"></div>
 
         <!-- TAB NAVIGATION -->
         <nav class="tab-navigation" role="tablist">
@@ -61,7 +62,6 @@
             
             <!-- TAB 1: Systemprüfung -->
             <section id="tab-audit" class="tab-content active" role="tabpanel">
-                <!-- HIER KORRIGIERT: overflow-y: auto statt overflow: hidden -->
                 <div class="document-view" style="padding: 0; overflow-y: auto; position: relative; min-height: 600px;">
                     <!-- Checklisten Topbar -->
                     <div class="topbar" style="background: var(--card-bg); padding: 18px 24px 14px; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid var(--primary); position: sticky; top: 0; z-index: 30;">
@@ -69,14 +69,13 @@
                             <span class="sub" id="topSub" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); display: block; margin-bottom: 4px;">Begehungen verwalten</span>
                             <h2 id="topTitle" style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Checkliste für Systemprüfungen</h2>
                         </div>
-                        <!-- HIER KORRIGIERT: flex-wrap: wrap -->
                         <div class="topbar-right" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn btn-secondary btn-mini-text text-btn" id="backBtn" style="display:none;" onclick="goToList()">[ ZURÜCK ]</button>
-                            <button class="btn btn-secondary btn-mini-text text-btn" id="loadStateBtn" onclick="document.getElementById('auditFileInput').click()">[ DATEN LADEN ]</button>
-                            <button class="btn btn-secondary btn-mini-text text-btn" id="saveStateBtn" onclick="exportState()">[ SPEICHERN ]</button>
-                            <input type="file" id="auditFileInput" style="display:none;" accept=".json" onchange="importState(event)">
-                            <button class="btn btn-secondary btn-mini-text text-btn" id="manageBtn" style="display:none;" onclick="openManageQuestions()">[ KATALOG ]</button>
-                            <button class="btn btn-secondary btn-mini-text text-btn text-danger" id="menuBtn" style="display:none; color: #dc2626;" onclick="openConfirmDelete('session', state.currentSessionId)">[ LÖSCHEN ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="backBtn" style="display:none;">[ ZURÜCK ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="loadStateBtn">[ DATEN LADEN ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="saveStateBtn">[ SPEICHERN ]</button>
+                            <input type="file" id="auditFileInput" style="display:none;" accept=".json">
+                            <button class="btn btn-secondary btn-mini-text text-btn" id="manageBtn" style="display:none;">[ KATALOG ]</button>
+                            <button class="btn btn-secondary btn-mini-text text-btn text-danger" id="menuBtn" style="display:none; color: #dc2626;">[ LÖSCHEN ]</button>
                         </div>
                     </div>
 
@@ -86,10 +85,13 @@
                     <!-- Export Bar Checkliste -->
                     <div class="export-bar" id="exportBar" style="display:none; position: absolute; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border-color); padding: 16px 24px; z-index: 25;">
                         <div class="export-bar-inner" style="display: flex; justify-content: flex-end;">
-                            <button class="btn btn-success" onclick="openExportModal()">Protokoll Exportieren</button>
+                            <button class="btn btn-success" id="openExportBtn">Protokoll Exportieren</button>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Floating Action Button für neue Session -->
+                <button class="fab" id="fabBtn" title="Neue Begehung starten" style="display:block;">+ NEU</button>
             </section>
 
             <!-- TAB 2: Datenbank & Suche -->
@@ -158,27 +160,25 @@
         </div>
     </main>
 
-    <!-- MODALS & OVERLAYS -->
-    <!-- HIER KORRIGIERT: Toast HTML Struktur repariert -->
+    <!-- TOAST MESSAGE -->
     <div id="toastMessage" class="toast" role="alert">
         <span id="toastText"></span>
-        <button id="toastUndoBtn" class="btn btn-secondary btn-mini-text" onclick="window.undoLastAction && window.undoLastAction()" style="display:none; margin-left: 10px;">Rückgängig</button>
+        <button id="toastUndoBtn" class="btn btn-secondary btn-mini-text" style="display:none; margin-left: 10px;">Rückgängig</button>
     </div>
 
-    <!-- Modals bleiben wie im Original ... -->
+    <!-- MODALS & OVERLAYS -->
     <div class="overlay" id="remarkModal" role="dialog" aria-modal="true">
         <div class="modal">
             <h2>Bemerkung hinzufügen</h2>
             <p class="desc">Erfassen Sie Details, Mängel oder Maßnahmen zu diesem Punkt.</p>
             <input type="hidden" id="remarkSnapshotId">
-            <input type="hidden" id="remarkSIdx">
             <div class="field">
                 <label>Text</label>
                 <textarea id="remarkText" placeholder="Notizen hier eintragen..."></textarea>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeRemarkModal()">Abbrechen</button>
-                <button class="btn btn-success" onclick="saveRemark()">Speichern</button>
+                <button class="btn btn-secondary" id="closeRemarkBtn">Abbrechen</button>
+                <button class="btn btn-success" id="saveRemarkBtn">Speichern</button>
             </div>
         </div>
     </div>
@@ -188,15 +188,15 @@
             <h2>Protokoll Export</h2>
             <p class="desc">Das Ergebnis der Begehung kopieren oder herunterladen.</p>
             <div class="segmented" id="exportTypeSegment">
-                <button class="active" onclick="setExportType('ALL')">Alles</button>
-                <button onclick="setExportType('DEFECTS')">Nur Mängel/Offen</button>
+                <button class="active" id="exportTypeAllBtn">Alles</button>
+                <button id="exportTypeDefectsBtn">Nur Mängel/Offen</button>
             </div>
             <div class="field">
                 <div class="export-output" id="exportPreview" style="background:#f1f5f9; padding: 15px; border-radius:6px; min-height: 200px; max-height:400px; overflow-y:auto; white-space:pre-wrap; font-size:14px; font-family:monospace;"></div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeExportModal()">Schließen</button>
-                <button class="btn btn-tool" onclick="copyExportText()">Text Kopieren</button>
+                <button class="btn btn-secondary" id="closeExportBtn">Schließen</button>
+                <button class="btn btn-tool" id="copyExportBtn">Text Kopieren</button>
             </div>
         </div>
     </div>
@@ -214,8 +214,8 @@
                 <input type="date" id="dateInput">
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeNewLocModal()">Abbrechen</button>
-                <button class="btn btn-success" onclick="createNewLocation()">Erstellen</button>
+                <button class="btn btn-secondary" id="closeNewLocBtn">Abbrechen</button>
+                <button class="btn btn-success" id="createNewLocBtn">Erstellen</button>
             </div>
         </div>
     </div>
@@ -225,24 +225,26 @@
             <h2 id="confirmDeleteTitle" style="color:#dc2626;">Wirklich löschen?</h2>
             <p class="desc" id="confirmDeleteDesc">Diese Aktion kann nicht rückgängig gemacht werden.</p>
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeConfirmDelete()">Abbrechen</button>
-                <button class="btn btn-success" style="background:#dc2626; color:#fff;" onclick="executeConfirmDelete()">Ja, Löschen</button>
+                <button class="btn btn-secondary" id="closeConfirmDeleteBtn">Abbrechen</button>
+                <button class="btn btn-success" style="background:#dc2626; color:#fff;" id="executeConfirmDeleteBtn">Ja, Löschen</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Scripts (Ausschließlich lokale ES6-Module) -->
     <script type="module" src="js/data.js"></script>
     <script type="module" src="js/ui.js"></script>
     <script type="module" src="js/checklist.js"></script>
     <script type="module" src="js/app.js"></script>
     
     <script>
+        // PWA Registration bleibt direkt im HTML, um schnellstmögliche Registrierung zu garantieren
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw2.js')
-                .then(reg => console.log('SW registriert', reg.scope))
-                .catch(err => console.log('SW Fehler', err));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw2.js')
+                    .then(reg => console.log('SW registriert', reg.scope))
+                    .catch(err => console.log('SW Fehler', err));
+            });
         }
     </script>
 </body>

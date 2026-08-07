@@ -1,0 +1,859 @@
+:root {
+    /* =========================================
+       FARBPALETTE & VARIABLEN
+       ========================================= */
+       
+    /* Primärfarben */
+    --primary: #0284c7;
+    --primary-hover: #0369a1;
+    --primary-light: #e0f2fe;
+    --primary-alpha: rgba(2, 132, 199, 0.15);
+
+    /* Hintergrund & Layout */
+    --bg-gradient-start: #f8fafc;
+    --bg-gradient-end: #e2e8f0;
+    --bg-hover: #f1f5f9;
+    --card-bg: #ffffff;
+    --toast-bg: #1f2937;
+
+    /* Textfarben */
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-dark: #334155;
+    --text-darker: #1e293b;
+
+    /* Status & Feedback (Erfolg) */
+    --success-bg: #f0fdf4;
+    --success-text: #16a34a;
+    --success-border: #bbf7d0;
+    --success-hover: #15803d;
+
+    /* Sekundäre Buttons */
+    --secondary-bg: #e2e8f0;
+    --secondary-hover: #cbd5e1;
+
+    /* Rahmen & Linien */
+    --border-color: #e2e8f0;
+    --border-highlight: #bae6fd;
+    
+    /* Disabled States */
+    --disabled-text: #94a3b8;
+}
+
+/* =========================================
+   BASIS & RESET
+   ========================================= */
+
+*, *::before, *::after { 
+    box-sizing: border-box; 
+}
+
+body {
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: var(--text-main); 
+    min-height: 100vh; 
+    line-height: 1.6;
+}
+
+h1, h2, h3 { 
+    margin-top: 0; 
+    line-height: 1.2; 
+}
+
+/* =========================================
+   LAYOUT & STRUKTUR
+   ========================================= */
+
+.workspace-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 2rem 1.5rem; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+}
+
+.main-content-area { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+}
+
+.results-container { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+}
+
+/* =========================================
+   BASIS KOMPONENTEN (Cards, Badges etc.)
+   ========================================= */
+
+.card-base {
+    background: var(--card-bg); 
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color); 
+    padding: 1.5rem;
+}
+
+.badge { 
+    background-color: var(--primary-light); 
+    color: var(--primary); 
+    font-size: 0.8rem; 
+    font-weight: 700; 
+    padding: 0.35rem 0.85rem; 
+    border-radius: 9999px; 
+    text-transform: uppercase; 
+}
+
+.status-badge { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    background-color: var(--bg-gradient-start); 
+    border: 1px solid var(--border-color); 
+    padding: 0.5rem 1rem; 
+    border-radius: 9999px; 
+    font-size: 0.9rem; 
+    font-weight: 500; 
+    color: var(--text-muted); 
+    min-height: 44px; 
+}
+
+.status-badge.loaded { 
+    background-color: var(--success-bg); 
+    border-color: var(--success-border); 
+    color: var(--success-text); 
+    font-weight: 600; 
+}
+
+.counter-badge { 
+    background-color: var(--primary-light); 
+    color: var(--primary); 
+    font-size: 0.85rem; 
+    font-weight: 700; 
+    padding: 0.3rem 0.8rem; 
+    border-radius: 9999px; 
+}
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+
+/* Standard & Primary Button (Mobile Touch Targets: min-height 44px) */
+.btn {
+    display: inline-block; 
+    background: var(--primary); 
+    color: #ffffff;
+    padding: 0.5rem 1rem; 
+    border-radius: 8px; 
+    border: none; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    transition: background 0.2s ease;
+    min-height: 44px;
+}
+
+.btn:hover { 
+    background: var(--primary-hover); 
+    color: #ffffff; 
+}
+
+/* Tool Button */
+.btn-tool { 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 0.5rem; 
+    font-weight: 600; 
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); 
+}
+
+.btn-tool:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+}
+
+/* Secondary Button */
+.btn-secondary { 
+    background-color: var(--secondary-bg); 
+    color: var(--text-dark); 
+}
+
+.btn-secondary:hover { 
+    background-color: var(--secondary-hover); 
+    color: var(--text-dark); 
+}
+
+/* Success Button */
+.btn-success { 
+    background-color: var(--success-text); 
+    color: #ffffff; 
+}
+
+.btn-success:hover { 
+    background-color: var(--success-hover); 
+    color: #ffffff; 
+}
+
+/* Action Icon Button */
+.action-icon-btn { 
+    background: var(--card-bg); 
+    border: 1px solid var(--border-color); 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+    font-weight: 600; 
+    padding: 0.6rem 0.75rem; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.35rem; 
+    font-family: inherit; 
+    min-height: 38px; 
+}
+
+.action-icon-btn.added { 
+    background-color: var(--success-bg); 
+    color: var(--success-text); 
+    border-color: var(--success-border); 
+}
+
+/* Toggle Text Button */
+.toggle-more-btn { 
+    background: none; 
+    border: none; 
+    color: var(--primary); 
+    font-weight: 700; 
+    font-size: 0.85rem; 
+    padding: 5px 0; 
+    margin-top: 5px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+}
+
+/* =========================================
+   HEADER BEREICH
+   ========================================= */
+
+.tool-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px 30px; 
+}
+
+.header-titles h1 { 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    letter-spacing: -0.5px; 
+    margin: 0 0 5px 0; 
+}
+
+.header-titles p { 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+    margin: 0; 
+}
+
+.header-right { 
+    display: flex; 
+    align-items: center; 
+    gap: 1rem; 
+    flex-wrap: wrap; 
+}
+
+/* =========================================
+   TAB NAVIGATION (Sticky)
+   ========================================= */
+
+.tab-navigation { 
+    display: flex; 
+    gap: 1rem; 
+    padding: 15px 0; 
+    flex-wrap: nowrap; 
+    overflow-x: auto;
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
+    background: rgba(248, 250, 252, 0.95); 
+    backdrop-filter: blur(8px);
+    margin-top: -1rem; 
+    border-bottom: 1px solid var(--border-color);
+    scrollbar-width: none; /* Firefox */
+}
+
+.tab-navigation::-webkit-scrollbar { 
+    display: none; /* Chrome, Safari */
+}
+
+.tab-btn {
+    flex: 1; 
+    min-width: 0; 
+    padding: 0.75rem 1.25rem; 
+    font-size: 1.1rem; 
+    font-weight: 700;
+    background: var(--card-bg); 
+    border: 1px solid var(--border-color); 
+    border-radius: 8px;
+    color: var(--text-muted); 
+    cursor: pointer; 
+    transition: all 0.2s;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 0.75rem;
+    min-height: 48px; 
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn:hover { 
+    background: var(--bg-gradient-start); 
+}
+
+.tab-btn.active { 
+    background: var(--primary-light); 
+    color: var(--primary); 
+    border-color: var(--primary); 
+}
+
+.tab-badge { 
+    background: var(--text-muted); 
+    color: #ffffff; 
+    padding: 2px 10px; 
+    border-radius: 999px; 
+    font-size: 0.9rem; 
+}
+
+.tab-btn.active .tab-badge { 
+    background: var(--primary); 
+}
+
+.tab-content { 
+    display: none; 
+    animation: fadeIn 0.3s ease; 
+}
+
+.tab-content.active { 
+    display: block; 
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* =========================================
+   FORMULARE & KONTROLLEN
+   ========================================= */
+
+.controls-toolbar { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1.25rem; 
+    padding: 24px 30px; 
+    align-items: center; 
+}
+
+.search-full-width { 
+    grid-column: span 2; 
+} 
+
+.control-field { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.4rem; 
+}
+
+.control-field label { 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+    color: var(--text-muted); 
+}
+
+select, 
+input[type="text"] { 
+    width: 100%; 
+    padding: 0.75rem 1rem; 
+    font-size: 0.95rem; 
+    border: 1px solid var(--border-color); 
+    border-radius: 8px; 
+    background-color: var(--card-bg); 
+    color: var(--text-main); 
+    transition: all 0.2s; 
+    font-family: inherit; 
+    min-height: 44px; 
+}
+
+select:focus, 
+input[type="text"]:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 3px var(--primary-alpha); 
+}
+
+select:disabled { 
+    background-color: var(--bg-gradient-start); 
+    color: var(--disabled-text); 
+    cursor: not-allowed; 
+}
+
+.filter-checkbox-wrapper { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    background-color: var(--bg-gradient-start); 
+    border: 1px solid var(--border-color); 
+    padding: 0.75rem 1rem; 
+    border-radius: 8px; 
+    min-height: 44px; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    font-weight: 600; 
+    color: var(--text-main); 
+    user-select: none; 
+    margin-top: 1.4rem; 
+    transition: all 0.2s; 
+}
+
+.filter-checkbox-wrapper:hover { 
+    border-color: var(--primary-light); 
+    background-color: var(--bg-hover); 
+}
+
+.filter-checkbox-wrapper input { 
+    width: 1.2rem; 
+    height: 1.2rem; 
+    accent-color: var(--primary); 
+    cursor: pointer; 
+}
+
+/* =========================================
+   ERGEBNISSE & GESETZES-KARTEN
+   ========================================= */
+
+.law-card { 
+    padding: 30px; 
+    transition: box-shadow 0.2s; 
+}
+
+.card-top { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 1rem; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+
+.law-title-meta { 
+    font-size: 0.95rem; 
+    color: var(--text-muted); 
+    font-weight: 500; 
+    margin-left: 0.5rem; 
+}
+
+.paragraph-heading { 
+    font-size: 1.4rem; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    margin-bottom: 1.25rem; 
+    padding-bottom: 0.75rem; 
+    border-bottom: 1px solid var(--border-color); 
+}
+
+.paragraph-box { 
+    background-color: var(--bg-gradient-start); 
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    padding: 1.25rem 1.5rem; 
+    margin-bottom: 1rem; 
+    transition: all 0.2s ease-in-out; 
+}
+
+.paragraph-box-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 0.75rem; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+
+.absatz-tag { 
+    font-weight: 700; 
+    font-size: 0.85rem; 
+    color: var(--primary); 
+    background-color: var(--primary-light); 
+    padding: 0.25rem 0.6rem; 
+    border-radius: 6px; 
+}
+
+.action-buttons-group { 
+    display: flex; 
+    gap: 0.5rem; 
+    flex-wrap: wrap; 
+}
+
+/* Progressive Disclosure (Text einklappen) */
+.text-content-wrapper { 
+    margin-bottom: 1rem; 
+}
+
+.text-clamp { 
+    display: -webkit-box; 
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical; 
+    overflow: hidden; 
+}
+
+.paragraph-text { 
+    font-size: 0.95rem; 
+    color: var(--text-dark); 
+    white-space: pre-line; 
+    line-height: 1.6; 
+    margin-bottom: 0; 
+}
+
+.revision-preview-box { 
+    background-color: var(--card-bg); 
+    border: 1px solid var(--border-highlight); 
+    border-left: 4px solid var(--primary); 
+    border-radius: 8px; 
+    padding: 1rem 1.25rem; 
+    font-size: 0.9rem; 
+    color: var(--text-main); 
+    white-space: pre-line; 
+    line-height: 1.6; 
+}
+
+/* =========================================
+   ENTWURF ANSICHT (Document View)
+   ========================================= */
+
+.document-view { 
+    background-color: var(--card-bg); 
+    border-radius: 12px; 
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+    padding: 40px 50px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+}
+
+.doc-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    border-bottom: 2px solid var(--text-main); 
+    padding-bottom: 1rem; 
+    margin-bottom: 1rem; 
+    flex-wrap: wrap; 
+    gap: 10px;
+}
+
+.doc-header h3 { 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    margin: 0; 
+    letter-spacing: -0.5px; 
+}
+
+.doc-items-list { 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.doc-item { 
+    padding: 1.5rem 0; 
+    border-bottom: 1px dashed var(--border-color); 
+    position: relative; 
+    transition: background 0.2s; 
+}
+
+.doc-item:last-child { 
+    border-bottom: none; 
+}
+
+.doc-item-title-row { 
+    display: flex; 
+    align-items: baseline; 
+    gap: 0.5rem; 
+    margin-bottom: 0.5rem; 
+    flex-wrap: wrap; 
+}
+
+.doc-item-num { 
+    font-weight: 700; 
+    font-size: 1.1rem; 
+    color: var(--text-main); 
+}
+
+.doc-title-input { 
+    flex-grow: 1; 
+    min-width: 200px; 
+    font-size: 1.1rem; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    border: 1px solid transparent; 
+    background: transparent; 
+    padding: 0.2rem 0.5rem; 
+    border-radius: 4px; 
+    transition: all 0.2s; 
+    margin-left: -0.5rem; 
+}
+
+.doc-title-input:hover, 
+.doc-title-input:focus { 
+    border-color: var(--primary-light); 
+    background: var(--bg-hover); 
+    outline: none; 
+}
+
+.doc-editable-text { 
+    font-size: 1rem; 
+    color: var(--text-darker); 
+    white-space: pre-wrap; 
+    line-height: 1.6; 
+    text-align: justify; 
+    outline: none; 
+    padding: 0.5rem; 
+    margin-left: -0.5rem; 
+    border-radius: 4px; 
+    border: 1px solid transparent; 
+    transition: all 0.2s; 
+}
+
+.doc-editable-text:hover { 
+    background-color: var(--bg-hover); 
+    cursor: text; 
+}
+
+.doc-editable-text:focus { 
+    border-color: var(--primary-light); 
+    background-color: var(--card-bg); 
+    box-shadow: 0 0 0 3px var(--primary-alpha); 
+}
+
+.doc-item-actions { 
+    opacity: 0; 
+    position: absolute; 
+    top: 1.5rem; 
+    right: 0; 
+    background: var(--bg-gradient-start); 
+    padding-left: 10px; 
+    box-shadow: -10px 0 10px var(--bg-gradient-start); 
+    display: flex; 
+    gap: 0.35rem; 
+    transition: opacity 0.2s; 
+}
+
+.doc-item:hover .doc-item-actions { 
+    opacity: 1; 
+    right: 15px; 
+}
+
+.doc-empty { 
+    text-align: center; 
+    padding: 4rem 2rem; 
+    color: var(--text-muted); 
+    font-size: 1.1rem; 
+    border: 2px dashed var(--border-color); 
+    border-radius: 8px; 
+    margin-top: 2rem; 
+}
+
+.doc-footer { 
+    display: flex; 
+    gap: 1rem; 
+    margin-top: 1rem; 
+    padding-top: 1rem; 
+    border-top: 1px solid var(--border-color); 
+    flex-wrap: wrap; 
+}
+
+/* =========================================
+   UI HELPER (Upload, Toast)
+   ========================================= */
+
+/* Generischer Upload-Wrapper */
+.upload-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.upload-wrapper input[type="file"] {
+    position: absolute;
+    inset: 0; /* Ersetzt left/top/width/height */
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed; 
+    bottom: 30px; 
+    left: 50%; 
+    transform: translateX(-50%) translateY(100px);
+    background: var(--toast-bg); 
+    color: #ffffff; 
+    padding: 14px 24px; 
+    border-radius: 50px;
+    font-weight: 600; 
+    font-size: 1rem; 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    opacity: 0; 
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.toast.show { 
+    transform: translateX(-50%) translateY(0); 
+    opacity: 1; 
+}
+
+/* =========================================
+   KOMPAKTES CSV-/STATUS-MENÜ
+   ========================================= */
+
+.compact-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-gradient-start);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 9999px;
+}
+
+.status-mini,
+.btn-mini,
+.compact-header .upload-wrapper {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.status-mini {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    overflow: hidden;
+}
+
+.status-mini span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-mini {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    min-height: unset; /* Überschreibt die 44px von .btn */
+}
+
+.btn-mini:hover {
+    background: var(--card-bg);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.compact-header .upload-wrapper .btn-mini {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+/* =========================================
+   STRICT MOBILE OPTIMIZATION (bis 900px)
+   ========================================= */
+
+@media (max-width: 900px) { 
+    .workspace-container { 
+        padding: 1rem 0.75rem; 
+        gap: 1rem; 
+    }
+    .tool-header { 
+        padding: 15px; 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 15px; 
+    }
+    .controls-toolbar { 
+        grid-template-columns: 1fr; 
+        padding: 15px; 
+        gap: 1rem; 
+    } 
+    .search-full-width { 
+        grid-column: span 1; 
+    } 
+    .card-base,
+    .law-card,
+    .paragraph-box { 
+        padding: 15px; 
+    }
+    .document-view { 
+        padding: 20px 15px; 
+    }
+    .doc-item-actions { 
+        opacity: 1; 
+        position: static; 
+        box-shadow: none; 
+        padding: 10px 0 0 0; 
+        justify-content: flex-end; 
+        background: transparent; 
+    } 
+    .doc-item:hover { 
+        padding: 1.5rem 0; 
+        margin: 0; 
+        border-radius: 0; 
+        background-color: transparent;
+    }
+    .filter-checkbox-wrapper { 
+        margin-top: 0.5rem; 
+    }
+    .compact-header { 
+        width: 100%; 
+        justify-content: space-between; 
+        border-radius: 8px;
+    }
+    .tab-navigation {
+        gap: 8px;
+    }
+    .tab-btn {
+        padding: 0.5rem 0.5rem; 
+        font-size: 0.9rem; 
+        min-width: 0; 
+        flex: 1;
+    }
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArbeitsSafe</title>
+    <meta name="theme-color" content="#0284c7">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/img-192x192.png">
+</head>
+<body>
+    <main class="workspace-container">
+        
+        <!-- ==========================================
+             HEADER
+             ========================================== -->
+        <header class="card-base tool-header">
+            <div class="header-titles">
+                <h1>ArbeitsSafe</h1>
+                <p>Ihr smarter Generator für Revisionsschreiben und Textbausteine im Arbeitsschutz.</p>
+            </div>
+            
+            <div class="header-right">
+                <div id="statusBadge" class="status-mini" title="Datenbank-Status">
+                    <span aria-hidden="true">🟢</span>
+                </div>
+                <button type="button" id="reloadBtn" class="btn-mini" title="Daten neu laden">
+                    <span aria-hidden="true">🔄</span>
+                </button>
+                <div class="upload-wrapper">
+                    <button type="button" class="btn-mini" title="Andere CSV laden">
+                        <span aria-hidden="true">📁</span>
+                    </button>
+                    <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
+                </div>
+            </div>
+        </header>
+
+        <!-- Error Container -->
+        <div id="errorContainer" aria-live="polite"></div>
+
+        <!-- ==========================================
+             TAB NAVIGATION
+             ========================================== -->
+        <nav class="tab-navigation" role="tablist">
+            <button type="button" class="tab-btn" data-tab="tab-audit" role="tab" aria-selected="false" aria-controls="tab-audit">
+                <span aria-hidden="true">📋</span> Systemprüfung
+            </button>
+            <button type="button" class="tab-btn active" data-tab="tab-search" role="tab" aria-selected="true" aria-controls="tab-search">
+                <span aria-hidden="true">🔍</span> Datenbank
+            </button>
+            <button type="button" class="tab-btn" data-tab="tab-document" role="tab" aria-selected="false" aria-controls="tab-document">
+                <span aria-hidden="true">📄</span> Entwurf 
+                <span id="tabCounter" class="tab-badge">0</span>
+            </button>
+        </nav>
+
+        <!-- ==========================================
+             TAB INHALTE
+             ========================================== -->
+        <div class="tabs-container">
+            
+            <!-- TAB 1: Systemprüfung -->
+            <section id="tab-audit" class="tab-content" role="tabpanel">
+                <div class="document-view">
+                    <header class="doc-header">
+                        <h3>Platzhalter für die Systemprüfung</h3>
+                    </header>
+                </div>
+            </section>
+
+            <!-- TAB 2: Datenbank & Suche -->
+            <section id="tab-search" class="tab-content active" role="tabpanel">
+                <div class="main-content-area">
+                    
+                    <!-- Such- und Filterleiste -->
+                    <div class="card-base controls-toolbar">
+                        <div class="control-field">
+                            <label for="lawFilter">1. Gesetz</label>
+                            <select id="lawFilter">
+                                <option value="">-- Alle --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-field">
+                            <label for="paragraphFilter">2. Paragraf</label>
+                            <select id="paragraphFilter">
+                                <option value="">-- Alle --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-field">
+                            <label for="absatzFilter">3. Absatz</label>
+                            <select id="absatzFilter" disabled>
+                                <option value="">-- Alle --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-field search-full-width">
+                            <label for="searchInput">4. Globale Textsuche</label>
+                            <input type="text" id="searchInput" placeholder="Suchbegriff eingeben (z.B. Lärm, Gefährdung)...">
+                        </div>
+                        
+                        <div>
+                            <label for="hasBausteinFilter" class="filter-checkbox-wrapper">
+                                <input type="checkbox" id="hasBausteinFilter"> 
+                                Nur Einträge mit Textbaustein
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Suchergebnisse -->
+                    <div id="results" class="results-container" aria-live="polite">
+                        <div class="card-base no-results">
+                            Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            <!-- TAB 3: Dokumenten-Ansicht (Entwurf) -->
+            <section id="tab-document" class="tab-content" role="tabpanel">
+                <div class="document-view">
+                    <header class="doc-header">
+                        <h3>Entwurf: Revisionsschreiben</h3>
+                        <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
+                    </header>
+
+                    <div id="schreibenList" class="doc-items-list">
+                        <div class="doc-empty">
+                            Das Schreiben ist noch leer.<br><br>
+                            Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.
+                        </div>
+                    </div>
+
+                    <footer class="doc-footer">
+                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; font-size: 1.1rem;" onclick="copyComposedSchreiben()" disabled>
+                            <span aria-hidden="true">📋</span> Dokument kopieren
+                        </button>
+                        <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;" onclick="clearSchreiben()">
+                            <span aria-hidden="true">🗑️</span> Leeren
+                        </button>
+                    </footer>
+                </div>
+            </section>
+            
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+    <!-- Scripte -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

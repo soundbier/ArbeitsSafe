@@ -79,24 +79,24 @@ export function populateFilter(selectElement, items, defaultText = "-- Alle --")
 export function updateDropdowns() {
     const data = state.gesetzeData;
     
-    const laws = [...new Set(data.map(d => d.gesetzKuerzel))].filter(Boolean);
+    const laws = [...new Set(data.map(d => d.gesetzKuerzel || d.Gesetz))].filter(Boolean);
     const currentLaw = DOM.lawFilter.value;
     
     populateFilter(DOM.lawFilter, laws, "-- Alle Gesetze --");
     DOM.lawFilter.value = currentLaw || "";
 
-    const filteredByLaw = currentLaw ? data.filter(d => d.gesetzKuerzel === currentLaw) : data;
+    const filteredByLaw = currentLaw ? data.filter(d => (d.gesetzKuerzel || d.Gesetz) === currentLaw) : data;
         
-    const paragraphs = [...new Set(filteredByLaw.map(d => d.paragraf))].filter(Boolean);
+    const paragraphs = [...new Set(filteredByLaw.map(d => d.paragraf || d.Paragraf))].filter(Boolean);
     const currentPara = DOM.paragraphFilter.value;
     
     populateFilter(DOM.paragraphFilter, paragraphs, "-- Alle Paragrafen --");
     DOM.paragraphFilter.value = paragraphs.includes(currentPara) ? currentPara : "";
 
     const currentParaValue = DOM.paragraphFilter.value;
-    const filteredByPara = currentParaValue ? filteredByLaw.filter(d => d.paragraf === currentParaValue) : filteredByLaw;
+    const filteredByPara = currentParaValue ? filteredByLaw.filter(d => (d.paragraf || d.Paragraf) === currentParaValue) : filteredByLaw;
         
-    const absaetze = [...new Set(filteredByPara.map(d => d.absatz))].filter(Boolean);
+    const absaetze = [...new Set(filteredByPara.map(d => d.absatz || d.Absatz))].filter(Boolean);
     const currentAbs = DOM.absatzFilter.value;
     
     populateFilter(DOM.absatzFilter, absaetze, "-- Alle Absätze --");
@@ -107,21 +107,22 @@ export function renderResults() {
     let results = state.gesetzeData;
     
     // Filter anwenden
-    if (DOM.lawFilter.value) results = results.filter(r => r.gesetzKuerzel === DOM.lawFilter.value);
-    if (DOM.paragraphFilter.value) results = results.filter(r => r.paragraf === DOM.paragraphFilter.value);
-    if (DOM.absatzFilter.value) results = results.filter(r => r.absatz === DOM.absatzFilter.value);
+    if (DOM.lawFilter.value) results = results.filter(r => (r.gesetzKuerzel || r.Gesetz) === DOM.lawFilter.value);
+    if (DOM.paragraphFilter.value) results = results.filter(r => (r.paragraf || r.Paragraf) === DOM.paragraphFilter.value);
+    if (DOM.absatzFilter.value) results = results.filter(r => (r.absatz || r.Absatz) === DOM.absatzFilter.value);
     
     const searchVal = DOM.searchInput.value.toLowerCase();
     if (searchVal) {
-        results = results.filter(r => 
-            (r.inhalt && r.inhalt.toLowerCase().includes(searchVal)) ||
-            (r.titel && r.titel.toLowerCase().includes(searchVal)) ||
-            (r.mangelVorgefunden && r.mangelVorgefunden.toLowerCase().includes(searchVal))
-        );
+        results = results.filter(r => {
+            const text = (r.inhalt || r.Rechtstext || '').toLowerCase();
+            const titel = (r.titel || '').toLowerCase();
+            const mangel = (r.mangelVorgefunden || '').toLowerCase();
+            return text.includes(searchVal) || titel.includes(searchVal) || mangel.includes(searchVal);
+        });
     }
     
     if (DOM.hasBausteinFilter.checked) {
-        results = results.filter(r => r.mangelVorgefunden || r.rechtsgrundlage || r.handlungsaufforderung);
+        results = results.filter(r => r.Textbaustein || r.mangelVorgefunden || r.rechtsgrundlage || r.handlungsaufforderung);
     }
 
     if (results.length === 0) {
@@ -137,26 +138,43 @@ export function renderResults() {
     DOM.resultsContainer.innerHTML = '';
     
     results.forEach(row => {
-        const hasBaustein = (row.mangelVorgefunden || row.rechtsgrundlage || row.handlungsaufforderung);
-        const textbaustein = [row.mangelVorgefunden, row.rechtsgrundlage, row.handlungsaufforderung].filter(Boolean).join("\n\n");
+        // Fallback für alte und neue Key-Strukturen
+        let pGesetz = row.gesetzKuerzel || row.Gesetz;
+        let pPara = row.paragraf || row.Paragraf;
+        let pAbsatz = row.absatz || row.Absatz;
+        let pSatz = row.satz || row.Satz;
+        let pNummer = row.nummer || row.Nummer;
+        let pBuchstabe = row.buchstabe || row.Buchstabe;
+
+        let titleParts = [];
+        if(pGesetz) titleParts.push(pGesetz);
+        if(pPara) titleParts.push(pPara.includes('§') ? pPara : `§ ${pPara}`);
+        if(pAbsatz) titleParts.push(pAbsatz.includes('Abs') ? pAbsatz : `Abs. ${pAbsatz}`);
+        if(pSatz) titleParts.push(`Satz ${pSatz}`);
+        if(pNummer) titleParts.push(`Nr. ${pNummer}`);
+        if(pBuchstabe) titleParts.push(`lit. ${pBuchstabe}`);
+        
+        const title = titleParts.join(' ') || 'Ohne Zuordnung';
+
+        let textbaustein = row.Textbaustein || [row.mangelVorgefunden, row.rechtsgrundlage, row.handlungsaufforderung].filter(Boolean).join("\n\n");
+        const hasBaustein = textbaustein && textbaustein.trim() !== '';
         
         const card = document.createElement('div');
         card.className = `card-base result-card ${hasBaustein ? 'has-textbaustein' : ''}`;
         
-        let titleParts = [];
-        if(row.gesetzKuerzel) titleParts.push(row.gesetzKuerzel);
-        if(row.paragraf) titleParts.push(row.paragraf);
-        if(row.absatz) titleParts.push(row.absatz);
-        const title = titleParts.join(' ') || 'Ohne Zuordnung';
+        let badgesHtml = '';
+        if (row.Kategorie) { badgesHtml += `<span class="badge" style="background:var(--secondary-bg); color:var(--text-dark);">${row.Kategorie}</span>`; }
+        if (row.Art) { badgesHtml += `<span class="badge" style="background:var(--bg-gradient-start); color:var(--primary); border: 1px solid var(--border-color);">${row.Art}</span>`; }
 
         let innerHtml = `
             <div class="result-header">
-                <div class="result-title">${title} - ${escapeHtml(row.titel)}</div>
+                <div class="result-title">${title} ${row.titel ? '- ' + escapeHtml(row.titel) : ''}</div>
+                <div class="result-badges">${badgesHtml}</div>
             </div>
             
             <div class="result-section">
                 <div class="result-label">Rechtstext</div>
-                <div class="result-content">${escapeHtml(row.inhalt || 'Kein Text vorhanden')}</div>
+                <div class="result-content">${escapeHtml(row.Rechtstext || row.inhalt || 'Kein Text vorhanden')}</div>
             </div>
         `;
 
@@ -172,13 +190,20 @@ export function renderResults() {
                     <div class="result-content highlight-text">${escapeHtml(textbaustein)}</div>
                 </div>
             `;
+        } else {
+             innerHtml += `
+                <div class="result-section" style="opacity: 0.6;">
+                    <div class="result-label">Textbaustein</div>
+                    <div class="result-content"><em>Kein vorgefertigter Textbaustein für diese Vorschrift hinterlegt.</em></div>
+                </div>
+            `;
         }
 
-        const isAdded = state.revisionsSchreibenListe.some(item => item.id === row.id);
+        const isAdded = state.revisionsSchreibenListe.some(item => (item.id || item._internalId) === (row.id || row._internalId));
         innerHtml += `
             <div class="result-actions">
                 ${hasBaustein ? `
-                    <button class="action-icon-btn ${isAdded ? 'added' : ''}" data-id="${row.id}">
+                    <button class="action-icon-btn ${isAdded ? 'added' : ''}" data-id="${row.id || row._internalId}">
                         ${isAdded ? '<span>✓</span> Im Entwurf' : '<span>+</span> Zum Entwurf'}
                     </button>
                 ` : `<button class="action-icon-btn" disabled style="opacity:0.4; cursor:not-allowed;">Kein Baustein verfügbar</button>`}
@@ -192,7 +217,7 @@ export function renderResults() {
     document.querySelectorAll('.action-icon-btn[data-id]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const id = e.currentTarget.getAttribute('data-id');
-            window.toggleToSchreiben(id); // Gefixed!
+            window.toggleToSchreiben(id); 
         });
     });
 
@@ -220,10 +245,21 @@ export function renderSchreiben() {
     DOM.schreibenList.innerHTML = '';
     
     state.revisionsSchreibenListe.forEach((item, index) => {
+        let pGesetz = item.gesetzKuerzel || item.Gesetz;
+        let pPara = item.paragraf || item.Paragraf;
+        let pAbsatz = item.absatz || item.Absatz;
+        let pSatz = item.satz || item.Satz;
+        let pNummer = item.nummer || item.Nummer;
+        let pBuchstabe = item.buchstabe || item.Buchstabe;
+
         let titleParts = [];
-        if(item.gesetzKuerzel) titleParts.push(item.gesetzKuerzel);
-        if(item.paragraf) titleParts.push(item.paragraf);
-        if(item.absatz) titleParts.push(item.absatz);
+        if(pGesetz) titleParts.push(pGesetz);
+        if(pPara) titleParts.push(pPara.includes('§') ? pPara : `§ ${pPara}`);
+        if(pAbsatz) titleParts.push(pAbsatz.includes('Abs') ? pAbsatz : `Abs. ${pAbsatz}`);
+        if(pSatz) titleParts.push(`Satz ${pSatz}`);
+        if(pNummer) titleParts.push(`Nr. ${pNummer}`);
+        if(pBuchstabe) titleParts.push(`lit. ${pBuchstabe}`);
+        
         const title = titleParts.join(' ');
         
         const div = document.createElement('div');
@@ -235,13 +271,13 @@ export function renderSchreiben() {
                     <span class="item-index" style="font-weight:bold;">${index + 1}.</span>
                     <span class="item-title" style="font-weight:bold;">${title}</span>
                 </div>
-                <button class="remove-btn btn-mini" onclick="window.removeFromSchreiben('${item.id}')" title="Entfernen" style="border:none; background:transparent; cursor:pointer; color:var(--text-muted);">
+                <button class="remove-btn btn-mini" onclick="window.removeFromSchreiben('${item.id || item._internalId}')" title="Entfernen" style="border:none; background:transparent; cursor:pointer; color:var(--text-muted);">
                     <span aria-hidden="true">✕</span>
                 </button>
             </div>
             
             <div class="item-content">
-                <textarea class="edit-textarea" data-id="${item.id}" rows="4" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit; margin-bottom: 10px;">${item.editedText}</textarea>
+                <textarea class="edit-textarea" data-id="${item.id || item._internalId}" rows="4" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit; margin-bottom: 10px;">${item.editedText || item._editedText}</textarea>
             </div>
             
             <button class="toggle-more-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.nextElementSibling.style.display === 'none' ? '<span>👁️</span> Originaltext anzeigen' : '<span>👁️</span> Originaltext ausblenden'">
@@ -249,7 +285,7 @@ export function renderSchreiben() {
             </button>
             <div class="original-text" style="display: none; background:var(--bg-gradient-start); padding:10px; border-radius:6px; margin-top:5px;">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">Originaler Rechtstext</p>
-                ${escapeHtml(item.inhalt)}
+                ${escapeHtml(item.inhalt || item.Rechtstext)}
             </div>
         `;
         
@@ -259,9 +295,10 @@ export function renderSchreiben() {
     document.querySelectorAll('.edit-textarea').forEach(textarea => {
         textarea.addEventListener('input', (e) => {
             const id = e.target.getAttribute('data-id');
-            const item = state.revisionsSchreibenListe.find(d => d.id === id);
+            const item = state.revisionsSchreibenListe.find(d => (d.id || d._internalId) === id);
             if (item) {
                 item.editedText = e.target.value;
+                item._editedText = e.target.value;
                 if(window.saveToLocalStorage) window.saveToLocalStorage();
             }
         });

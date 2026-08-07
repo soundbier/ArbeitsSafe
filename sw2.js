@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
     './js/app.js',
     './js/data.js',
     './js/ui.js',
+    './js/checklist.js',
     './gesetze.csv',
     './manifest.json',
     './icons/img-192x192.png',  

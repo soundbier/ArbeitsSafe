@@ -104,6 +104,18 @@ export function updateDropdowns() {
 }
 
 export function renderResults() {
+    // --- LOGIK-STOPPER ---
+    // Wenn ein Gesetz gewählt ist, aber KEIN Paragraf und KEINE Suche aktiv ist:
+    if (DOM.lawFilter.value && !DOM.paragraphFilter.value && !DOM.searchInput.value) {
+        DOM.resultsContainer.innerHTML = `
+            <div class="empty-state card-base">
+                <p class="bold-text">Bitte wählen Sie einen Paragrafen</p>
+                <p>Um die Ansicht übersichtlich zu halten, wählen Sie bitte einen Paragrafen aus dem Dropdown-Menü aus.</p>
+            </div>
+        `;
+        return;
+    }
+
     let results = state.gesetzeData;
     
     // Filter anwenden
@@ -138,7 +150,6 @@ export function renderResults() {
     DOM.resultsContainer.innerHTML = '';
     
     results.forEach(row => {
-        // Fallback für alte und neue Key-Strukturen
         let pGesetz = row.gesetzKuerzel || row.Gesetz;
         let pPara = row.paragraf || row.Paragraf;
         let pAbsatz = row.absatz || row.Absatz;
@@ -156,7 +167,8 @@ export function renderResults() {
         
         const title = titleParts.join(' ') || 'Ohne Zuordnung';
 
-        let textbaustein = row.Textbaustein || [row.mangelVorgefunden, row.rechtsgrundlage, row.handlungsaufforderung].filter(Boolean).join("\n\n");
+        // HIER KORRIGIERT: Nur noch ein Zeilenumbruch ("\n")
+        let textbaustein = row.Textbaustein || [row.mangelVorgefunden, row.rechtsgrundlage, row.handlungsaufforderung].filter(Boolean).join("\n");
         const hasBaustein = textbaustein && textbaustein.trim() !== '';
         
         const card = document.createElement('div');

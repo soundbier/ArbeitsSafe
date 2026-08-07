@@ -50,339 +50,301 @@ export function switchTab(tabId) {
 
 // Mobile-freundliches Toast-Feedback
 export function showToast(message) {
-    const toast = document.getElementById('toast');
+    const toast = document.getElementById('toastMessage') || document.getElementById('toast');
     // FIX: Nur den Text im Span ändern, damit der Undo-Button aus der Checkliste nicht überschrieben wird
-    document.getElementById('toastText').textContent = message;
+    if(document.getElementById('toastText')) { document.getElementById('toastText').textContent = message; } else { toast.textContent = message; }
     
     // Undo-Button ausblenden, falls er von der Checkliste noch sichtbar wäre
     const undoBtn = document.getElementById('toastUndoBtn');
     if(undoBtn) undoBtn.style.display = 'none';
 
-    toast.classList.add('show');
+    if(toast) toast.classList.add('show');
     
     setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2500);
+        if(toast) toast.classList.remove('show');
+    }, 3000);
 }
 
-// Globale Text-Toggle Funktion für "Mehr lesen"
-// Wird global an window gebunden, da es über Inline-HTML (onclick) aufgerufen wird
-window.toggleText = function(btn) {
-    const target = btn.previousElementSibling;
-    target.classList.toggle('text-clamp');
+export function showError(message) {
+    DOM.errorContainer.textContent = message;
+    DOM.errorContainer.style.display = 'block';
+    setTimeout(() => { DOM.errorContainer.style.display = 'none'; }, 5000);
+}
+
+export function updateCounters() {
+    DOM.schreibenCounter.textContent = state.schreibenData.length;
+    DOM.tabCounter.textContent = state.schreibenData.length;
     
-    const isClamped = target.classList.contains('text-clamp');
-    btn.innerHTML = isClamped ? 'Mehr anzeigen ⬇' : 'Weniger anzeigen ⬆';
-};
-
-/* ==========================================
-   TEXT & CLIPBOARD HELPER
-   ========================================== */
-
-export function escapeHTML(text) { 
-    if (!text) return "";
-    return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;"); 
-}
-
-export function escapeJS(str) { 
-    if (!str) return "";
-    return str
-        .replace(/\\/g, '\\\\')
-        .replace(/`/g, '\\`')
-        .replace(/\n/g, '\\n'); 
-}
-
-export function containsExactWord(text, query) { 
-    if (!text || !query) return false; 
-    
-    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
-    const regex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
-    
-    return regex.test(text); 
-}
-
-export function copyTextToClipboard(btn, text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('✓ Text erfolgreich kopiert');
-    });
-}
-
-function onCopySuccess() { 
-    showToast('✓ Gesamtes Schreiben erfolgreich kopiert!');
+    if (state.schreibenData.length > 0) {
+        DOM.tabCounter.style.backgroundColor = 'var(--primary)';
+        DOM.tabCounter.style.color = 'white';
+    } else {
+        DOM.tabCounter.style.backgroundColor = 'var(--text-muted)';
+        DOM.tabCounter.style.color = 'white';
+    }
 }
 
 /* ==========================================
-   FILTER & DATENVERARBEITUNG
+   FILTER & DROPDOWNS
    ========================================== */
 
-function getFilteredData() {
-    const selectedLaw = DOM.lawFilter.value;
-    const selectedParagraf = DOM.paragraphFilter.value;
-    const selectedAbsatz = DOM.absatzFilter.value;
-    const searchQuery = DOM.searchInput.value.trim();
-    const requireBaustein = DOM.hasBausteinFilter.checked;
-
-    return state.gesetzeData.filter(item => {
-        const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-        
-        if (requireBaustein && !hasBausteinData) return false;
-        if (selectedLaw && item.gesetzKuerzel !== selectedLaw) return false;
-        if (selectedParagraf && item.paragraf !== selectedParagraf) return false;
-        if (selectedAbsatz && item.absatz !== selectedAbsatz) return false; 
-        
-        if (searchQuery) {
-            const searchableText = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
-            if (!containsExactWord(searchableText, searchQuery)) return false;
-        }
-        
-        return true;
+export function populateFilter(selectElement, items, defaultText = "-- Alle --") {
+    selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+    items.sort().forEach(item => {
+        if (!item) return;
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        selectElement.appendChild(opt);
     });
 }
 
 export function updateDropdowns() {
+    const data = state.parsedData;
+    
+    // Alle verfügbaren Gesetze, die auch in den aktuellen Daten vorkommen
+    const laws = [...new Set(data.map(d => d.Gesetz))].filter(Boolean);
     const currentLaw = DOM.lawFilter.value;
-    const currentParagraf = DOM.paragraphFilter.value;
-    const currentAbsatz = DOM.absatzFilter.value;
-    const requireBaustein = DOM.hasBausteinFilter.checked;
     
-    const lawsMap = new Map();
-    const paragrafenMap = new Map();
-    const absatzeSet = new Set();
-    
-    // 1. Gesetze füllen
-    state.gesetzeData.forEach(item => { 
-        const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-        if (!requireBaustein || hasBausteinData) {
-            lawsMap.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel); 
-        }
-    });
-    
-    let lawOptions = '<option value="">-- Alle Gesetze --</option>';
-    Array.from(lawsMap).forEach(([kuerzel, name]) => {
-        lawOptions += `<option value="${escapeHTML(kuerzel)}">${escapeHTML(kuerzel)} - ${escapeHTML(name)}</option>`;
-    });
-    DOM.lawFilter.innerHTML = lawOptions;
-    if (lawsMap.has(currentLaw)) DOM.lawFilter.value = currentLaw;
+    populateFilter(DOM.lawFilter, laws, "-- Alle Gesetze --");
+    DOM.lawFilter.value = currentLaw || "";
 
-    // 2. Paragrafen füllen (abhängig vom Gesetz)
-    state.gesetzeData.forEach(item => { 
-        const lawMatches = !DOM.lawFilter.value || item.gesetzKuerzel === DOM.lawFilter.value;
-        const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
+    // Paragrafen filtern basierend auf Gesetz
+    const filteredByLaw = currentLaw 
+        ? data.filter(d => d.Gesetz === currentLaw)
+        : data;
         
-        if (lawMatches && (!requireBaustein || hasBausteinData) && item.paragraf) {
-            paragrafenMap.set(item.paragraf, item.titel); 
-        }
-    });
+    const paragraphs = [...new Set(filteredByLaw.map(d => d.Paragraf))].filter(Boolean);
+    const currentPara = DOM.paragraphFilter.value;
     
-    let paragrafOptions = '<option value="">-- Alle Paragrafen --</option>';
-    Array.from(paragrafenMap).forEach(([paragraf, titel]) => {
-        const displayTitel = titel ? ` — ${escapeHTML(titel)}` : '';
-        paragrafOptions += `<option value="${escapeHTML(paragraf)}">${escapeHTML(paragraf)}${displayTitel}</option>`;
-    });
-    DOM.paragraphFilter.innerHTML = paragrafOptions;
-    if (paragrafenMap.has(currentParagraf)) DOM.paragraphFilter.value = currentParagraf;
-
-    // 3. Absätze füllen (abhängig vom Paragraf)
-    if (DOM.paragraphFilter.value) { 
-        state.gesetzeData.forEach(item => { 
-            const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-            if (item.paragraf === DOM.paragraphFilter.value && (!requireBaustein || hasBausteinData) && item.absatz) {
-                absatzeSet.add(item.absatz); 
-            }
-        }); 
+    populateFilter(DOM.paragraphFilter, paragraphs, "-- Alle Paragrafen --");
+    // Paragraf beibehalten, falls er im neuen Gesetz existiert
+    if (paragraphs.includes(currentPara)) {
+        DOM.paragraphFilter.value = currentPara;
+    } else {
+        DOM.paragraphFilter.value = "";
     }
-    
-    let absatzOptions = '<option value="">-- Alle Absätze --</option>';
-    Array.from(absatzeSet)
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-        .forEach(absatz => {
-            absatzOptions += `<option value="${escapeHTML(absatz)}">${escapeHTML(absatz)}</option>`;
-        });
+
+    // Absätze filtern basierend auf Gesetz UND Paragraf
+    const currentParaValue = DOM.paragraphFilter.value;
+    const filteredByPara = currentParaValue
+        ? filteredByLaw.filter(d => d.Paragraf === currentParaValue)
+        : filteredByLaw;
         
-    DOM.absatzFilter.innerHTML = absatzOptions;
-    if (absatzeSet.has(currentAbsatz)) DOM.absatzFilter.value = currentAbsatz;
-    DOM.absatzFilter.disabled = absatzeSet.size === 0;
+    const absaetze = [...new Set(filteredByPara.map(d => d.Absatz))].filter(Boolean);
+    const currentAbs = DOM.absatzFilter.value;
+    
+    populateFilter(DOM.absatzFilter, absaetze, "-- Alle Absätze --");
+    if (absaetze.includes(currentAbs)) {
+        DOM.absatzFilter.value = currentAbs;
+    } else {
+        DOM.absatzFilter.value = "";
+    }
 }
 
 /* ==========================================
-   RENDER FUNKTIONEN (DOM Updates)
+   RENDERING SUCHE & DATENBANK
    ========================================== */
 
-export function renderResults() {
-    const data = getFilteredData();
-    
-    if (data.length === 0) { 
-        DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`; 
-        return; 
-    }
-    if (!DOM.searchInput.value && !DOM.paragraphFilter.value && !DOM.lawFilter.value) { 
-        DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie Filter oder nutzen Sie die Suche.</div>`; 
-        return; 
-    }
-
-    // Gruppieren nach Gesetz und Paragraf
-    const groupMap = new Map();
-    data.forEach(item => { 
-        const key = `${item.gesetzKuerzel}_${item.paragraf}`; 
-        if (!groupMap.has(key)) {
-            groupMap.set(key, { ...item, entries: [] }); 
-        }
-        groupMap.get(key).entries.push(item); 
-    });
-
-    // HTML generieren
-    DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(group => {
-        const titelErgaenzung = group.titel && !group.titel.startsWith(group.paragraf) ? ` — ${escapeHTML(group.titel)}` : '';
-        
-        return `
-        <article class="card-base law-card">
-            <header class="card-top">
-                <div>
-                    <span class="badge">${escapeHTML(group.gesetzKuerzel)}</span>
-                    <span class="law-title-meta">${escapeHTML(group.gesetzName)}</span>
-                </div>
-            </header>
-            
-            <h2 class="paragraph-heading">${escapeHTML(group.paragraf)}${titelErgaenzung}</h2>
-            
-            ${group.entries.map(item => {
-                const hasBaustein = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-                const bausteinText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
-                const isInDocument = state.revisionsSchreibenListe.some(docItem => docItem.id === item.id);
-                
-                return `
-                <section class="paragraph-box">
-                    <header class="paragraph-box-header">
-                        <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
-                        <div class="action-buttons-group">
-                            <button type="button" class="action-icon-btn" onclick="copyTextToClipboard(this, \`${escapeJS(item.inhalt)}\`)">
-                                <span aria-hidden="true">📋</span> Gesetz
-                            </button>
-                            ${hasBaustein ? `
-                            <button type="button" class="action-icon-btn ${isInDocument ? 'added' : ''}" id="add-btn-${item.id}" onclick="toggleToSchreiben('${item.id}')">
-                                ${isInDocument ? '<span aria-hidden="true">✓</span> Im Schreiben' : '<span aria-hidden="true">➕</span> Zum Schreiben'}
-                            </button>` : ''}
-                        </div>
-                    </header>
-                    
-                    <div class="text-content-wrapper">
-                        <div class="paragraph-text text-clamp">${escapeHTML(item.inhalt)}</div>
-                        <button type="button" class="toggle-more-btn" onclick="window.toggleText(this)">Mehr anzeigen ⬇</button>
-                    </div>
-
-                    ${hasBaustein ? `
-                    <div class="revision-preview-box">
-                        <div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:0.35rem;">
-                            Vorschau Textbaustein
-                        </div>
-                        <div class="text-clamp">${escapeHTML(bausteinText)}</div>
-                        <button type="button" class="toggle-more-btn" onclick="window.toggleText(this)">Mehr anzeigen ⬇</button>
-                    </div>` : ''}
-                </section>`;
-            }).join('')}
-        </article>`;
-    }).join('');
-}
-
-export function renderDocumentView() {
-    const count = state.revisionsSchreibenListe.length;
-    
-    DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
-    DOM.tabCounter.textContent = count; 
-    
-    // Leerer Zustand
-    if (count === 0) {
-        DOM.schreibenList.innerHTML = `
-            <div class="doc-empty">
-                Das Schreiben ist noch leer.<br><br>
-                Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.
-            </div>`;
-        DOM.copySchreibenBtn.disabled = true; 
-        DOM.clearSchreibenBtn.style.display = 'none'; 
+export function renderResults(results) {
+    if (results.length === 0) {
+        DOM.resultsContainer.innerHTML = `
+            <div class="empty-state card-base">
+                <p class="bold-text">Keine Ergebnisse gefunden</p>
+                <p>Bitte passen Sie Ihre Filter an oder ändern Sie den Suchbegriff.</p>
+            </div>
+        `;
         return;
     }
 
-    // Gefüllter Zustand
-    DOM.copySchreibenBtn.disabled = false; 
-    DOM.clearSchreibenBtn.style.display = 'flex';
+    DOM.resultsContainer.innerHTML = '';
+    
+    results.forEach(row => {
+        const hasBaustein = row.Textbaustein && row.Textbaustein.trim() !== '';
+        
+        const card = document.createElement('div');
+        card.className = `card-base result-card ${hasBaustein ? 'has-textbaustein' : ''}`;
+        
+        // Titel generieren
+        let titleParts = [];
+        if(row.Gesetz) titleParts.push(row.Gesetz);
+        if(row.Paragraf) titleParts.push(`§ ${row.Paragraf}`);
+        if(row.Absatz) titleParts.push(`Abs. ${row.Absatz}`);
+        if(row.Satz) titleParts.push(`Satz ${row.Satz}`);
+        if(row.Nummer) titleParts.push(`Nr. ${row.Nummer}`);
+        if(row.Buchstabe) titleParts.push(`lit. ${row.Buchstabe}`);
+        
+        const title = titleParts.join(' ') || 'Ohne Zuordnung';
 
-    DOM.schreibenList.innerHTML = state.revisionsSchreibenListe.map((item, idx) => {
-        return `
-        <div class="doc-item">
-            <header class="doc-item-title-row">
-                <span class="doc-item-num">${idx + 1}.</span>
-                <input type="text" class="doc-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)">
-            </header>
+        // Badges generieren
+        let badgesHtml = '';
+        if (row.Kategorie) {
+            badgesHtml += `<span class="badge" style="background:var(--secondary-bg); color:var(--text-dark);">${row.Kategorie}</span>`;
+        }
+        if (row.Art) {
+            badgesHtml += `<span class="badge" style="background:var(--bg-gradient-start); color:var(--primary); border: 1px solid var(--border-color);">${row.Art}</span>`;
+        }
+
+        // HTML aufbauen
+        let innerHtml = `
+            <div class="result-header">
+                <div class="result-title">${title}</div>
+                <div class="result-badges">${badgesHtml}</div>
+            </div>
             
-            <div class="doc-editable-text" contenteditable="true" 
-                 oninput="updateItemText('${item.id}', this.innerText)" 
-                 title="Klicken, um den Text zu bearbeiten">${escapeHTML(item.editedText)}</div>
-                 
-            <div class="doc-item-actions">
-                ${idx > 0 ? `
-                <button type="button" class="action-icon-btn" title="Nach oben" onclick="moveItem(${idx}, -1)">
-                    <span aria-hidden="true">▲</span>
-                </button>` : ''}
-                
-                ${idx < count - 1 ? `
-                <button type="button" class="action-icon-btn" title="Nach unten" onclick="moveItem(${idx}, 1)">
-                    <span aria-hidden="true">▼</span>
-                </button>` : ''}
-                
-                <button type="button" class="action-icon-btn" style="color: #dc2626;" title="Punkt entfernen" onclick="removeFromSchreiben('${item.id}')">
-                    <span aria-hidden="true">🗑️</span>
+            <div class="result-section">
+                <div class="result-label">Rechtstext</div>
+                <div class="result-content">${escapeHtml(row.Rechtstext || 'Kein Text vorhanden')}</div>
+            </div>
+        `;
+
+        if (hasBaustein) {
+            innerHtml += `
+                <div class="result-section baustein-section">
+                    <div class="result-label">
+                        Textbaustein für Schreiben
+                        <button class="btn btn-tool btn-mini" title="Kopieren" data-copy-text="${escapeQuotes(row.Textbaustein)}">
+                            <span aria-hidden="true">📋</span>
+                        </button>
+                    </div>
+                    <div class="result-content highlight-text">${escapeHtml(row.Textbaustein)}</div>
+                </div>
+            `;
+        } else {
+             innerHtml += `
+                <div class="result-section" style="opacity: 0.6;">
+                    <div class="result-label">Textbaustein</div>
+                    <div class="result-content"><em>Kein vorgefertigter Textbaustein für diese Vorschrift hinterlegt.</em></div>
+                </div>
+            `;
+        }
+
+        // Action Buttons
+        const isAdded = state.schreibenData.some(item => item.id === row._internalId);
+        innerHtml += `
+            <div class="result-actions">
+                ${hasBaustein ? `
+                    <button class="action-icon-btn ${isAdded ? 'added' : ''}" data-id="${row._internalId}">
+                        ${isAdded ? '<span>✓</span> Im Entwurf' : '<span>+</span> Zum Entwurf'}
+                    </button>
+                ` : `<button class="action-icon-btn" disabled style="opacity:0.4; cursor:not-allowed;">Kein Baustein verfügbar</button>`}
+            </div>
+        `;
+
+        card.innerHTML = innerHtml;
+        DOM.resultsContainer.appendChild(card);
+    });
+
+    // Event Listener für "Zum Schreiben" Buttons hinzufügen
+    document.querySelectorAll('.action-icon-btn[data-id]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            window.toggleSchreibenItem(id);
+        });
+    });
+
+    // Event Listener für kleine Copy-Buttons an den Bausteinen
+    document.querySelectorAll('[data-copy-text]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const text = e.currentTarget.getAttribute('data-copy-text');
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Baustein kopiert!');
+            });
+        });
+    });
+}
+
+
+/* ==========================================
+   RENDERING SCHREIBEN (ENTWURF)
+   ========================================== */
+
+export function renderSchreiben() {
+    if (state.schreibenData.length === 0) {
+        DOM.schreibenList.innerHTML = `
+            <div class="empty-state">
+                <p class="bold-text">Noch keine Bausteine</p>
+                <p>Suchen Sie in der Datenbank und fügen Sie Textbausteine zum Entwurf hinzu.</p>
+            </div>
+        `;
+        return;
+    }
+
+    DOM.schreibenList.innerHTML = '';
+    
+    state.schreibenData.forEach((item, index) => {
+        let titleParts = [];
+        if(item.Gesetz) titleParts.push(item.Gesetz);
+        if(item.Paragraf) titleParts.push(`§ ${item.Paragraf}`);
+        if(item.Absatz) titleParts.push(`Abs. ${item.Absatz}`);
+        if(item.Satz) titleParts.push(`Satz ${item.Satz}`);
+        if(item.Nummer) titleParts.push(`Nr. ${item.Nummer}`);
+        if(item.Buchstabe) titleParts.push(`lit. ${item.Buchstabe}`);
+        
+        const title = titleParts.join(' ');
+        
+        const div = document.createElement('div');
+        div.className = 'schreiben-item card-base';
+        
+        div.innerHTML = `
+            <div class="item-header">
+                <div>
+                    <span class="item-index">${index + 1}.</span>
+                    <span class="item-title">${title}</span>
+                </div>
+                <button class="remove-btn" onclick="window.removeSchreibenItem('${item._internalId}')" title="Entfernen">
+                    <span aria-hidden="true">✕</span>
                 </button>
             </div>
-        </div>`;
-    }).join('');
+            
+            <div class="item-content">
+                <textarea class="edit-textarea" data-id="${item._internalId}" rows="3">${item._editedText || item.Textbaustein}</textarea>
+            </div>
+            
+            <button class="toggle-more-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.nextElementSibling.style.display === 'none' ? '<span>👁️</span> Originaltext anzeigen' : '<span>👁️</span> Originaltext ausblenden'">
+                <span>👁️</span> Originaltext anzeigen
+            </button>
+            <div class="original-text" style="display: none;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Originaler Rechtstext</p>
+                ${escapeHtml(item.Rechtstext)}
+            </div>
+        `;
+        
+        DOM.schreibenList.appendChild(div);
+    });
+
+    // Auto-Save für Textareas
+    document.querySelectorAll('.edit-textarea').forEach(textarea => {
+        textarea.addEventListener('input', (e) => {
+            const id = e.target.getAttribute('data-id');
+            const item = state.schreibenData.find(d => d._internalId === id);
+            if (item) {
+                item._editedText = e.target.value;
+                window.saveToLocalStorage(); // Speichert direkt während des Tippens
+            }
+        });
+    });
 }
 
 /* ==========================================
-   EXPORT / CLIPBOARD
+   HILFSFUNKTIONEN (HTML ESCAPING)
    ========================================== */
 
-export function copyComposedSchreiben() {
-    if (state.revisionsSchreibenListe.length === 0) return;
-    
-    // 1. Plain Text generieren
-    const plainText = state.revisionsSchreibenListe.map((item, idx) => {
-        return `${idx + 1}. ${item.titel}\r\n\r\n${item.editedText}`;
-    }).join("\r\n\r\n\r\n");
-    
-    // 2. Formatiertes HTML generieren
-    const htmlContent = state.revisionsSchreibenListe.map((item, idx) => {
-        const paragraphs = item.editedText.split(/(?:\r?\n){2,}/).map(block => {
-            const htmlBlock = escapeHTML(block).replace(/\r?\n/g, '<br>');
-            return `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${htmlBlock}</p>`;
-        }).join('');
-        
-        return `
-            <p style="margin-top:0; margin-bottom:12pt; text-align:justify;">
-                <strong>${idx + 1}. ${escapeHTML(item.titel)}</strong>
-            </p>
-            ${paragraphs}`;
-    }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+         .toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
 
-    const clipboardHtmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
-    
-    const fallbackCopy = () => {
-        navigator.clipboard.writeText(plainText).then(onCopySuccess);
-    };
-    
-    // 3. In Zwischenablage schreiben (Rich Text bevorzugt)
-    if (navigator.clipboard && window.ClipboardItem) {
-        navigator.clipboard.write([
-            new ClipboardItem({
-                "text/plain": new Blob([plainText], { type: "text/plain" }), 
-                "text/html": new Blob([clipboardHtmlText], { type: "text/html" })
-            })
-        ]).then(onCopySuccess).catch(fallbackCopy);
-    } else {
-        fallbackCopy();
-    }
+function escapeQuotes(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+         .toString()
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
 }

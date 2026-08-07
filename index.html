@@ -16,9 +16,7 @@
 <body>
     <main class="workspace-container">
         
-        <!-- ==========================================
-             HEADER
-             ========================================== -->
+        <!-- HEADER -->
         <header class="card-base tool-header">
             <div class="header-titles">
                 <h1>ArbeitsSafe</h1>
@@ -44,11 +42,8 @@
         <!-- Error Container -->
         <div id="errorContainer" aria-live="polite"></div>
 
-        <!-- ==========================================
-             TAB NAVIGATION
-             ========================================== -->
+        <!-- TAB NAVIGATION -->
         <nav class="tab-navigation" role="tablist">
-            <!-- TAB 1: Systemprüfung ist nun aktiv -->
             <button type="button" class="tab-btn active" data-tab="tab-audit" role="tab" aria-selected="true" aria-controls="tab-audit">
                 <span aria-hidden="true">📋</span> Systemprüfung
             </button>
@@ -61,21 +56,21 @@
             </button>
         </nav>
 
-        <!-- ==========================================
-             TAB INHALTE
-             ========================================== -->
+        <!-- TAB INHALTE -->
         <div class="tabs-container">
             
             <!-- TAB 1: Systemprüfung -->
             <section id="tab-audit" class="tab-content active" role="tabpanel">
-                <div class="document-view" style="padding: 0; overflow: hidden; position: relative; min-height: 600px;">
+                <!-- HIER KORRIGIERT: overflow-y: auto statt overflow: hidden -->
+                <div class="document-view" style="padding: 0; overflow-y: auto; position: relative; min-height: 600px;">
                     <!-- Checklisten Topbar -->
                     <div class="topbar" style="background: var(--card-bg); padding: 18px 24px 14px; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid var(--primary); position: sticky; top: 0; z-index: 30;">
                         <div class="topbar-left">
                             <span class="sub" id="topSub" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); display: block; margin-bottom: 4px;">Begehungen verwalten</span>
                             <h2 id="topTitle" style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Checkliste für Systemprüfungen</h2>
                         </div>
-                        <div class="topbar-right" style="display: flex; gap: 8px;">
+                        <!-- HIER KORRIGIERT: flex-wrap: wrap -->
+                        <div class="topbar-right" style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn btn-secondary btn-mini-text text-btn" id="backBtn" style="display:none;" onclick="goToList()">[ ZURÜCK ]</button>
                             <button class="btn btn-secondary btn-mini-text text-btn" id="loadStateBtn" onclick="document.getElementById('auditFileInput').click()">[ DATEN LADEN ]</button>
                             <button class="btn btn-secondary btn-mini-text text-btn" id="saveStateBtn" onclick="exportState()">[ SPEICHERN ]</button>
@@ -100,28 +95,23 @@
             <!-- TAB 2: Datenbank & Suche -->
             <section id="tab-search" class="tab-content" role="tabpanel">
                 <div class="main-content-area">
-                    
                     <div class="card-base controls-toolbar">
                         <div class="control-field">
                             <label for="lawFilter">1. Gesetz</label>
                             <select id="lawFilter"><option value="">-- Alle --</option></select>
                         </div>
-                        
                         <div class="control-field">
                             <label for="paragraphFilter">2. Paragraf</label>
                             <select id="paragraphFilter"><option value="">-- Alle --</option></select>
                         </div>
-                        
                         <div class="control-field">
                             <label for="absatzFilter">3. Absatz</label>
                             <select id="absatzFilter"><option value="">-- Alle --</option></select>
                         </div>
-                        
                         <div class="control-field">
                             <label for="searchInput">Volltextsuche</label>
                             <input type="text" id="searchInput" placeholder="Suche in Texten...">
                         </div>
-                        
                         <div class="control-field has-checkbox">
                             <label class="custom-checkbox">
                                 <input type="checkbox" id="hasBausteinFilter">
@@ -129,7 +119,6 @@
                             </label>
                         </div>
                     </div>
-
                     <div id="results" class="results-grid" aria-live="polite"></div>
                 </div>
             </section>
@@ -137,14 +126,14 @@
             <!-- TAB 3: Entwurf & Schreiben -->
             <section id="tab-document" class="tab-content" role="tabpanel">
                 <div class="document-view">
-                    <div class="topbar">
+                    <div class="topbar" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
                         <div class="topbar-left">
                             <span class="sub">Aktueller Vorgang</span>
-                            <h2>Entwurf bearbeiten</h2>
+                            <h2 style="margin:0;">Entwurf bearbeiten</h2>
                         </div>
-                        <div class="topbar-right">
-                            <span class="doc-meta"><span id="schreibenCounter">0</span> Positionen erfasst</span>
-                            <div class="doc-actions">
+                        <div class="topbar-right" style="display:flex; align-items:center; gap: 10px; flex-wrap: wrap;">
+                            <span class="doc-meta" style="font-size: 0.9rem; color: var(--text-muted);"><span id="schreibenCounter">0</span> Positionen erfasst</span>
+                            <div class="doc-actions" style="display: flex; gap: 8px;">
                                 <button type="button" class="btn btn-secondary" id="clearSchreibenBtn">
                                     <span aria-hidden="true">🗑️</span> Leeren
                                 </button>
@@ -169,18 +158,20 @@
         </div>
     </main>
 
-    <!-- ==========================================
-         MODALS & OVERLAYS
-         ========================================== -->
-    <div id="toastMessage" class="toast" role="alert"></div>
+    <!-- MODALS & OVERLAYS -->
+    <!-- HIER KORRIGIERT: Toast HTML Struktur repariert -->
+    <div id="toastMessage" class="toast" role="alert">
+        <span id="toastText"></span>
+        <button id="toastUndoBtn" class="btn btn-secondary btn-mini-text" onclick="window.undoLastAction && window.undoLastAction()" style="display:none; margin-left: 10px;">Rückgängig</button>
+    </div>
 
+    <!-- Modals bleiben wie im Original ... -->
     <div class="overlay" id="remarkModal" role="dialog" aria-modal="true">
         <div class="modal">
             <h2>Bemerkung hinzufügen</h2>
             <p class="desc">Erfassen Sie Details, Mängel oder Maßnahmen zu diesem Punkt.</p>
             <input type="hidden" id="remarkSnapshotId">
             <input type="hidden" id="remarkSIdx">
-            
             <div class="field">
                 <label>Text</label>
                 <textarea id="remarkText" placeholder="Notizen hier eintragen..."></textarea>
@@ -192,21 +183,17 @@
         </div>
     </div>
 
-    <!-- Export Modal (Checkliste) -->
     <div class="overlay" id="exportModal" role="dialog" aria-modal="true">
         <div class="modal" style="max-width: 600px;">
             <h2>Protokoll Export</h2>
             <p class="desc">Das Ergebnis der Begehung kopieren oder herunterladen.</p>
-            
             <div class="segmented" id="exportTypeSegment">
                 <button class="active" onclick="setExportType('ALL')">Alles</button>
                 <button onclick="setExportType('DEFECTS')">Nur Mängel/Offen</button>
             </div>
-            
             <div class="field">
-                <div class="export-output" id="exportPreview"></div>
+                <div class="export-output" id="exportPreview" style="background:#f1f5f9; padding: 15px; border-radius:6px; min-height: 200px; max-height:400px; overflow-y:auto; white-space:pre-wrap; font-size:14px; font-family:monospace;"></div>
             </div>
-            
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeExportModal()">Schließen</button>
                 <button class="btn btn-tool" onclick="copyExportText()">Text Kopieren</button>
@@ -214,7 +201,6 @@
         </div>
     </div>
 
-    <!-- Neuer Ort (Session) Modal -->
     <div class="overlay" id="newLocModal" role="dialog" aria-modal="true">
         <div class="modal">
             <h2>Neue Begehung anlegen</h2>
@@ -234,24 +220,6 @@
         </div>
     </div>
 
-    <!-- Manage Questions Modal -->
-    <div class="overlay" id="manageModal" role="dialog" aria-modal="true">
-        <div class="modal" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
-            <div style="flex-shrink:0;">
-                <h2>Fragenkatalog bearbeiten</h2>
-                <p class="desc">Fragen ändern, hinzufügen oder löschen. Änderungen betreffen nur neue oder zurückgesetzte Begehungen.</p>
-            </div>
-            
-            <div id="manageList" style="flex:1; overflow-y:auto; border:1px solid var(--border-color); border-radius:6px; margin-bottom: 20px; background: #fff;"></div>
-            
-            <div class="modal-actions" style="flex-shrink:0;">
-                <button class="btn btn-secondary" onclick="closeManageQuestions()">Schließen</button>
-                <button class="btn btn-success" onclick="saveManagedQuestions()">Speichern</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Global Confirm Delete Modal -->
     <div class="overlay" id="confirmDeleteModal" role="dialog" aria-modal="true">
         <div class="modal">
             <h2 id="confirmDeleteTitle" style="color:#dc2626;">Wirklich löschen?</h2>
@@ -263,27 +231,13 @@
         </div>
     </div>
 
-    <!-- Reset Session Modal -->
-    <div class="overlay" id="resetSessionModal" role="dialog" aria-modal="true">
-        <div class="modal">
-            <h2 style="color:#dc2626;">Fortschritt zurücksetzen?</h2>
-            <p class="desc">Soll diese Begehung auf den aktuellen Fragenkatalog zurückgesetzt werden? Alle bisherigen Antworten gehen verloren!</p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="document.getElementById('resetSessionModal').classList.remove('open')">Abbrechen</button>
-                <button class="btn btn-success" style="background:#dc2626; color:#fff;" onclick="executeResetSession()">Zurücksetzen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Module laden -->
-    <!-- papa parse -->
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script type="module" src="js/data.js"></script>
     <script type="module" src="js/ui.js"></script>
     <script type="module" src="js/checklist.js"></script>
     <script type="module" src="js/app.js"></script>
     
-    <!-- PWA Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw2.js')

@@ -51,7 +51,13 @@ export function switchTab(tabId) {
 // Mobile-freundliches Toast-Feedback
 export function showToast(message) {
     const toast = document.getElementById('toast');
-    toast.textContent = message;
+    // FIX: Nur den Text im Span ändern, damit der Undo-Button aus der Checkliste nicht überschrieben wird
+    document.getElementById('toastText').textContent = message;
+    
+    // Undo-Button ausblenden, falls er von der Checkliste noch sichtbar wäre
+    const undoBtn = document.getElementById('toastUndoBtn');
+    if(undoBtn) undoBtn.style.display = 'none';
+
     toast.classList.add('show');
     
     setTimeout(() => {

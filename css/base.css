@@ -28,3 +28,19 @@ h1, h2, h3 { margin-top: 0; line-height: 1.2; }
 }
 
 .main-content-area, .results-container { display: flex; flex-direction: column; gap: 1.5rem; }
+/* ==========================================
+   MOBILE OPTIMIERUNG (BASE)
+   ========================================== */
+@media (max-width: 600px) {
+    /* 1. Verhindert automatisches Einzoomen auf iOS-Geräten beim Tippen */
+    input, 
+    select, 
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* 2. Platzhalter unten, damit die fixierte Bottom-Navigation keine Inhalte verdeckt */
+    .workspace-container {
+        padding-bottom: 90px;
+    }
+}

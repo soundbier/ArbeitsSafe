@@ -486,20 +486,17 @@ export function executeConfirmDelete(){
 }
 
 /* ---------- Export (HTML mit Farben / JSON) ---------- */
-// Hinweis: Konstanten werden später in data.js ausgelagert
 function getStatusBadgeHtml(status) {
     const baseStyle = "padding: 3px 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; white-space: nowrap; border-radius: 4px; display: inline-block; min-width: 65px; text-align: center;";
-    let bg = "#cbd5e1", col = "#475569", text = status;
     
-    if (status === 'NEIN' || status === 'AMPEL_ROT') { bg = "#fef2f2"; col = "#dc2626"; text = (status==='AMPEL_ROT'?'ROT':'NEIN'); }
-    else if (status === 'JA_INV') { bg = "#fef2f2"; col = "#dc2626"; text = "JA (MANGEL)"; }
-    else if (status === 'JA' || status === 'AMPEL_GRUEN') { bg = "#f0fdf4"; col = "#16a34a"; text = (status==='AMPEL_GRUEN'?'GRÜN':'JA'); }
-    else if (status === 'NEIN_INV') { bg = "#f0fdf4"; col = "#16a34a"; text = "NEIN (OK)"; }
-    else if (status === 'AMPEL_GELB') { bg = "#fef9c3"; col = "#d97706"; text = "GELB"; }
-    else if (status === 'ENTFAELLT') { bg = "#f1f5f9"; col = "#64748b"; text = "ENTFÄLLT"; }
-    else if (status === 'OFFEN') { bg = "transparent"; col = "#94a3b8"; text = "OFFEN"; }
+    // Holt die Farben und den Text aus der zentralen Konfiguration in data.js
+    const conf = STATUS_COLORS[status] || { 
+        bg: STATUS_COLORS.DEFAULT.bg, 
+        col: STATUS_COLORS.DEFAULT.col, 
+        text: status 
+    };
     
-    return `<span style="${baseStyle} background-color: ${bg}; color: ${col}; border: 1px solid ${col}40;">${text}</span>`;
+    return `<span style="${baseStyle} background-color: ${conf.bg}; color: ${conf.col}; border: 1px solid ${conf.col}40;">${conf.text}</span>`;
 }
 
 // ... Rest der Export und Manage-Funktionen bleiben unverändert ...

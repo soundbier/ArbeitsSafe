@@ -28,6 +28,7 @@ h1, h2, h3 { margin-top: 0; line-height: 1.2; }
 }
 
 .main-content-area, .results-container { display: flex; flex-direction: column; gap: 1.5rem; }
+
 /* ==========================================
    MOBILE OPTIMIERUNG (BASE)
    ========================================== */
@@ -39,8 +40,8 @@ h1, h2, h3 { margin-top: 0; line-height: 1.2; }
         font-size: 16px !important;
     }
 
-    /* 2. Platzhalter unten, damit die fixierte Bottom-Navigation keine Inhalte verdeckt */
+    /* 2. Platzhalter unten & engere Seitenränder für Smartphones */
     .workspace-container {
-        padding-bottom: 90px;
+        padding: 0.5rem 0.5rem 90px 0.5rem !important;
     }
 }

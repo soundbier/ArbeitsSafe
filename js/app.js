@@ -1,65 +1,89 @@
-import { state, parseCSV } from './data.js';
-import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard, switchTab } from './ui.js';
+import { state, parseCSV, saveToLocalStorage, loadFromLocalStorage } from './data.js';
+import { DOM, updateDropdowns, renderResults, renderSchreiben, switchTab, showToast } from './ui.js';
 
 // --- Haupt-Logik ---
 function initData(csvString, fileName = null) {
     state.lastLoadedFileText = csvString; 
     state.lastLoadedFileName = fileName;
-    state.gesetzeData = parseCSV(csvString);
+    
+    // Vermeide Überschreiben beim Reload, falls schon CSV-Daten da sind
+    if(csvString) {
+        state.gesetzeData = parseCSV(csvString);
+    }
     
     if (fileName) {
-    DOM.statusBadge.className = 'status-mini';
-    DOM.statusBadge.innerHTML = '<span>🟢</span>';
-    DOM.statusBadge.title = `${fileName} (${state.gesetzeData.length} Einträge)`;
-} else {
-    DOM.statusBadge.className = 'status-mini';
-    DOM.statusBadge.innerHTML = '<span>🟡</span>';
-    DOM.statusBadge.title = `Demo-Modus (${state.gesetzeData.length} Einträge)`;
-}
+        DOM.statusBadge.className = 'status-mini';
+        DOM.statusBadge.innerHTML = '<span>🟢</span>';
+        DOM.statusBadge.title = `${fileName} (${state.gesetzeData.length} Einträge)`;
+    } else {
+        DOM.statusBadge.className = 'status-mini';
+        DOM.statusBadge.innerHTML = '<span>🟡</span>';
+        DOM.statusBadge.title = `Demo-Modus (${state.gesetzeData.length} Einträge)`;
+    }
     updateDropdowns(); 
     renderResults();
+    renderSchreiben();
 }
 
 function toggleToSchreiben(itemId) {
     const item = state.gesetzeData.find(i => i.id === itemId); 
     if (!item) return;
+    
     const idx = state.revisionsSchreibenListe.findIndex(i => i.id === itemId);
-    const btn = document.getElementById(`add-btn-${itemId}`);
     
     if (idx > -1) { 
         state.revisionsSchreibenListe.splice(idx, 1); 
-        if(btn){ btn.classList.remove('added'); btn.innerHTML='➕ Zum Schreiben'; } 
     } else { 
         let newItem = { ...item };
         newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
         state.revisionsSchreibenListe.push(newItem); 
-        if(btn){ btn.classList.add('added'); btn.innerHTML='✓ Im Schreiben'; } 
     }
-    renderDocumentView();
+    
+    saveToLocalStorage();
+    renderResults();    // Buttons in der Suche updaten
+    renderSchreiben();  // Entwurf-Tab updaten
 }
 
-function updateItemTitle(id, v) { const i = state.revisionsSchreibenListe.find(x => x.id === id); if(i) i.titel = v; }
-function updateItemText(id, v) { const i = state.revisionsSchreibenListe.find(x => x.id === id); if(i) i.editedText = v; }
-function moveItem(idx, dir) { 
-    const n = idx + dir; 
-    if(n >= 0 && n < state.revisionsSchreibenListe.length){ 
-        state.revisionsSchreibenListe.splice(n, 0, state.revisionsSchreibenListe.splice(idx, 1)[0]); 
-        renderDocumentView(); 
-    } 
+function removeFromSchreiben(id) { 
+    toggleToSchreiben(id); 
 }
-function removeFromSchreiben(id) { toggleToSchreiben(id); }
-function clearSchreiben() { state.revisionsSchreibenListe = []; renderResults(); renderDocumentView(); }
+
+function clearSchreiben() { 
+    if(confirm("Möchten Sie den aktuellen Entwurf wirklich komplett leeren?")) {
+        state.revisionsSchreibenListe = []; 
+        saveToLocalStorage();
+        renderResults(); 
+        renderSchreiben(); 
+    }
+}
+
+function copyComposedSchreiben() {
+    if(state.revisionsSchreibenListe.length === 0) {
+        showToast("Der Entwurf ist leer.");
+        return;
+    }
+    
+    const text = state.revisionsSchreibenListe.map((item, idx) => {
+        let titleParts = [];
+        if(item.gesetzKuerzel) titleParts.push(item.gesetzKuerzel);
+        if(item.paragraf) titleParts.push(item.paragraf);
+        if(item.absatz) titleParts.push(item.absatz);
+        
+        return `${idx + 1}. ${titleParts.join(' ')}\n${item.editedText}`;
+    }).join('\n\n---\n\n');
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showToast("Gesamter Entwurf kopiert!");
+    });
+}
 
 
-// --- Exponieren an window (Wichtig für Inline-onclick im HTML) ---
+// --- Exponieren an window für Inline-onclick im HTML ---
 window.toggleToSchreiben = toggleToSchreiben;
-window.updateItemTitle = updateItemTitle;
-window.updateItemText = updateItemText;
-window.moveItem = moveItem;
 window.removeFromSchreiben = removeFromSchreiben;
 window.clearSchreiben = clearSchreiben;
 window.copyComposedSchreiben = copyComposedSchreiben;
-window.copyTextToClipboard = copyTextToClipboard;
+window.saveToLocalStorage = saveToLocalStorage;
 
 
 // --- Event Listeners ---
@@ -71,17 +95,22 @@ DOM.csvFileInput.addEventListener('change', e => {
         r.readAsArrayBuffer(f); 
     } 
 });
+
 DOM.reloadBtn.addEventListener('click', () => initData(state.lastLoadedFileText, state.lastLoadedFileName));
 DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 DOM.absatzFilter.addEventListener('change', renderResults); 
 DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
 
-// NEU: Debouncing für die Suchleiste (verhindert Ruckeln auf Mobile)
+// Buttons im "Entwurf"-Tab
+if(DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.addEventListener('click', clearSchreiben);
+if(DOM.copySchreibenBtn) DOM.copySchreibenBtn.addEventListener('click', copyComposedSchreiben);
+
+// Debouncing für die Suchleiste (verhindert Ruckeln auf Mobile)
 let searchTimeout;
 DOM.searchInput.addEventListener('input', () => {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(renderResults, 500);
+    searchTimeout = setTimeout(renderResults, 400);
 });
 
 // --- Tab Navigation ---
@@ -93,11 +122,19 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // --- App Start ---
 window.addEventListener('DOMContentLoaded', () => {
+    // Gespeicherte Daten laden
+    loadFromLocalStorage();
+    
+    // CSV laden
     fetch('gesetze.csv')
         .then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
         .then(t => initData(t, "Datenbank geladen"))
         .catch(e => { 
-            DOM.errorContainer.innerHTML=`<div class="error-alert"><strong>Hinweis:</strong> gesetze.csv nicht gefunden. Nutze Fallback-Daten.</div>`; 
+            if(DOM.errorContainer) {
+                DOM.errorContainer.innerHTML=`<div class="error-alert"><strong>Hinweis:</strong> gesetze.csv nicht gefunden. Nutze Fallback-Daten.</div>`; 
+                DOM.errorContainer.style.display = 'block';
+                setTimeout(() => DOM.errorContainer.style.display = 'none', 5000);
+            }
             initData(state.rawCsvData); 
         });
 });

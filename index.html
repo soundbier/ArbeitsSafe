@@ -66,7 +66,7 @@
              ========================================== -->
         <div class="tabs-container">
             
-            <!-- TAB 1: Systemprüfung (CHECKLISTE HIER EINGEFÜGT) -->
+            <!-- TAB 1: Systemprüfung -->
             <section id="tab-audit" class="tab-content active" role="tabpanel">
                 <div class="document-view" style="padding: 0; overflow: hidden; position: relative; min-height: 600px;">
                     <!-- Checklisten Topbar -->
@@ -86,7 +86,7 @@
                     </div>
 
                     <!-- Hauptbereich der Checkliste -->
-                    <main id="auditMainArea" style="padding-bottom: 80px;"></main>
+                    <main id="auditMainArea" style="padding-bottom: 100px;"></main>
 
                     <!-- Export Bar Checkliste -->
                     <div class="export-bar" id="exportBar" style="display:none; position: absolute; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border-color); padding: 16px 24px; z-index: 25;">
@@ -114,51 +114,55 @@
                         
                         <div class="control-field">
                             <label for="absatzFilter">3. Absatz</label>
-                            <select id="absatzFilter" disabled><option value="">-- Alle --</option></select>
+                            <select id="absatzFilter"><option value="">-- Alle --</option></select>
                         </div>
                         
-                        <div class="control-field search-full-width">
-                            <label for="searchInput">4. Globale Textsuche</label>
-                            <input type="text" id="searchInput" placeholder="Suchbegriff eingeben (z.B. Lärm, Gefährdung)...">
+                        <div class="control-field">
+                            <label for="searchInput">Volltextsuche</label>
+                            <input type="text" id="searchInput" placeholder="Suche in Texten...">
                         </div>
                         
-                        <div>
-                            <label for="hasBausteinFilter" class="filter-checkbox-wrapper">
-                                <input type="checkbox" id="hasBausteinFilter"> Nur Einträge mit Textbaustein
+                        <div class="control-field has-checkbox">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" id="hasBausteinFilter">
+                                <span>Nur mit Textbaustein</span>
                             </label>
                         </div>
                     </div>
 
-                    <div id="results" class="results-container" aria-live="polite">
-                        <div class="card-base no-results">Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.</div>
-                    </div>
-                    
+                    <div id="results" class="results-grid" aria-live="polite"></div>
                 </div>
             </section>
 
-            <!-- TAB 3: Dokumenten-Ansicht (Entwurf) -->
+            <!-- TAB 3: Entwurf & Schreiben -->
             <section id="tab-document" class="tab-content" role="tabpanel">
                 <div class="document-view">
-                    <header class="doc-header">
-                        <h3>Entwurf: Revisionsschreiben</h3>
-                        <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
-                    </header>
-
-                    <div id="schreibenList" class="doc-items-list">
-                        <div class="doc-empty">
-                            Das Schreiben ist noch leer.<br><br>
-                            Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.
+                    <div class="topbar">
+                        <div class="topbar-left">
+                            <span class="sub">Aktueller Vorgang</span>
+                            <h2>Entwurf bearbeiten</h2>
+                        </div>
+                        <div class="topbar-right">
+                            <span class="doc-meta"><span id="schreibenCounter">0</span> Positionen erfasst</span>
+                            <div class="doc-actions">
+                                <button type="button" class="btn btn-secondary" id="clearSchreibenBtn">
+                                    <span aria-hidden="true">🗑️</span> Leeren
+                                </button>
+                                <button type="button" class="btn btn-tool" id="copySchreibenBtn">
+                                    <span aria-hidden="true">📋</span> Kopieren
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <footer class="doc-footer">
-                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; font-size: 1.1rem;" onclick="copyComposedSchreiben()" disabled>
-                            <span aria-hidden="true">📋</span> Dokument kopieren
-                        </button>
-                        <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;" onclick="clearSchreiben()">
-                            <span aria-hidden="true">🗑️</span> Leeren
-                        </button>
-                    </footer>
+                    
+                    <div class="document-body">
+                        <div id="schreibenList" class="schreiben-list">
+                            <div class="empty-state">
+                                <p class="bold-text">Noch keine Bausteine</p>
+                                <p>Suchen Sie in der Datenbank und fügen Sie Textbausteine zum Entwurf hinzu.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             
@@ -166,74 +170,126 @@
     </main>
 
     <!-- ==========================================
-         OVERLAYS / MODALS FÜR CHECKLISTE
+         MODALS & OVERLAYS
          ========================================== -->
-    <div class="overlay" id="newSessionOverlay">
-      <div class="modal">
-        <h2>Neue Begehung</h2>
-        <p class="desc">Bitte Datum und Einsatzort eintragen.</p>
-        <div class="field"><label>Datum</label><input type="date" id="newSessionDate"></div>
-        <div class="field"><label>Uhrzeit</label><input type="time" id="newSessionTime"></div>
-        <div class="field"><label>Ort / Gemarkung</label><input type="text" id="newSessionLocation" placeholder="z.B. Höxter"></div>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeOverlay('newSessionOverlay')">Abbrechen</button>
-          <button class="btn btn-success" onclick="confirmCreateSession()">Erfassen</button>
+    <div id="toastMessage" class="toast" role="alert"></div>
+
+    <div class="overlay" id="remarkModal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <h2>Bemerkung hinzufügen</h2>
+            <p class="desc">Erfassen Sie Details, Mängel oder Maßnahmen zu diesem Punkt.</p>
+            <input type="hidden" id="remarkSnapshotId">
+            <input type="hidden" id="remarkSIdx">
+            
+            <div class="field">
+                <label>Text</label>
+                <textarea id="remarkText" placeholder="Notizen hier eintragen..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeRemarkModal()">Abbrechen</button>
+                <button class="btn btn-success" onclick="saveRemark()">Speichern</button>
+            </div>
         </div>
-      </div>
-    </div>
-    
-    <div class="overlay" id="remarkOverlay">
-      <div class="modal">
-        <h2>Bemerkung</h2>
-        <p class="desc" id="remarkQuestionText"></p>
-        <div class="field"><textarea id="remarkTextarea" placeholder="Stichprobe / Feststellung eintragen..."></textarea></div>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeOverlay('remarkOverlay')">Abbrechen</button>
-          <button class="btn btn-success" onclick="saveRemark()">Sichern</button>
-        </div>
-      </div>
-    </div>
-    
-    <div class="overlay" id="exportOverlay">
-      <div class="modal" style="max-width:700px;">
-        <h2>Protokoll Übersicht</h2>
-        <p class="desc">Kompakte, farblich markierte Übersicht der beantworteten Fragen.</p>
-        <div class="segmented">
-          <button class="active" id="formatTextBtn" onclick="setExportFormat('html')">Farbiges Protokoll</button>
-          <button id="formatJsonBtn" onclick="setExportFormat('json')">JSON-Daten</button>
-        </div>
-        <div class="export-output" id="exportOutput"></div>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeOverlay('exportOverlay')">Schließen</button>
-          <button class="btn btn-secondary" onclick="copyExport()">Kopieren</button>
-          <button class="btn btn-success" onclick="printExport()">Als PDF Drucken</button>
-        </div>
-      </div>
-    </div>
-    
-    <div class="overlay" id="confirmDeleteOverlay">
-      <div class="modal">
-        <h2 id="confirmDeleteTitle">Daten entfernen?</h2>
-        <p class="desc" id="confirmDeleteText">Dieser Vorgang ist endgültig und kann nicht rückgängig gemacht werden.</p>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeOverlay('confirmDeleteOverlay')">Abbrechen</button>
-          <button class="btn btn-success" style="background-color: #dc2626;" onclick="executeDeleteGeneric()">Bestätigen</button>
-        </div>
-      </div>
     </div>
 
-    <!-- FAB Button für Checkliste -->
-    <button class="fab" id="fabBtn" onclick="openNewSessionModal()">NEUE ERFASSUNG</button>
-
-    <!-- Toast Notification Container -->
-    <div id="toast" class="toast" role="alert" aria-live="assertive">
-        <span id="toastText"></span>
-        <button id="toastUndoBtn" style="display:none; margin-left: 15px; border: 1px solid white; background: transparent; color: white; padding: 2px 8px; border-radius: 4px; cursor: pointer;" onclick="undoLastChange()">Rückgängig</button>
+    <!-- Export Modal (Checkliste) -->
+    <div class="overlay" id="exportModal" role="dialog" aria-modal="true">
+        <div class="modal" style="max-width: 600px;">
+            <h2>Protokoll Export</h2>
+            <p class="desc">Das Ergebnis der Begehung kopieren oder herunterladen.</p>
+            
+            <div class="segmented" id="exportTypeSegment">
+                <button class="active" onclick="setExportType('ALL')">Alles</button>
+                <button onclick="setExportType('DEFECTS')">Nur Mängel/Offen</button>
+            </div>
+            
+            <div class="field">
+                <div class="export-output" id="exportPreview"></div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeExportModal()">Schließen</button>
+                <button class="btn btn-tool" onclick="copyExportText()">Text Kopieren</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Scripte -->
-    <script type="module" src="js/app.js"></script>
-    <!-- Das Skript für die Checklisten-Logik erstellen wir als nächstes -->
+    <!-- Neuer Ort (Session) Modal -->
+    <div class="overlay" id="newLocModal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <h2>Neue Begehung anlegen</h2>
+            <p class="desc">Geben Sie Ort und Datum für die Systemprüfung ein.</p>
+            <div class="field">
+                <label>Ort / Bereich / Halle</label>
+                <input type="text" id="locInput" placeholder="z.B. Halle 3, Bürogebäude A...">
+            </div>
+            <div class="field">
+                <label>Datum</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeNewLocModal()">Abbrechen</button>
+                <button class="btn btn-success" onclick="createNewLocation()">Erstellen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Questions Modal -->
+    <div class="overlay" id="manageModal" role="dialog" aria-modal="true">
+        <div class="modal" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="flex-shrink:0;">
+                <h2>Fragenkatalog bearbeiten</h2>
+                <p class="desc">Fragen ändern, hinzufügen oder löschen. Änderungen betreffen nur neue oder zurückgesetzte Begehungen.</p>
+            </div>
+            
+            <div id="manageList" style="flex:1; overflow-y:auto; border:1px solid var(--border-color); border-radius:6px; margin-bottom: 20px; background: #fff;"></div>
+            
+            <div class="modal-actions" style="flex-shrink:0;">
+                <button class="btn btn-secondary" onclick="closeManageQuestions()">Schließen</button>
+                <button class="btn btn-success" onclick="saveManagedQuestions()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Confirm Delete Modal -->
+    <div class="overlay" id="confirmDeleteModal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <h2 id="confirmDeleteTitle" style="color:#dc2626;">Wirklich löschen?</h2>
+            <p class="desc" id="confirmDeleteDesc">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmDelete()">Abbrechen</button>
+                <button class="btn btn-success" style="background:#dc2626; color:#fff;" onclick="executeConfirmDelete()">Ja, Löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Session Modal -->
+    <div class="overlay" id="resetSessionModal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <h2 style="color:#dc2626;">Fortschritt zurücksetzen?</h2>
+            <p class="desc">Soll diese Begehung auf den aktuellen Fragenkatalog zurückgesetzt werden? Alle bisherigen Antworten gehen verloren!</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="document.getElementById('resetSessionModal').classList.remove('open')">Abbrechen</button>
+                <button class="btn btn-success" style="background:#dc2626; color:#fff;" onclick="executeResetSession()">Zurücksetzen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module laden -->
+    <!-- papa parse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script type="module" src="js/data.js"></script>
+    <script type="module" src="js/ui.js"></script>
     <script type="module" src="js/checklist.js"></script>
+    <script type="module" src="js/app.js"></script>
+    
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw2.js')
+                .then(reg => console.log('SW registriert', reg.scope))
+                .catch(err => console.log('SW Fehler', err));
+        }
+    </script>
 </body>
 </html>

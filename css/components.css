@@ -164,17 +164,19 @@
         color: var(--primary) !important;
     }
 
-    /* --- MODALS FIX (Bottom-Sheet) --- */
+    /* Overlay MUSS höher liegen als die Bottom-Navi (1000) */
     .overlay {
         align-items: flex-end;
         padding: 0;
+        z-index: 2000 !important; 
     }
 
+    /* Modal-Fenster mit ausreichend Platz nach unten */
     .modal {
         max-width: 100%;
         border-radius: 20px 20px 0 0;
-        padding: 24px 20px 32px;
-        max-height: 85vh;
+        padding: 24px 20px 40px !important; /* Extra Platz für Buttons unten */
+        max-height: 80vh;
         overflow-y: auto;
         animation: slideUp 0.25s ease-out;
     }

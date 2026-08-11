@@ -29,6 +29,15 @@ export const DOM = {
 };
 
 /* ==========================================
+   STATE FÜR UX (Scroll Memory etc.)
+   ========================================== */
+const scrollPositions = {
+    'tab-search': 0,
+    'tab-document': 0
+};
+let activeTabId = 'tab-search';
+
+/* ==========================================
    UI INITIALISIERUNG (ICONS)
    ========================================== */
 
@@ -58,6 +67,12 @@ export function injectStaticIcons() {
    ========================================== */
 
 export function switchTab(tabId) {
+    if (tabId === activeTabId) return;
+
+    // 1. Aktuelle Scroll-Position speichern
+    scrollPositions[activeTabId] = window.scrollY;
+
+    // 2. Tabs umschalten
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
@@ -68,13 +83,19 @@ export function switchTab(tabId) {
     
     const target = document.getElementById(tabId);
     if(target) target.classList.add('active');
+
     const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
     if (activeBtn) {
         activeBtn.classList.add('active');
         activeBtn.setAttribute('aria-selected', 'true');
     }
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    activeTabId = tabId;
+
+    // 3. Scroll-Position wiederherstellen (mit kurzem Timeout für Render-Zeit)
+    requestAnimationFrame(() => {
+        window.scrollTo(0, scrollPositions[tabId]);
+    });
 }
 
 export function showToast(message) {
@@ -113,8 +134,18 @@ export function escapeHTML(text) {
 }
 
 /**
- * Optimierte Wort-Suche. Der Regex wird jetzt nur noch EINMAL
- * pro Suchvorgang in getFilteredData erstellt.
+ * Hebt den Suchbegriff im Text hervor.
+ */
+function highlightSearchTerm(text, regex) {
+    if (!text || !regex) return escapeHTML(text);
+    const escapedText = escapeHTML(text);
+    // Da wir escapeHTML nutzen, müssen wir sicherstellen, dass der Regex
+    // keine HTML-Tags zerstört. Da wir nur Text ersetzen, ist das hier sicher.
+    return escapedText.replace(regex, (match) => `<mark class="search-highlight">${match}</mark>`);
+}
+
+/**
+ * Optimierte Wort-Suche.
  */
 export function containsExactWord(text, regex) {
     if (!text || !regex) return false;
@@ -135,6 +166,8 @@ function onCopySuccess() {
    FILTER & DATENVERARBEITUNG
    ========================================== */
 
+let lastSearchRegex = null;
+
 function getFilteredData() {
     const selectedLaw = DOM.lawFilter.value;
     const selectedParagraf = DOM.paragraphFilter.value;
@@ -142,11 +175,17 @@ function getFilteredData() {
     const searchQuery = DOM.searchInput.value.trim();
     const requireBaustein = DOM.hasBausteinFilter.checked;
 
-    // PERFORMANCE: Such-Regex EINMAL vorab kompilieren
-    let searchRegex = null;
+    lastSearchRegex = null;
     if (searchQuery) {
         const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        searchRegex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
+        lastSearchRegex = new RegExp(`(${escapedQuery})`, 'gi'); // Vereinfacht für Highlighting
+    }
+
+    // Für den Filter nutzen wir den präzisen Regex
+    let filterRegex = null;
+    if (searchQuery) {
+        const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filterRegex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
     }
 
     return state.gesetzeData.filter(item => {
@@ -157,9 +196,9 @@ function getFilteredData() {
         if (selectedParagraf && item.paragraf !== selectedParagraf) return false;
         if (selectedAbsatz && item.absatz !== selectedAbsatz) return false; 
         
-        if (searchRegex) {
+        if (filterRegex) {
             const searchableText = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
-            if (!containsExactWord(searchableText, searchRegex)) return false;
+            if (!containsExactWord(searchableText, filterRegex)) return false;
         }
         
         return true;
@@ -232,10 +271,6 @@ export function updateDropdowns() {
    RENDER FUNKTIONEN (DOM Updates)
    ========================================== */
 
-/**
- * PERFORMANCE: Chunked Rendering.
- * Verhindert das "Einfrieren" bei sehr vielen Ergebnissen.
- */
 let currentRenderItems = [];
 let renderChunkSize = 30;
 
@@ -251,7 +286,6 @@ export function renderResults() {
         return; 
     }
 
-    // Gruppieren
     const groupMap = new Map();
     data.forEach(item => { 
         const key = `${item.gesetzKuerzel}_${item.paragraf}`; 
@@ -262,8 +296,6 @@ export function renderResults() {
     });
 
     currentRenderItems = Array.from(groupMap.values());
-
-    // Den ersten Chunk sofort rendern
     renderChunks(true);
 }
 
@@ -274,7 +306,9 @@ function renderChunks(isInitial = false) {
     if (itemsToRender.length === 0) return;
 
     const html = itemsToRender.map(group => {
-        const titelErgaenzung = group.titel && !group.titel.startsWith(group.paragraf) ? ` — ${escapeHTML(group.titel)}` : '';
+        const displayTitel = group.titel && !group.titel.startsWith(group.paragraf) ? group.titel : '';
+        const highlightedTitle = highlightSearchTerm(displayTitel, lastSearchRegex);
+        const titelErgaenzung = highlightedTitle ? ` — ${highlightedTitle}` : '';
         
         return `
         <article class="card-base law-card">
@@ -293,7 +327,7 @@ function renderChunks(isInitial = false) {
                 const isInDocument = state.revisionsSchreibenListe.some(docItem => docItem.id === item.id);
                 
                 return `
-                <section class="paragraph-box">
+                <section class="paragraph-box" id="item-card-${item.id}">
                     <header class="paragraph-box-header">
                         <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
                         <div class="action-buttons-group">
@@ -308,7 +342,7 @@ function renderChunks(isInitial = false) {
                     </header>
                     
                     <div class="text-content-wrapper">
-                        <div class="paragraph-text text-clamp">${escapeHTML(item.inhalt)}</div>
+                        <div class="paragraph-text text-clamp">${highlightSearchTerm(item.inhalt, lastSearchRegex)}</div>
                         <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Text ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
                     </div>
 
@@ -317,7 +351,7 @@ function renderChunks(isInitial = false) {
                         <div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:0.35rem;">
                             Vorschau Textbaustein
                         </div>
-                        <div class="text-clamp">${escapeHTML(bausteinText)}</div>
+                        <div class="text-clamp">${highlightSearchTerm(bausteinText, lastSearchRegex)}</div>
                         <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Vorschautext ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
                     </div>` : ''}
                 </section>`;
@@ -327,7 +361,6 @@ function renderChunks(isInitial = false) {
 
     DOM.resultsContainer.insertAdjacentHTML('beforeend', html);
 
-    // Nächsten Chunk anfordern, wenn noch welche da sind
     if (currentRenderItems.length > 0) {
         requestAnimationFrame(() => renderChunks());
     }

@@ -31,6 +31,13 @@ function toggleToSchreiben(itemId) {
         let newItem = { ...item };
         newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
         state.revisionsSchreibenListe.push(newItem); 
+
+        // Micro-Interaction: Visuelles Feedback an der Karte
+        const card = document.getElementById(`item-card-${itemId}`);
+        if (card) {
+            card.classList.add('pulse-confirm');
+            setTimeout(() => card.classList.remove('pulse-confirm'), 600);
+        }
     }
     renderResults();
     renderDocumentView();
@@ -58,7 +65,7 @@ function moveItem(idx, dir) {
     if(n >= 0 && n < state.revisionsSchreibenListe.length){ 
         state.revisionsSchreibenListe.splice(n, 0, state.revisionsSchreibenListe.splice(idx, 1)[0]); 
         renderDocumentView();
-        saveState();
+        saveState(true); // Sofort speichern bei Verschiebung
     }
 }
 
@@ -67,7 +74,7 @@ function clearSchreiben() {
         state.revisionsSchreibenListe = [];
         renderResults();
         renderDocumentView();
-        saveState();
+        saveState(true);
     }
 }
 
@@ -75,7 +82,7 @@ function clearSchreiben() {
 
 document.addEventListener('click', e => {
     // Tab Navigation
-    const tabBtn = e.target.closest('.tab-btn');
+    const tabBtn = e.target.closest('.tab-btn:not(.mobile-only)');
     if (tabBtn) switchTab(tabBtn.dataset.tab);
 
     // "Mehr anzeigen" Toggles
@@ -120,7 +127,7 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.1.5.1\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Vollständig offline-fähig.');
+        alert('ArbeitsSafe v1.1.5.5\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Performance & UX optimiert.');
     }
 
     // Close settings menu when clicking outside
@@ -161,16 +168,19 @@ DOM.csvFileInput.addEventListener('change', e => {
 DOM.lawFilter.addEventListener('change', () => {
     updateDropdowns();
     renderResults();
-    document.querySelector('.controls-toolbar').classList.add('collapsed');
+    const toolbar = document.querySelector('.controls-toolbar');
+    if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
 });
 DOM.paragraphFilter.addEventListener('change', () => {
     updateDropdowns();
     renderResults();
-    document.querySelector('.controls-toolbar').classList.add('collapsed');
+    const toolbar = document.querySelector('.controls-toolbar');
+    if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
 });
 DOM.absatzFilter.addEventListener('change', () => {
     renderResults();
-    document.querySelector('.controls-toolbar').classList.add('collapsed');
+    const toolbar = document.querySelector('.controls-toolbar');
+    if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
 });
 DOM.hasBausteinFilter.addEventListener('change', () => {
     updateDropdowns();
@@ -183,7 +193,8 @@ DOM.searchInput.addEventListener('input', () => {
     searchTimeout = setTimeout(() => {
         renderResults();
         if (DOM.searchInput.value.trim().length > 2) {
-            document.querySelector('.controls-toolbar').classList.add('collapsed');
+            const toolbar = document.querySelector('.controls-toolbar');
+            if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
         }
     }, 500);
 });

@@ -3,7 +3,7 @@
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
 // versionsnummer.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.5.1';
+const CACHE_NAME = 'revisions-tool-v1.1.5.2';
 
 const ASSETS_TO_CACHE = [
     './index.html',

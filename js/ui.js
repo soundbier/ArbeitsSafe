@@ -50,14 +50,17 @@ export function injectStaticIcons() {
         'icon-filter-toggle': icons.filter,
         'icon-update': icons.refresh,
         'icon-theme-toggle': document.body.classList.contains('dark-mode') ? icons.sun : icons.moon,
-        // Bottom Nav Icons
         'icon-nav-search': icons.home,
         'icon-nav-document': icons.fileText
     };
 
     Object.entries(iconMap).forEach(([id, svg]) => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = svg;
+        if (el) {
+            el.innerHTML = svg;
+        } else {
+            console.warn(`Icon element not found: ${id}`);
+        }
     });
 }
 

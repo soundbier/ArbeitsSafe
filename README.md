@@ -1,4 +1,4 @@
-# ArbeitsSafe 🛡️ (v1.1.9.1)
+# ArbeitsSafe 🛡️ (v1.3.2.0)
 
 Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arbeitsschutz. ArbeitsSafe unterstützt Arbeitsschutz-Experten dabei, festgestellte Mängel und gesetzliche Grundlagen schnell zu filtern, zu strukturieren und als professionelles Revisionsschreiben zusammenzustellen.
 
@@ -8,6 +8,7 @@ Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arb
 
 * **Premium "2026" UI**: 
   * Modernes, minimalistisches Design mit Glassmorphism-Effekten (Backdrop-Blur).
+  * **Optimierte Law-Cards**: Klare visuelle Trennung zwischen Gesetzestext und Textbausteinen für maximale Scanbarkeit.
   * Vollständiger **Dark Mode** Support mit automatischer Systemerkennung.
   * Native App-Haptik durch taktiles Feedback und flüssige Animationen.
 

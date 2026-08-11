@@ -162,8 +162,26 @@ document.addEventListener('click', e => {
 
     const filterToggle = e.target.closest('#mobileFilterToggle');
     if (filterToggle) {
-        const toolbar = document.querySelector('.controls-toolbar');
-        toolbar.classList.toggle('collapsed');
+        const overlay = document.getElementById('filterOverlay');
+        overlay.classList.toggle('hidden');
+    }
+
+    if (e.target.closest('#closeFilterBtn') || e.target.closest('#applyFilterBtn')) {
+        document.getElementById('filterOverlay').classList.add('hidden');
+    }
+
+    if (e.target.id === 'filterOverlay') {
+        e.target.classList.add('hidden');
+    }
+
+    if (e.target.closest('#resetFilterBtn')) {
+        DOM.lawFilter.value = '';
+        DOM.paragraphFilter.value = '';
+        DOM.absatzFilter.value = '';
+        DOM.searchInput.value = '';
+        DOM.hasBausteinFilter.checked = false;
+        updateDropdowns();
+        renderResults();
     }
 
     if (e.target.closest('#reloadUpdateBtn')) {

@@ -103,8 +103,8 @@ export function navigateTo(hash) {
 
     // 5. Mobile Toolbar Verhalten
     if (route !== '#search') {
-        const toolbar = document.querySelector('.controls-toolbar');
-        if (toolbar) toolbar.classList.add('collapsed');
+        const overlay = document.getElementById('filterOverlay');
+        if (overlay) overlay.classList.add('hidden');
     }
 }
 
@@ -281,7 +281,8 @@ let renderChunkSize = 30;
 
 export function renderResults() {
     const data = getFilteredData();
-    
+    updateFilterSummary(data.length);
+
     if (data.length === 0) { 
         DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`; 
         return; 
@@ -304,7 +305,20 @@ export function renderResults() {
     renderChunks(true);
 }
 
-function renderChunks(isInitial = false) {
+function updateFilterSummary(count) {
+    const bar = document.getElementById('activeFilterBar');
+    const text = document.getElementById('filterSummaryText');
+    const isFiltered = DOM.lawFilter.value || DOM.paragraphFilter.value || DOM.searchInput.value || DOM.hasBausteinFilter.checked;
+
+    if (isFiltered) {
+        bar.classList.remove('hidden');
+        let summary = `${count} Treffer gefunden`;
+        if (DOM.lawFilter.value) summary += ` in ${DOM.lawFilter.value}`;
+        text.textContent = summary;
+    } else {
+        bar.classList.add('hidden');
+    }
+}
     if (isInitial) DOM.resultsContainer.innerHTML = '';
 
     const itemsToRender = currentRenderItems.splice(0, renderChunkSize);

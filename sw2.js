@@ -1,9 +1,9 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// versionsnummer.
+// Versionsnummer.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.5.3';
+const CACHE_NAME = 'revisions-tool-v1.1.5.4';
 
 const ASSETS_TO_CACHE = [
     './index.html',
@@ -52,7 +52,6 @@ self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
 
     // Spezielle Behandlung für Navigation (Seitenaufrufe)
-    // Wenn offline, liefere die index.html aus dem Cache
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).catch(() => {
@@ -62,7 +61,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Für alle anderen statischen Assets (CSS, JS, CSV, Bilder)
+    // Für alle anderen statischen Assets
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             return cachedResponse || fetch(event.request);

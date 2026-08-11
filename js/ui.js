@@ -66,7 +66,8 @@ export function switchTab(tabId) {
         btn.setAttribute('aria-selected', 'false');
     });
     
-    document.getElementById(tabId).classList.add('active');
+    const target = document.getElementById(tabId);
+    if(target) target.classList.add('active');
     const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
     if (activeBtn) {
         activeBtn.classList.add('active');
@@ -111,10 +112,12 @@ export function escapeHTML(text) {
         .replace(/'/g, "&#39;"); 
 }
 
-export function containsExactWord(text, query) { 
-    if (!text || !query) return false; 
-    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
+/**
+ * Optimierte Wort-Suche. Der Regex wird jetzt nur noch EINMAL
+ * pro Suchvorgang in getFilteredData erstellt.
+ */
+export function containsExactWord(text, regex) {
+    if (!text || !regex) return false;
     return regex.test(text);
 }
 
@@ -139,6 +142,13 @@ function getFilteredData() {
     const searchQuery = DOM.searchInput.value.trim();
     const requireBaustein = DOM.hasBausteinFilter.checked;
 
+    // PERFORMANCE: Such-Regex EINMAL vorab kompilieren
+    let searchRegex = null;
+    if (searchQuery) {
+        const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        searchRegex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
+    }
+
     return state.gesetzeData.filter(item => {
         const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
         
@@ -147,9 +157,9 @@ function getFilteredData() {
         if (selectedParagraf && item.paragraf !== selectedParagraf) return false;
         if (selectedAbsatz && item.absatz !== selectedAbsatz) return false; 
         
-        if (searchQuery) {
+        if (searchRegex) {
             const searchableText = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
-            if (!containsExactWord(searchableText, searchQuery)) return false;
+            if (!containsExactWord(searchableText, searchRegex)) return false;
         }
         
         return true;
@@ -222,6 +232,13 @@ export function updateDropdowns() {
    RENDER FUNKTIONEN (DOM Updates)
    ========================================== */
 
+/**
+ * PERFORMANCE: Chunked Rendering.
+ * Verhindert das "Einfrieren" bei sehr vielen Ergebnissen.
+ */
+let currentRenderItems = [];
+let renderChunkSize = 30;
+
 export function renderResults() {
     const data = getFilteredData();
     
@@ -234,6 +251,7 @@ export function renderResults() {
         return; 
     }
 
+    // Gruppieren
     const groupMap = new Map();
     data.forEach(item => { 
         const key = `${item.gesetzKuerzel}_${item.paragraf}`; 
@@ -243,7 +261,19 @@ export function renderResults() {
         groupMap.get(key).entries.push(item); 
     });
 
-    DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(group => {
+    currentRenderItems = Array.from(groupMap.values());
+
+    // Den ersten Chunk sofort rendern
+    renderChunks(true);
+}
+
+function renderChunks(isInitial = false) {
+    if (isInitial) DOM.resultsContainer.innerHTML = '';
+
+    const itemsToRender = currentRenderItems.splice(0, renderChunkSize);
+    if (itemsToRender.length === 0) return;
+
+    const html = itemsToRender.map(group => {
         const titelErgaenzung = group.titel && !group.titel.startsWith(group.paragraf) ? ` — ${escapeHTML(group.titel)}` : '';
         
         return `
@@ -294,6 +324,13 @@ export function renderResults() {
             }).join('')}
         </article>`;
     }).join('');
+
+    DOM.resultsContainer.insertAdjacentHTML('beforeend', html);
+
+    // Nächsten Chunk anfordern, wenn noch welche da sind
+    if (currentRenderItems.length > 0) {
+        requestAnimationFrame(() => renderChunks());
+    }
 }
 
 export function renderDocumentView() {

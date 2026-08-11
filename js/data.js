@@ -8,11 +8,26 @@ export const state = {
     rawCsvData: `gesetzKuerzel;gesetzName;paragraf;absatz;titel;inhalt;mangelVorgefunden;rechtsgrundlage;handlungsaufforderung\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 1;Beurteilung der Arbeitsbedingungen;"(1) Der Arbeitgeber hat durch eine Beurteilung der für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, welche Maßnahmen des Arbeitsschutzes erforderlich sind.";"Zum Zeitpunkt der Besichtigung konnte von Ihnen keine Gefährdungsbeurteilungen vorgelegt werden.";"Laut § 5 Arbeitsschutzgesetzes (ArbSchG) hat der Arbeitgeber durch eine Beurteilung die für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, bei Erfordernis notwendige Maßnahmen gegen diese Gefährdungen zu treffen und die Wirksamkeit dieser Maßnahmen fortlaufend zu prüfen.";"Bitte überarbeiten Sie eigenverantwortlich Ihre Gefährdungsbeurteilungen, dokumentieren Sie zukünftig die umgesetzten Maßnahmen und führen Sie Wirksamkeitskontrollen durch."\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 2;Beurteilung der Arbeitsbedingungen;"(2) Eine Beurteilung nach Absatz 1 ist unabhängig von der Zahl der Beschäftigten vorzunehmen.";;;`
 };
 
-export function saveState() {
-    try {
-        localStorage.setItem('arbeitsSafe_revisionsSchreiben', JSON.stringify(state.revisionsSchreibenListe));
-    } catch (e) {
-        console.error('Fehler beim Speichern des Zustands:', e);
+/**
+ * Speichert den aktuellen Zustand in den LocalStorage.
+ * Mit Debounce-Mechanismus, um die Performance beim Tippen nicht zu beeinträchtigen.
+ */
+let saveTimeout;
+export function saveState(immediate = false) {
+    const doSave = () => {
+        try {
+            localStorage.setItem('arbeitsSafe_revisionsSchreiben', JSON.stringify(state.revisionsSchreibenListe));
+        } catch (e) {
+            console.error('Fehler beim Speichern des Zustands:', e);
+        }
+    };
+
+    if (immediate) {
+        clearTimeout(saveTimeout);
+        doSave();
+    } else {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(doSave, 1000); // 1 Sekunde Verzögerung
     }
 }
 

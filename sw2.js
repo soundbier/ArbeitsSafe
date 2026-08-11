@@ -1,9 +1,10 @@
 // =========================================================================
-// UPDATE-STEUERUNG: v1.2.0.1
+// UPDATE-STEUERUNG: v1.2.0.2
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.2.0.1';
+const CACHE_NAME = 'revisions-tool-v1.2.0.2';
 
 const ASSETS_TO_CACHE = [
+    './',
     'index.html',
     'css/style.css',
     'js/app.js',
@@ -18,19 +19,16 @@ const ASSETS_TO_CACHE = [
 
 // 1. INSTALLATION: Dateien mit Cache-Busting laden
 self.addEventListener('install', event => {
-    self.skipWaiting(); // Sofort übernehmen
+    // skipWaiting() wird hier bewusst NICHT gerufen,
+    // damit der User über den Banner selbst entscheiden kann (bessere Stabilität)
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            // Wir fügen einen Zeitstempel hinzu, um den Browser-Cache zu umgehen
-            const versionedAssets = ASSETS_TO_CACHE.map(asset => {
-                return `${asset}?v=${Date.now()}`;
-            });
-            return cache.addAll(versionedAssets);
+            return cache.addAll(ASSETS_TO_CACHE.map(asset => `${asset}?v=${CACHE_NAME}`));
         })
     );
 });
 
-// 2. AKTIVIERUNG: Alte Caches sofort löschen
+// 2. AKTIVIERUNG: Alte Caches löschen
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -45,28 +43,28 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. FETCH: Netzwerk-Priorität für Navigation, Cache für Assets
+// 3. FETCH: Stale-While-Revalidate Strategie
 self.addEventListener('fetch', event => {
-    // Verhindere Caching von Browser-Extensions etc.
     if (!event.request.url.startsWith(self.location.origin)) return;
 
     event.respondWith(
-        fetch(event.request).then(response => {
-            // Wenn Netzwerk da ist, Cache aktualisieren (Stale-While-Revalidate Prinzip)
-            if (response.status === 200) {
-                const responseClone = response.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseClone);
-                });
-            }
-            return response;
-        }).catch(() => {
-            // Offline: Aus dem Cache laden
-            return caches.match(event.request);
+        caches.match(event.request).then(cachedResponse => {
+            const fetchPromise = fetch(event.request).then(networkResponse => {
+                if (networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return networkResponse;
+            });
+            // Gib den Cache zurück, falls vorhanden, sonst warte aufs Netzwerk
+            return cachedResponse || fetchPromise;
         })
     );
 });
 
+// 4. SKIP WAITING
 self.addEventListener('message', event => {
     if (event.data === 'SKIP_WAITING') {
         self.skipWaiting();

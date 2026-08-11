@@ -151,7 +151,7 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.1.7.1\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Dark Mode & Native Screens.');
+        alert('ArbeitsSafe v1.2.0.2\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Premium Design & Intelligente Filter.');
     }
 
     const menu = document.getElementById('settingsMenu');

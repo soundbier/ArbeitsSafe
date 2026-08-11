@@ -1,40 +1,39 @@
-# ArbeitsSafe 🛡️
+# ArbeitsSafe 🛡️ (v1.1.9.1)
 
-Ein smarter Generator für Revisionsschreiben und Textbausteine im Arbeitsschutz. ArbeitsSafe unterstützt Arbeitsschutz-Experten dabei, festgestellte Mängel und gesetzliche Grundlagen schnell zu filtern, zu strukturieren und als professionelles Revisionsschreiben zusammenzustellen.
-
----
-
-## 🚀 Hauptfunktionen
-
-* **Datenbank & erweiterte Suche**:
-  * Filterung nach Gesetzen, Paragraphen und Absätzen.
-  * Globale Textsuche mit präzisem Wort-Matching.
-  * Filteroption, um gezielt nur Einträge mit vorhandenen Textbausteinen anzuzeigen.
-    
-* **CSV-Datenimport**:
-  * Flexibles Laden eigener CSV-Datensätze (z. B. `gesetze.csv`) per Dateiupload.
-  * Automatisierter Parser zur Erkennung von Paragraphen, Inhalten, Mängeln, Rechtsgrundlagen und Handlungsaufforderungen.
-    
-* **Entwurfs-Ansicht & Text-Komposition**:
-  * Per Klick können relevante Normen und Textbausteine in einen Entwurf übernommen werden.
-  * Inline-Bearbeitung von Titeln und Texten direkt im Entwurf.
-  * Sortierfunktion (Verschieben nach oben/unten) und Verwaltung der Revisionspunkte.
-    
-* **Export-Funktion**:
-  * Kopieren des vollständigen Schreibens in die Zwischenablage wahlweise als formatierter HTML-Text (ideal für Word oder E-Mail) oder als Klartex.
-    
-* **Progressive Web App (PWA)**:
-  * Vollständig offline-fähig dank integriertem Service Worker.
-  * Installierbar auf mobilen Geräten und Desktop-Systemen (Stand-alone-Modus).
-  * Mobil-optimiertes UI mit responsivem Layout, Touch-freundlichen Elementen und Toast-Benachrichtigungen.
+Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arbeitsschutz. ArbeitsSafe unterstützt Arbeitsschutz-Experten dabei, festgestellte Mängel und gesetzliche Grundlagen schnell zu filtern, zu strukturieren und als professionelles Revisionsschreiben zusammenzustellen.
 
 ---
 
-## 🛠️ Technologie-Stack
+## ✨ Highlights & Features
 
-* **Frontend**: Vanilla JavaScript (ES Modules).
-* **Styling**: Modernes CSS (mit CSS Custom Properties, Flexbox & Grid, responsiven Media Queries).
-* **PWA**: Service Worker (`sw2.js`) mit Cache-First-Strategie und Manifest.
+* **Premium "2026" UI**: 
+  * Modernes, minimalistisches Design mit Glassmorphism-Effekten (Backdrop-Blur).
+  * Vollständiger **Dark Mode** Support mit automatischer Systemerkennung.
+  * Native App-Haptik durch taktiles Feedback und flüssige Animationen.
+
+* **Intelligentes Filtering**:
+  * **Modernes Bottom-Sheet** für mobile Filterung.
+  * Live-Statistik und Trefferanzeige direkt über den Suchergebnissen.
+  * Filterung nach Gesetzen, Paragraphen und Absätzen sowie globale Volltextsuche.
+
+* **Effiziente Dokument-Komposition**:
+  * Kombiniert Mängel, Rechtsgrundlagen und Handlungsaufforderungen automatisch.
+  * Flexibler Export in HTML (für Word/Outlook) oder Reintext.
+  * Integriertes Draft-System mit Sortierfunktion.
+
+---
+
+## 📝 Beispiel eines Revisionspunktes
+
+ArbeitsSafe strukturiert komplexe gesetzliche Anforderungen in klare, handlungsrelevante Blöcke:
+
+> **1. Unterweisung und besondere Beauftragung von Beschäftigten**
+> 
+> **Mangel:** Zum Zeitpunkt der Besichtigung konnte nicht nachgewiesen werden, dass die Beschäftigten vor der erstmaligen Verwendung von Arbeitsmitteln ausreichend informiert und unterwiesen wurden und/oder die gesetzlich geforderte schriftliche Dokumentation dieser Unterweisungen fehlte.
+> 
+> **Rechtsgrundlage (§ 12 Abs. 1 BetrSichV):** Der Arbeitgeber hat die Beschäftigten vor Aufnahme der Verwendung von Arbeitsmitteln tätigkeitsbezogen zu unterweisen... Das Datum einer jeden Unterweisung und die Namen der Unterwiesenen hat er schriftlich festzuhalten.
+> 
+> **Handlungsaufforderung:** Bitte informieren und unterweisen Sie Ihre Beschäftigten tätigkeitsbezogen vor der erstmaligen Verwendung von Arbeitsmitteln und wiederholen Sie dies anschließend mindestens einmal jährlich.
 
 ---
 

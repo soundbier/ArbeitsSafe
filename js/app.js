@@ -102,6 +102,33 @@ document.addEventListener('click', e => {
     if (e.target.closest('#copySchreibenBtn')) copyComposedSchreiben();
     if (e.target.closest('#clearSchreibenBtn')) clearSchreiben();
     if (e.target.closest('#reloadBtn')) initData(state.lastLoadedFileText, state.lastLoadedFileName);
+
+    // Settings Toggle
+    const settingsBtn = e.target.closest('#settingsBtn');
+    if (settingsBtn) {
+        const menu = document.getElementById('settingsMenu');
+        menu.classList.toggle('hidden');
+        menu.setAttribute('aria-hidden', menu.classList.contains('hidden'));
+    }
+
+    // Settings Actions
+    if (e.target.closest('#btn-clear-all')) {
+        if (confirm('ACHTUNG: Dies löscht ALLE gespeicherten Daten (Entwurf und CSV-Status) unwiderruflich. Fortfahren?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    if (e.target.closest('#btn-app-info')) {
+        alert('ArbeitsSafe v1.1.5.1\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Vollständig offline-fähig.');
+    }
+
+    // Close settings menu when clicking outside
+    const menu = document.getElementById('settingsMenu');
+    if (menu && !menu.classList.contains('hidden') && !e.target.closest('.settings-menu-content') && !e.target.closest('#settingsBtn')) {
+        menu.classList.add('hidden');
+        menu.setAttribute('aria-hidden', 'true');
+    }
 });
 
 document.addEventListener('input', e => {

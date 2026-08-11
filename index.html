@@ -35,8 +35,32 @@
                     </button>
                     <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
                 </div>
+                <button type="button" id="settingsBtn" class="btn-mini" title="Einstellungen">
+                    <span id="icon-settings" aria-hidden="true"></span>
+                </button>
             </div>
         </header>
+
+        <!-- Settings Menu Overlay -->
+        <div id="settingsMenu" class="settings-menu hidden" aria-hidden="true">
+            <div class="settings-menu-content card-base">
+                <header class="settings-menu-header">
+                    <h3>Einstellungen</h3>
+                </header>
+                <div class="settings-menu-body">
+                    <button type="button" class="settings-item-btn" id="btn-clear-all">
+                        <span id="icon-clear-all" aria-hidden="true"></span>
+                        Alle Daten löschen
+                    </button>
+                    <button type="button" class="settings-item-btn" id="btn-app-info">
+                        <span id="icon-app-info" aria-hidden="true"></span>
+                        App Information
+                    </button>
+                    <hr class="settings-divider">
+                    <div class="settings-info-text">Version 1.1.5.1</div>
+                </div>
+            </div>
+        </div>
 
         <!-- Error Container -->
         <div id="errorContainer" aria-live="polite"></div>

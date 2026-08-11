@@ -40,7 +40,10 @@ export function injectStaticIcons() {
         'icon-tab-search': icons.search,
         'icon-tab-document': icons.file,
         'icon-copy-doc': icons.clipboard,
-        'icon-clear-doc': icons.trash
+        'icon-clear-doc': icons.trash,
+        'icon-settings': icons.settings,
+        'icon-clear-all': icons.trash,
+        'icon-app-info': icons.info
     };
 
     Object.entries(iconMap).forEach(([id, svg]) => {

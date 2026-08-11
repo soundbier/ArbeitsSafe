@@ -1,76 +1,74 @@
 // =========================================================================
-// UPDATE-STEUERUNG: 
-// Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer.
+// UPDATE-STEUERUNG: v1.1.9.2
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.9.1';
+const CACHE_NAME = 'revisions-tool-v1.1.9.2';
 
 const ASSETS_TO_CACHE = [
-    './',
-    './index.html',
-    './css/style.css',
-    './js/app.js',
-    './js/data.js',
-    './js/ui.js',
-    './js/icons.js',
-    './gesetze.csv',
-    './manifest.json',
-    './icons/img-192x192.png',  
-    './icons/img-512x512.png'   
+    'index.html',
+    'css/style.css',
+    'js/app.js',
+    'js/data.js',
+    'js/ui.js',
+    'js/icons.js',
+    'gesetze.csv',
+    'manifest.json',
+    'icons/img-192x192.png',
+    'icons/img-512x512.png'
 ];
 
-// 1. INSTALLATION: Dateien in den Cache laden
+// 1. INSTALLATION: Dateien mit Cache-Busting laden
 self.addEventListener('install', event => {
+    self.skipWaiting(); // Sofort übernehmen
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('[Service Worker] Caching App Shell');
-                return cache.addAll(ASSETS_TO_CACHE);
-            })
-            .then(() => self.skipWaiting()) 
+        caches.open(CACHE_NAME).then(cache => {
+            // Wir fügen einen Zeitstempel hinzu, um den Browser-Cache zu umgehen
+            const versionedAssets = ASSETS_TO_CACHE.map(asset => {
+                return `${asset}?v=${Date.now()}`;
+            });
+            return cache.addAll(versionedAssets);
+        })
     );
 });
 
-// 2. AKTIVIERUNG: Alte Caches restlos löschen
+// 2. AKTIVIERUNG: Alte Caches sofort löschen
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cache => {
                     if (cache !== CACHE_NAME) {
-                        console.log('[Service Worker] Lösche alten Cache:', cache);
                         return caches.delete(cache);
                     }
                 })
             );
-        })
-        .then(() => self.clients.claim()) 
+        }).then(() => self.clients.claim())
     );
 });
 
-// 3. DATEN ABRUFEN: Strategie für Offline-Support
+// 3. FETCH: Netzwerk-Priorität für Navigation, Cache für Assets
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
-
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                return caches.match('./index.html');
-            })
-        );
-        return;
-    }
+    // Verhindere Caching von Browser-Extensions etc.
+    if (!event.request.url.startsWith(self.location.origin)) return;
 
     event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            return cachedResponse || fetch(event.request);
+        fetch(event.request).then(response => {
+            // Wenn Netzwerk da ist, Cache aktualisieren (Stale-While-Revalidate Prinzip)
+            if (response.status === 200) {
+                const responseClone = response.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseClone);
+                });
+            }
+            return response;
+        }).catch(() => {
+            // Offline: Aus dem Cache laden
+            return caches.match(event.request);
         })
     );
 });
 
-// 4. NACHRICHTEN: Skip Waiting
 self.addEventListener('message', event => {
-    if (event.data && event.data === 'SKIP_WAITING') {
+    if (event.data === 'SKIP_WAITING') {
         self.skipWaiting();
     }
 });

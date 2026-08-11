@@ -53,7 +53,8 @@ export function injectStaticIcons() {
         'icon-settings': icons.settings,
         'icon-clear-all': icons.trash,
         'icon-app-info': icons.info,
-        'icon-filter-toggle': icons.filter
+        'icon-filter-toggle': icons.filter,
+        'icon-update': icons.refresh
     };
 
     Object.entries(iconMap).forEach(([id, svg]) => {

@@ -32,7 +32,6 @@ function toggleToSchreiben(itemId) {
         newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
         state.revisionsSchreibenListe.push(newItem); 
 
-        // Micro-Interaction: Visuelles Feedback an der Karte
         const card = document.getElementById(`item-card-${itemId}`);
         if (card) {
             card.classList.add('pulse-confirm');
@@ -65,7 +64,7 @@ function moveItem(idx, dir) {
     if(n >= 0 && n < state.revisionsSchreibenListe.length){ 
         state.revisionsSchreibenListe.splice(n, 0, state.revisionsSchreibenListe.splice(idx, 1)[0]); 
         renderDocumentView();
-        saveState(true); // Sofort speichern bei Verschiebung
+        saveState(true);
     }
 }
 
@@ -81,36 +80,28 @@ function clearSchreiben() {
 // --- Event Delegation ---
 
 document.addEventListener('click', e => {
-    // Tab Navigation
     const tabBtn = e.target.closest('.tab-btn:not(.mobile-only)');
     if (tabBtn) switchTab(tabBtn.dataset.tab);
 
-    // "Mehr anzeigen" Toggles
     const toggleBtn = e.target.closest('.js-toggle-more-btn');
     if (toggleBtn) toggleText(toggleBtn);
 
-    // Datenbank-Aktionen: Kopieren
     const copyItemBtn = e.target.closest('.js-copy-item-btn');
     if (copyItemBtn) copyTextToClipboard(copyItemBtn.dataset.text);
 
-    // Datenbank-Aktionen: Zum Schreiben hinzufügen/entfernen
     const toggleItemBtn = e.target.closest('.js-toggle-item-btn');
     if (toggleItemBtn) toggleToSchreiben(toggleItemBtn.dataset.id);
 
-    // Entwurf-Aktionen: Entfernen
     const removeItemBtn = e.target.closest('.js-remove-item-btn');
     if (removeItemBtn) toggleToSchreiben(removeItemBtn.dataset.id);
 
-    // Entwurf-Aktionen: Verschieben
     const moveItemBtn = e.target.closest('.js-move-item-btn');
     if (moveItemBtn) moveItem(parseInt(moveItemBtn.dataset.idx), parseInt(moveItemBtn.dataset.dir));
 
-    // Entwurf-Aktionen: Kopieren & Leeren
     if (e.target.closest('#copySchreibenBtn')) copyComposedSchreiben();
     if (e.target.closest('#clearSchreibenBtn')) clearSchreiben();
     if (e.target.closest('#reloadBtn')) initData(state.lastLoadedFileText, state.lastLoadedFileName);
 
-    // Settings Toggle
     const settingsBtn = e.target.closest('#settingsBtn');
     if (settingsBtn) {
         const menu = document.getElementById('settingsMenu');
@@ -118,7 +109,6 @@ document.addEventListener('click', e => {
         menu.setAttribute('aria-hidden', menu.classList.contains('hidden'));
     }
 
-    // Settings Actions
     if (e.target.closest('#btn-clear-all')) {
         if (confirm('ACHTUNG: Dies löscht ALLE gespeicherten Daten (Entwurf und CSV-Status) unwiderruflich. Fortfahren?')) {
             localStorage.clear();
@@ -127,21 +117,26 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.1.5.5\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Performance & UX optimiert.');
+        alert('ArbeitsSafe v1.1.6.0\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Performance & UX optimiert.');
     }
 
-    // Close settings menu when clicking outside
     const menu = document.getElementById('settingsMenu');
     if (menu && !menu.classList.contains('hidden') && !e.target.closest('.settings-menu-content') && !e.target.closest('#settingsBtn')) {
         menu.classList.add('hidden');
         menu.setAttribute('aria-hidden', 'true');
     }
 
-    // Mobile Filter Toggle
     const filterToggle = e.target.closest('#mobileFilterToggle');
     if (filterToggle) {
         const toolbar = document.querySelector('.controls-toolbar');
         toolbar.classList.toggle('collapsed');
+    }
+
+    // PWA Update Reload
+    if (e.target.closest('#reloadUpdateBtn')) {
+        if (newWorker) {
+            newWorker.postMessage('SKIP_WAITING');
+        }
     }
 });
 
@@ -214,11 +209,33 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 });
 
-// --- Service Worker ---
+// --- Service Worker & Update Logic ---
+let newWorker;
+let refreshing = false;
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw2.js')
-            .then(reg => console.log('[PWA] Registered:', reg.scope))
-            .catch(err => console.error('[PWA] Error:', err));
+        navigator.serviceWorker.register('./sw2.js').then(reg => {
+            reg.addEventListener('updatefound', () => {
+                newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // Neue Version ist bereit!
+                        showUpdateBanner();
+                    }
+                });
+            });
+        });
     });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        window.location.reload();
+        refreshing = true;
+    });
+}
+
+function showUpdateBanner() {
+    const banner = document.getElementById('updateBanner');
+    if (banner) banner.classList.remove('hidden');
 }

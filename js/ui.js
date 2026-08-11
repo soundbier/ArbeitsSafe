@@ -23,19 +23,14 @@ export const DOM = {
     copySchreibenBtn: document.getElementById('copySchreibenBtn'), 
     clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
     statusBadge: document.getElementById('statusBadge'),
-    statusText: document.getElementById('statusText'), 
     csvFileInput: document.getElementById('csvFileInput'),
     reloadBtn: document.getElementById('reloadBtn')
 };
 
 /* ==========================================
-   STATE FÜR UX (Scroll Memory etc.)
+   STATE FÜR ROUTING & UX
    ========================================== */
-const scrollPositions = {
-    'tab-search': 0,
-    'tab-document': 0
-};
-let activeTabId = 'tab-search';
+const screenScrollPositions = {};
 
 /* ==========================================
    UI INITIALISIERUNG (ICONS)
@@ -46,15 +41,17 @@ export function injectStaticIcons() {
         'icon-status': icons.database,
         'icon-reload': icons.refresh,
         'icon-upload': icons.folder,
-        'icon-tab-search': icons.search,
-        'icon-tab-document': icons.file,
         'icon-copy-doc': icons.clipboard,
         'icon-clear-doc': icons.trash,
         'icon-settings': icons.settings,
         'icon-clear-all': icons.trash,
         'icon-app-info': icons.info,
         'icon-filter-toggle': icons.filter,
-        'icon-update': icons.refresh
+        'icon-update': icons.refresh,
+        'icon-theme-toggle': document.body.classList.contains('dark-mode') ? icons.sun : icons.moon,
+        // Bottom Nav Icons
+        'icon-nav-search': icons.home,
+        'icon-nav-document': icons.fileText
     };
 
     Object.entries(iconMap).forEach(([id, svg]) => {
@@ -64,40 +61,51 @@ export function injectStaticIcons() {
 }
 
 /* ==========================================
-   UI HELPER FUNKTIONEN
+   ROUTING & SCREEN NAVIGATION
    ========================================== */
 
-export function switchTab(tabId) {
-    if (tabId === activeTabId) return;
-
-    // 1. Aktuelle Scroll-Position speichern
-    scrollPositions[activeTabId] = window.scrollY;
-
-    // 2. Tabs umschalten
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-selected', 'false');
-    });
+/**
+ * Wechselt den Screen basierend auf dem Hash.
+ */
+export function navigateTo(hash) {
+    const route = hash || '#search';
+    const screens = document.querySelectorAll('.app-screen');
+    const navItems = document.querySelectorAll('.nav-item');
     
-    const target = document.getElementById(tabId);
-    if(target) target.classList.add('active');
-
-    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        activeBtn.setAttribute('aria-selected', 'true');
+    // 1. Vorherige Position speichern (falls vorhanden)
+    const activeScreen = document.querySelector('.app-screen.active');
+    if (activeScreen) {
+        screenScrollPositions[activeScreen.id] = activeScreen.scrollTop;
     }
 
-    activeTabId = tabId;
+    // 2. Screens umschalten
+    screens.forEach(screen => {
+        const isActive = screen.getAttribute('data-route') === route;
+        screen.classList.toggle('active', isActive);
 
-    // 3. Scroll-Position wiederherstellen (mit kurzem Timeout für Render-Zeit)
-    requestAnimationFrame(() => {
-        window.scrollTo(0, scrollPositions[tabId]);
+        // Position wiederherstellen
+        if (isActive && screenScrollPositions[screen.id]) {
+            requestAnimationFrame(() => {
+                screen.scrollTop = screenScrollPositions[screen.id];
+            });
+        }
     });
+
+    // 3. Nav-Items aktualisieren
+    navItems.forEach(item => {
+        const isActive = item.getAttribute('href') === route;
+        item.classList.toggle('active', isActive);
+    });
+
+    // 4. Mobile Toolbar Verhalten
+    if (route !== '#search') {
+        document.querySelector('.controls-toolbar').classList.add('collapsed');
+    }
 }
+
+/* ==========================================
+   UI HELPER FUNKTIONEN
+   ========================================== */
 
 export function showToast(message) {
     const toast = document.getElementById('toast');
@@ -134,20 +142,12 @@ export function escapeHTML(text) {
         .replace(/'/g, "&#39;"); 
 }
 
-/**
- * Hebt den Suchbegriff im Text hervor.
- */
 function highlightSearchTerm(text, regex) {
     if (!text || !regex) return escapeHTML(text);
     const escapedText = escapeHTML(text);
-    // Da wir escapeHTML nutzen, müssen wir sicherstellen, dass der Regex
-    // keine HTML-Tags zerstört. Da wir nur Text ersetzen, ist das hier sicher.
     return escapedText.replace(regex, (match) => `<mark class="search-highlight">${match}</mark>`);
 }
 
-/**
- * Optimierte Wort-Suche.
- */
 export function containsExactWord(text, regex) {
     if (!text || !regex) return false;
     return regex.test(text);
@@ -179,10 +179,9 @@ function getFilteredData() {
     lastSearchRegex = null;
     if (searchQuery) {
         const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        lastSearchRegex = new RegExp(`(${escapedQuery})`, 'gi'); // Vereinfacht für Highlighting
+        lastSearchRegex = new RegExp(`(${escapedQuery})`, 'gi');
     }
 
-    // Für den Filter nutzen wir den präzisen Regex
     let filterRegex = null;
     if (searchQuery) {
         const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -371,13 +370,14 @@ export function renderDocumentView() {
     const count = state.revisionsSchreibenListe.length;
     
     DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
-    DOM.tabCounter.textContent = count; 
+    const tabCounter = document.getElementById('tabCounter');
+    if(tabCounter) tabCounter.textContent = count;
     
     if (count === 0) {
         DOM.schreibenList.innerHTML = `
             <div class="doc-empty">
                 Das Schreiben ist noch leer.<br><br>
-                Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf den Button zum Hinzufügen.
+                Wechseln Sie in die <strong>"Datenbank"</strong> und klicken Sie auf den Button zum Hinzufügen.
             </div>`;
         DOM.copySchreibenBtn.disabled = true; 
         DOM.clearSchreibenBtn.style.display = 'none'; 

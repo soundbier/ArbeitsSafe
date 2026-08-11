@@ -1,7 +1,23 @@
 import { state, parseCSV, saveState, loadState } from './data.js';
-import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard, switchTab, toggleText, injectStaticIcons } from './ui.js';
+import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard, navigateTo, toggleText, injectStaticIcons } from './ui.js';
 
 // --- Haupt-Logik ---
+function initTheme() {
+    const savedTheme = localStorage.getItem('arbeitsSafe_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-mode');
+    }
+    injectStaticIcons(); // Update the theme icon
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('arbeitsSafe_theme', isDark ? 'dark' : 'light');
+    injectStaticIcons(); // Refresh icons to show sun/moon
+}
+
 function initData(csvString, fileName = null) {
     state.lastLoadedFileText = csvString; 
     state.lastLoadedFileName = fileName;
@@ -77,11 +93,20 @@ function clearSchreiben() {
     }
 }
 
+// --- Router ---
+function handleRouting() {
+    const hash = window.location.hash || '#search';
+    navigateTo(hash);
+}
+
 // --- Event Delegation ---
 
 document.addEventListener('click', e => {
-    const tabBtn = e.target.closest('.tab-btn:not(.mobile-only)');
-    if (tabBtn) switchTab(tabBtn.dataset.tab);
+    // Navigation (handled by hashchange, but we prevent default for smooth internal feeling)
+    const navItem = e.target.closest('.nav-item');
+    if (navItem && navItem.getAttribute('href')) {
+        // Der Browser regelt den Hashchange selbst
+    }
 
     const toggleBtn = e.target.closest('.js-toggle-more-btn');
     if (toggleBtn) toggleText(toggleBtn);
@@ -110,14 +135,18 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-clear-all')) {
-        if (confirm('ACHTUNG: Dies löscht ALLE gespeicherten Daten (Entwurf und CSV-Status) unwiderruflich. Fortfahren?')) {
+        if (confirm('ACHTUNG: Dies löscht ALLE gespeicherten Daten unwiderruflich. Fortfahren?')) {
             localStorage.clear();
             location.reload();
         }
     }
 
+    if (e.target.closest('#btn-toggle-theme')) {
+        toggleTheme();
+    }
+
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.1.6.1\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Performance & UX optimiert.');
+        alert('ArbeitsSafe v1.1.7.1\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Dark Mode & Native Screens.');
     }
 
     const menu = document.getElementById('settingsMenu');
@@ -132,7 +161,6 @@ document.addEventListener('click', e => {
         toolbar.classList.toggle('collapsed');
     }
 
-    // PWA Update Reload
     if (e.target.closest('#reloadUpdateBtn')) {
         if (newWorker) {
             newWorker.postMessage('SKIP_WAITING');
@@ -161,25 +189,19 @@ DOM.csvFileInput.addEventListener('change', e => {
 
 // --- Filter Listeners ---
 DOM.lawFilter.addEventListener('change', () => {
-    updateDropdowns();
-    renderResults();
-    const toolbar = document.querySelector('.controls-toolbar');
-    if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
+    updateDropdowns(); renderResults();
+    if(window.innerWidth <= 768) document.querySelector('.controls-toolbar').classList.add('collapsed');
 });
 DOM.paragraphFilter.addEventListener('change', () => {
-    updateDropdowns();
-    renderResults();
-    const toolbar = document.querySelector('.controls-toolbar');
-    if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
+    updateDropdowns(); renderResults();
+    if(window.innerWidth <= 768) document.querySelector('.controls-toolbar').classList.add('collapsed');
 });
 DOM.absatzFilter.addEventListener('change', () => {
     renderResults();
-    const toolbar = document.querySelector('.controls-toolbar');
-    if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
+    if(window.innerWidth <= 768) document.querySelector('.controls-toolbar').classList.add('collapsed');
 });
 DOM.hasBausteinFilter.addEventListener('change', () => {
-    updateDropdowns();
-    renderResults();
+    updateDropdowns(); renderResults();
 });
 
 let searchTimeout;
@@ -187,29 +209,32 @@ DOM.searchInput.addEventListener('input', () => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         renderResults();
-        if (DOM.searchInput.value.trim().length > 2) {
-            const toolbar = document.querySelector('.controls-toolbar');
-            if(window.innerWidth <= 768) toolbar.classList.add('collapsed');
+        if (DOM.searchInput.value.trim().length > 2 && window.innerWidth <= 768) {
+            document.querySelector('.controls-toolbar').classList.add('collapsed');
         }
     }, 500);
 });
 
 // --- App Start ---
 window.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     injectStaticIcons();
     loadState();
     renderDocumentView();
+    handleRouting(); // Initial route
 
     fetch('gesetze.csv')
         .then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
         .then(t => initData(t, "Datenbank geladen"))
         .catch(e => { 
-            DOM.errorContainer.innerHTML=`<div class="error-alert"><strong>Hinweis:</strong> gesetze.csv nicht gefunden. Nutze Fallback-Daten.</div>`; 
+            document.getElementById('errorContainer').innerHTML=`<div class="error-alert"><strong>Hinweis:</strong> Datenbank wird geladen...</div>`;
             initData(state.rawCsvData); 
         });
 });
 
-// --- Service Worker & Update Logic ---
+window.addEventListener('hashchange', handleRouting);
+
+// --- Service Worker ---
 let newWorker;
 let refreshing = false;
 
@@ -220,7 +245,8 @@ if ('serviceWorker' in navigator) {
                 newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showUpdateBanner();
+                        const banner = document.getElementById('updateBanner');
+                        if (banner) banner.classList.remove('hidden');
                     }
                 });
             });
@@ -232,9 +258,4 @@ if ('serviceWorker' in navigator) {
         window.location.reload();
         refreshing = true;
     });
-}
-
-function showUpdateBanner() {
-    const banner = document.getElementById('updateBanner');
-    if (banner) banner.classList.remove('hidden');
 }

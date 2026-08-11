@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ArbeitsSafe</title>
     <meta name="theme-color" content="#0284c7">
     
@@ -11,173 +11,164 @@
     <link rel="icon" type="image/png" sizes="32x32" href="icons/img-192x192.png">
 </head>
 <body>
-    <main class="workspace-container">
+    <!-- App Header -->
+    <header class="card-base tool-header main-app-header">
+        <div class="header-titles">
+            <h1>ArbeitsSafe</h1>
+        </div>
         
-        <!-- ==========================================
-             HEADER
-             ========================================== -->
-        <header class="card-base tool-header">
-            <div class="header-titles">
-                <h1>ArbeitsSafe</h1>
-                <p>Ihr smarter Generator für Revisionsschreiben und Textbausteine im Arbeitsschutz.</p>
+        <div class="header-right">
+            <div id="statusBadge" class="status-mini" title="Datenbank-Status">
+                <span id="icon-status" aria-hidden="true"></span>
             </div>
-            
-            <div class="header-right">
-                <div id="statusBadge" class="status-mini" title="Datenbank-Status">
-                    <span id="icon-status" aria-hidden="true"></span>
-                </div>
-                <button type="button" id="reloadBtn" class="btn-mini" title="Daten neu laden">
-                    <span id="icon-reload" aria-hidden="true"></span>
+            <button type="button" id="reloadBtn" class="btn-mini" title="Daten neu laden">
+                <span id="icon-reload" aria-hidden="true"></span>
+            </button>
+            <div class="upload-wrapper">
+                <button type="button" class="btn-mini" title="Andere CSV laden">
+                    <span id="icon-upload" aria-hidden="true"></span>
                 </button>
-                <div class="upload-wrapper">
-                    <button type="button" class="btn-mini" title="Andere CSV laden">
-                        <span id="icon-upload" aria-hidden="true"></span>
-                    </button>
-                    <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
-                </div>
-                <button type="button" id="settingsBtn" class="btn-mini" title="Einstellungen">
-                    <span id="icon-settings" aria-hidden="true"></span>
-                </button>
+                <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
             </div>
-        </header>
-
-        <!-- Settings Menu Overlay -->
-        <div id="settingsMenu" class="settings-menu hidden" aria-hidden="true">
-            <div class="settings-menu-content card-base">
-                <header class="settings-menu-header">
-                    <h3>Einstellungen</h3>
-                </header>
-                <div class="settings-menu-body">
-                    <button type="button" class="settings-item-btn" id="btn-clear-all">
-                        <span id="icon-clear-all" aria-hidden="true"></span>
-                        Alle Daten löschen
-                    </button>
-                    <button type="button" class="settings-item-btn" id="btn-app-info">
-                        <span id="icon-app-info" aria-hidden="true"></span>
-                        App Information
-                    </button>
-                    <hr class="settings-divider">
-                    <div class="settings-info-text">Version 1.1.6.0</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Update Notification Banner -->
-        <div id="updateBanner" class="update-banner hidden" role="alert" aria-live="assertive">
-            <div class="update-banner-content">
-                <span id="icon-update" aria-hidden="true"></span>
-                <span>Update verfügbar!</span>
-                <button type="button" id="reloadUpdateBtn" class="btn-update-reload">Jetzt laden</button>
-            </div>
-        </div>
-
-        <!-- Error Container -->
-        <div id="errorContainer" aria-live="polite"></div>
-
-        <!-- ==========================================
-             TAB NAVIGATION
-             ========================================== -->
-        <nav class="tab-navigation" role="tablist">
-            <button type="button" class="tab-btn active" data-tab="tab-search" role="tab" aria-selected="true" aria-controls="tab-search">
-                <span id="icon-tab-search" aria-hidden="true"></span> Datenbank
+            <button type="button" id="settingsBtn" class="btn-mini" title="Einstellungen">
+                <span id="icon-settings" aria-hidden="true"></span>
             </button>
-            <button type="button" class="tab-btn" data-tab="tab-document" role="tab" aria-selected="false" aria-controls="tab-document">
-                <span id="icon-tab-document" aria-hidden="true"></span> Entwurf
-                <span id="tabCounter" class="tab-badge">0</span>
-            </button>
-            <button type="button" id="mobileFilterToggle" class="tab-btn mobile-only" aria-label="Filter umschalten">
-                <span id="icon-filter-toggle" aria-hidden="true"></span>
-            </button>
-        </nav>
-
-        <!-- ==========================================
-             TAB INHALTE
-             ========================================== -->
-        <div class="tabs-container">
-
-            <!-- TAB 1: Datenbank & Suche -->
-            <section id="tab-search" class="tab-content active" role="tabpanel">
-                <div class="main-content-area">
-                    
-                    <!-- Such- und Filterleiste -->
-                    <div class="card-base controls-toolbar">
-                        <div class="control-field">
-                            <label for="lawFilter">1. Gesetz</label>
-                            <select id="lawFilter">
-                                <option value="">-- Alle --</option>
-                            </select>
-                        </div>
-                        
-                        <div class="control-field">
-                            <label for="paragraphFilter">2. Paragraf</label>
-                            <select id="paragraphFilter">
-                                <option value="">-- Alle --</option>
-                            </select>
-                        </div>
-                        
-                        <div class="control-field">
-                            <label for="absatzFilter">3. Absatz</label>
-                            <select id="absatzFilter" disabled>
-                                <option value="">-- Alle --</option>
-                            </select>
-                        </div>
-                        
-                        <div class="control-field search-full-width">
-                            <label for="searchInput">4. Globale Textsuche</label>
-                            <input type="text" id="searchInput" placeholder="Suchbegriff eingeben (z.B. Lärm, Gefährdung)...">
-                        </div>
-                        
-                        <div>
-                            <label for="hasBausteinFilter" class="filter-checkbox-wrapper">
-                                <input type="checkbox" id="hasBausteinFilter"> 
-                                Nur Einträge mit Textbaustein
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Suchergebnisse -->
-                    <div id="results" class="results-container" aria-live="polite">
-                        <div class="card-base no-results">
-                            Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.
-                        </div>
-                    </div>
-                    
-                </div>
-            </section>
-
-            <!-- TAB 2: Dokumenten-Ansicht (Entwurf) -->
-            <section id="tab-document" class="tab-content" role="tabpanel">
-                <div class="document-view">
-                    <header class="doc-header">
-                        <h3>Entwurf: Revisionsschreiben</h3>
-                        <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
-                    </header>
-
-                    <div id="schreibenList" class="doc-items-list">
-                        <div class="doc-empty">
-                            Das Schreiben ist noch leer.<br><br>
-                            Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf den Button zum Hinzufügen.
-                        </div>
-                    </div>
-
-                    <footer class="doc-footer">
-                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; font-size: 1.1rem;" disabled>
-                            <span id="icon-copy-doc" aria-hidden="true"></span> Dokument kopieren
-                        </button>
-                        <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;">
-                            <span id="icon-clear-doc" aria-hidden="true"></span> Leeren
-                        </button>
-                    </footer>
-                </div>
-            </section>
-            
         </div>
-    </main>
+    </header>
 
-    <!-- Toast Notification Container -->
+    <!-- Error & Toast Container -->
+    <div id="errorContainer" aria-live="polite"></div>
     <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
-    <!-- Scripte -->
+    <!-- Main Content (Screens) -->
+    <main class="workspace-container screen-container">
+
+        <!-- Screen 1: Datenbank & Suche -->
+        <section id="search" class="app-screen active" data-route="#search">
+            <div class="main-content-area">
+                <!-- Such- und Filterleiste -->
+                <div class="card-base controls-toolbar">
+                    <div class="control-field">
+                        <label for="lawFilter">1. Gesetz</label>
+                        <select id="lawFilter">
+                            <option value="">-- Alle --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-field">
+                        <label for="paragraphFilter">2. Paragraf</label>
+                        <select id="paragraphFilter">
+                            <option value="">-- Alle --</option>
+                        </select>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="absatzFilter">3. Absatz</label>
+                        <select id="absatzFilter" disabled>
+                            <option value="">-- Alle --</option>
+                        </select>
+                    </div>
+
+                    <div class="control-field search-full-width">
+                        <label for="searchInput">4. Globale Textsuche</label>
+                        <input type="text" id="searchInput" placeholder="Suchbegriff eingeben (z.B. Lärm, Gefährdung)...">
+                    </div>
+                    
+                    <div>
+                        <label for="hasBausteinFilter" class="filter-checkbox-wrapper">
+                            <input type="checkbox" id="hasBausteinFilter">
+                            Nur Einträge mit Textbaustein
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Suchergebnisse -->
+                <div id="results" class="results-container" aria-live="polite">
+                    <div class="card-base no-results">
+                        Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screen 2: Dokumenten-Ansicht (Entwurf) -->
+        <section id="document" class="app-screen" data-route="#document">
+            <div class="document-view">
+                <header class="doc-header">
+                    <h3>Entwurf: Revisionsschreiben</h3>
+                    <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
+                </header>
+
+                <div id="schreibenList" class="doc-items-list">
+                    <div class="doc-empty">
+                        Das Schreiben ist noch leer.
+                    </div>
+                </div>
+
+                <footer class="doc-footer">
+                    <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2;" disabled>
+                        <span id="icon-copy-doc" aria-hidden="true"></span> Dokument kopieren
+                    </button>
+                    <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;">
+                        <span id="icon-clear-doc" aria-hidden="true"></span> Leeren
+                    </button>
+                </footer>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation (Mobile First) -->
+    <nav class="bottom-nav" role="navigation">
+        <a href="#search" class="nav-item active" data-target="search">
+            <span class="nav-icon" id="icon-nav-search"></span>
+            <span class="nav-label">Datenbank</span>
+        </a>
+        <a href="#document" class="nav-item" data-target="document">
+            <span class="nav-icon" id="icon-nav-document"></span>
+            <span class="nav-label">Entwurf</span>
+            <span id="tabCounter" class="tab-badge">0</span>
+        </a>
+        <button type="button" id="mobileFilterToggle" class="nav-item filter-trigger" aria-label="Filter umschalten">
+            <span class="nav-icon" id="icon-filter-toggle"></span>
+            <span class="nav-label">Filter</span>
+        </button>
+    </nav>
+
+    <!-- Overlays -->
+    <div id="settingsMenu" class="settings-menu hidden" aria-hidden="true">
+        <div class="settings-menu-content card-base">
+            <header class="settings-menu-header">
+                <h3>Einstellungen</h3>
+            </header>
+            <div class="settings-menu-body">
+                <button type="button" class="settings-item-btn" id="btn-clear-all">
+                    <span id="icon-clear-all" aria-hidden="true"></span>
+                    Alle Daten löschen
+                </button>
+                <button type="button" class="settings-item-btn" id="btn-toggle-theme">
+                    <span id="icon-theme-toggle" aria-hidden="true"></span>
+                    Design umschalten
+                </button>
+                <button type="button" class="settings-item-btn" id="btn-app-info">
+                    <span id="icon-app-info" aria-hidden="true"></span>
+                    App Information
+                </button>
+                <hr class="settings-divider">
+                <div class="settings-info-text">Version 1.1.7.1</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Notification Banner -->
+    <div id="updateBanner" class="update-banner hidden" role="alert" aria-live="assertive">
+        <div class="update-banner-content">
+            <span id="icon-update" aria-hidden="true"></span>
+            <span>Update verfügbar!</span>
+            <button type="button" id="reloadUpdateBtn" class="btn-update-reload">Jetzt laden</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

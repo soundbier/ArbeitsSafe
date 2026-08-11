@@ -1,9 +1,9 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer.
+// versionsnummer.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.6.1';
+const CACHE_NAME = 'revisions-tool-v1.1.7.1';
 
 const ASSETS_TO_CACHE = [
     './',

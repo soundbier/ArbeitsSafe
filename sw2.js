@@ -1,7 +1,7 @@
 // =========================================================================
-// UPDATE-STEUERUNG: v1.2.0.2
+// UPDATE-STEUERUNG: v1.2.0.3
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.2.0.2';
+const CACHE_NAME = 'revisions-tool-v1.2.0.3';
 
 const ASSETS_TO_CACHE = [
     './',

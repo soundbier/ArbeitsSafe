@@ -119,6 +119,7 @@ export function navigateTo(hash) {
 
 export function showToast(message) {
     const toast = document.getElementById('toast');
+    if (!toast) return;
     toast.textContent = message;
     toast.classList.add('show');
     
@@ -130,6 +131,7 @@ export function showToast(message) {
 // Text-Toggle für "Mehr lesen"
 export function toggleText(btn) {
     const target = btn.previousElementSibling;
+    if (!target) return;
     target.classList.toggle('text-clamp');
     
     const isClamped = target.classList.contains('text-clamp');
@@ -180,6 +182,8 @@ function onCopySuccess() {
 let lastSearchRegex = null;
 
 function getFilteredData() {
+    if (!DOM.lawFilter || !DOM.paragraphFilter || !DOM.absatzFilter || !DOM.searchInput || !DOM.hasBausteinFilter) return [];
+
     const selectedLaw = DOM.lawFilter.value;
     const selectedParagraf = DOM.paragraphFilter.value;
     const selectedAbsatz = DOM.absatzFilter.value;
@@ -216,10 +220,12 @@ function getFilteredData() {
 }
 
 export function updateDropdowns() {
+    if (!DOM.lawFilter || !DOM.paragraphFilter || !DOM.absatzFilter) return;
+
     const currentLaw = DOM.lawFilter.value;
     const currentParagraf = DOM.paragraphFilter.value;
     const currentAbsatz = DOM.absatzFilter.value;
-    const requireBaustein = DOM.hasBausteinFilter.checked;
+    const requireBaustein = DOM.hasBausteinFilter?.checked || false;
     
     const lawsMap = new Map();
     const paragrafenMap = new Map();
@@ -285,6 +291,7 @@ let currentRenderItems = [];
 let renderChunkSize = 30;
 
 export function renderResults() {
+    if (!DOM.resultsContainer) return;
     const data = getFilteredData();
     updateFilterSummary(data.length);
 
@@ -292,7 +299,7 @@ export function renderResults() {
         DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`; 
         return; 
     }
-    if (!DOM.searchInput.value && !DOM.paragraphFilter.value && !DOM.lawFilter.value) { 
+    if (!DOM.searchInput?.value && !DOM.paragraphFilter?.value && !DOM.lawFilter?.value) {
         DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie Filter oder nutzen Sie die Suche.</div>`; 
         return; 
     }
@@ -313,17 +320,22 @@ export function renderResults() {
 function updateFilterSummary(count) {
     const bar = document.getElementById('activeFilterBar');
     const text = document.getElementById('filterSummaryText');
-    const isFiltered = DOM.lawFilter.value || DOM.paragraphFilter.value || DOM.searchInput.value || DOM.hasBausteinFilter.checked;
+    if (!bar || !text) return;
+
+    const isFiltered = DOM.lawFilter?.value || DOM.paragraphFilter?.value || DOM.searchInput?.value || DOM.hasBausteinFilter?.checked;
 
     if (isFiltered) {
         bar.classList.remove('hidden');
         let summary = `${count} Treffer gefunden`;
-        if (DOM.lawFilter.value) summary += ` in ${DOM.lawFilter.value}`;
+        if (DOM.lawFilter?.value) summary += ` in ${DOM.lawFilter.value}`;
         text.textContent = summary;
     } else {
         bar.classList.add('hidden');
     }
 }
+
+function renderChunks(isInitial = false) {
+    if (!DOM.resultsContainer) return;
     if (isInitial) DOM.resultsContainer.innerHTML = '';
 
     const itemsToRender = currentRenderItems.splice(0, renderChunkSize);
@@ -391,6 +403,7 @@ function updateFilterSummary(count) {
 }
 
 export function renderDocumentView() {
+    if (!DOM.schreibenCounter || !DOM.schreibenList) return;
     const count = state.revisionsSchreibenListe.length;
     
     DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
@@ -403,13 +416,13 @@ export function renderDocumentView() {
                 Das Schreiben ist noch leer.<br><br>
                 Wechseln Sie in die <strong>"Datenbank"</strong> und klicken Sie auf den Button zum Hinzufügen.
             </div>`;
-        DOM.copySchreibenBtn.disabled = true; 
-        DOM.clearSchreibenBtn.style.display = 'none'; 
+        if (DOM.copySchreibenBtn) DOM.copySchreibenBtn.disabled = true;
+        if (DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.style.display = 'none';
         return;
     }
 
-    DOM.copySchreibenBtn.disabled = false;
-    DOM.clearSchreibenBtn.style.display = 'flex';
+    if (DOM.copySchreibenBtn) DOM.copySchreibenBtn.disabled = false;
+    if (DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.style.display = 'flex';
 
     DOM.schreibenList.innerHTML = state.revisionsSchreibenListe.map((item, idx) => {
         return `

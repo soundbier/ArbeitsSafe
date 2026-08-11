@@ -97,9 +97,13 @@ export function navigateTo(hash) {
         item.classList.toggle('active', isActive);
     });
 
-    // 4. Mobile Toolbar Verhalten
+    // 4. Update Body Route Attribute for CSS logic
+    document.body.setAttribute('data-active-route', route);
+
+    // 5. Mobile Toolbar Verhalten
     if (route !== '#search') {
-        document.querySelector('.controls-toolbar').classList.add('collapsed');
+        const toolbar = document.querySelector('.controls-toolbar');
+        if (toolbar) toolbar.classList.add('collapsed');
     }
 }
 

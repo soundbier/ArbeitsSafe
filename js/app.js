@@ -129,6 +129,13 @@ document.addEventListener('click', e => {
         menu.classList.add('hidden');
         menu.setAttribute('aria-hidden', 'true');
     }
+
+    // Mobile Filter Toggle
+    const filterToggle = e.target.closest('#mobileFilterToggle');
+    if (filterToggle) {
+        const toolbar = document.querySelector('.controls-toolbar');
+        toolbar.classList.toggle('collapsed');
+    }
 });
 
 document.addEventListener('input', e => {
@@ -151,15 +158,34 @@ DOM.csvFileInput.addEventListener('change', e => {
 });
 
 // --- Filter Listeners ---
-DOM.lawFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
-DOM.paragraphFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
-DOM.absatzFilter.addEventListener('change', renderResults); 
-DOM.hasBausteinFilter.addEventListener('change', () => { updateDropdowns(); renderResults(); });
+DOM.lawFilter.addEventListener('change', () => {
+    updateDropdowns();
+    renderResults();
+    document.querySelector('.controls-toolbar').classList.add('collapsed');
+});
+DOM.paragraphFilter.addEventListener('change', () => {
+    updateDropdowns();
+    renderResults();
+    document.querySelector('.controls-toolbar').classList.add('collapsed');
+});
+DOM.absatzFilter.addEventListener('change', () => {
+    renderResults();
+    document.querySelector('.controls-toolbar').classList.add('collapsed');
+});
+DOM.hasBausteinFilter.addEventListener('change', () => {
+    updateDropdowns();
+    renderResults();
+});
 
 let searchTimeout;
 DOM.searchInput.addEventListener('input', () => {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(renderResults, 500);
+    searchTimeout = setTimeout(() => {
+        renderResults();
+        if (DOM.searchInput.value.trim().length > 2) {
+            document.querySelector('.controls-toolbar').classList.add('collapsed');
+        }
+    }, 500);
 });
 
 // --- App Start ---

@@ -100,6 +100,25 @@ h1, h2, h3 {
     padding: 1.5rem;
 }
 
+/* Icons */
+.icon-svg {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.25rem;
+    position: relative;
+    top: -1px;
+}
+
+.btn-tool .icon-svg,
+.action-icon-btn .icon-svg {
+    margin-right: 0.5rem;
+}
+
+.status-mini .icon-svg {
+    margin-right: 0;
+}
+}
+
 .badge { 
     background-color: var(--primary-light); 
     color: var(--primary); 

@@ -1,4 +1,5 @@
 import { state } from './data.js';
+import { icons } from './icons.js';
 
 /* ==========================================
    DOM ELEMENTE
@@ -28,27 +29,49 @@ export const DOM = {
 };
 
 /* ==========================================
+   UI INITIALISIERUNG (ICONS)
+   ========================================== */
+
+export function injectStaticIcons() {
+    const iconMap = {
+        'icon-status': icons.database,
+        'icon-reload': icons.refresh,
+        'icon-upload': icons.folder,
+        'icon-tab-search': icons.search,
+        'icon-tab-document': icons.file,
+        'icon-copy-doc': icons.clipboard,
+        'icon-clear-doc': icons.trash
+    };
+
+    Object.entries(iconMap).forEach(([id, svg]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = svg;
+    });
+}
+
+/* ==========================================
    UI HELPER FUNKTIONEN
    ========================================== */
 
 export function switchTab(tabId) {
-    // Alle aktiven States entfernen
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
     });
     
-    // Neuen Tab aktivieren
     document.getElementById(tabId).classList.add('active');
-    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-selected', 'true');
+    }
     
-    // Auf Mobile sanft nach oben scrollen beim Tab-Wechsel
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Mobile-freundliches Toast-Feedback
 export function showToast(message) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -59,15 +82,16 @@ export function showToast(message) {
     }, 2500);
 }
 
-// Globale Text-Toggle Funktion für "Mehr lesen"
-// Wird global an window gebunden, da es über Inline-HTML (onclick) aufgerufen wird
-window.toggleText = function(btn) {
+// Text-Toggle für "Mehr lesen"
+export function toggleText(btn) {
     const target = btn.previousElementSibling;
     target.classList.toggle('text-clamp');
     
     const isClamped = target.classList.contains('text-clamp');
-    btn.innerHTML = isClamped ? 'Mehr anzeigen ⬇' : 'Weniger anzeigen ⬆';
-};
+    btn.innerHTML = isClamped
+        ? `Mehr anzeigen ${icons.chevronDown}`
+        : `Weniger anzeigen ${icons.chevronUp}`;
+}
 
 /* ==========================================
    TEXT & CLIPBOARD HELPER
@@ -83,31 +107,21 @@ export function escapeHTML(text) {
         .replace(/'/g, "&#39;"); 
 }
 
-export function escapeJS(str) {
-    if (!str) return "";
-    return str
-        .replace(/\\/g, '\\\\')
-        .replace(/`/g, '\\`')
-        .replace(/\n/g, '\\n');
-}
-
 export function containsExactWord(text, query) { 
     if (!text || !query) return false; 
-
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
-
     return regex.test(text);
 }
 
-export function copyTextToClipboard(btn, text) {
+export function copyTextToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        showToast('✓ Text erfolgreich kopiert');
+        showToast('Text erfolgreich kopiert');
     });
 }
 
 function onCopySuccess() { 
-    showToast('✓ Gesamtes Schreiben erfolgreich kopiert!');
+    showToast('Gesamtes Schreiben erfolgreich kopiert!');
 }
 
 /* ==========================================
@@ -148,7 +162,6 @@ export function updateDropdowns() {
     const paragrafenMap = new Map();
     const absatzeSet = new Set();
     
-    // 1. Gesetze füllen
     state.gesetzeData.forEach(item => {
         const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
         if (!requireBaustein || hasBausteinData) {
@@ -163,7 +176,6 @@ export function updateDropdowns() {
     DOM.lawFilter.innerHTML = lawOptions;
     if (lawsMap.has(currentLaw)) DOM.lawFilter.value = currentLaw;
 
-    // 2. Paragrafen füllen (abhängig vom Gesetz)
     state.gesetzeData.forEach(item => {
         const lawMatches = !DOM.lawFilter.value || item.gesetzKuerzel === DOM.lawFilter.value;
         const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
@@ -181,7 +193,6 @@ export function updateDropdowns() {
     DOM.paragraphFilter.innerHTML = paragrafOptions;
     if (paragrafenMap.has(currentParagraf)) DOM.paragraphFilter.value = currentParagraf;
 
-    // 3. Absätze füllen (abhängig vom Paragraf)
     if (DOM.paragraphFilter.value) {
         state.gesetzeData.forEach(item => { 
             const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
@@ -219,7 +230,6 @@ export function renderResults() {
         return; 
     }
 
-    // Gruppieren nach Gesetz und Paragraf
     const groupMap = new Map();
     data.forEach(item => { 
         const key = `${item.gesetzKuerzel}_${item.paragraf}`; 
@@ -229,7 +239,6 @@ export function renderResults() {
         groupMap.get(key).entries.push(item); 
     });
 
-    // HTML generieren
     DOM.resultsContainer.innerHTML = Array.from(groupMap.values()).map(group => {
         const titelErgaenzung = group.titel && !group.titel.startsWith(group.paragraf) ? ` — ${escapeHTML(group.titel)}` : '';
         
@@ -254,19 +263,19 @@ export function renderResults() {
                     <header class="paragraph-box-header">
                         <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
                         <div class="action-buttons-group">
-                            <button type="button" class="action-icon-btn" onclick="copyTextToClipboard(this, \`${escapeJS(item.inhalt)}\`)">
-                                <span aria-hidden="true">📋</span> Gesetz
+                            <button type="button" class="action-icon-btn js-copy-item-btn" data-text="${escapeHTML(item.inhalt)}" aria-label="Gesetzestext kopieren">
+                                ${icons.clipboard} Gesetz
                             </button>
                             ${hasBaustein ? `
-                            <button type="button" class="action-icon-btn ${isInDocument ? 'added' : ''}" id="add-btn-${item.id}" onclick="toggleToSchreiben('${item.id}')">
-                                ${isInDocument ? '<span aria-hidden="true">✓</span> Im Schreiben' : '<span aria-hidden="true">➕</span> Zum Schreiben'}
+                            <button type="button" class="action-icon-btn js-toggle-item-btn ${isInDocument ? 'added' : ''}" data-id="${item.id}" aria-label="${isInDocument ? 'Aus dem Schreiben entfernen' : 'Zum Schreiben hinzufügen'}">
+                                ${isInDocument ? icons.check + ' Im Schreiben' : icons.plus + ' Zum Schreiben'}
                             </button>` : ''}
                         </div>
                     </header>
                     
                     <div class="text-content-wrapper">
                         <div class="paragraph-text text-clamp">${escapeHTML(item.inhalt)}</div>
-                        <button type="button" class="toggle-more-btn" onclick="window.toggleText(this)">Mehr anzeigen ⬇</button>
+                        <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Text ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
                     </div>
 
                     ${hasBaustein ? `
@@ -275,7 +284,7 @@ export function renderResults() {
                             Vorschau Textbaustein
                         </div>
                         <div class="text-clamp">${escapeHTML(bausteinText)}</div>
-                        <button type="button" class="toggle-more-btn" onclick="window.toggleText(this)">Mehr anzeigen ⬇</button>
+                        <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Vorschautext ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
                     </div>` : ''}
                 </section>`;
             }).join('')}
@@ -289,19 +298,17 @@ export function renderDocumentView() {
     DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
     DOM.tabCounter.textContent = count; 
     
-    // Leerer Zustand
     if (count === 0) {
         DOM.schreibenList.innerHTML = `
             <div class="doc-empty">
                 Das Schreiben ist noch leer.<br><br>
-                Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.
+                Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf den Button zum Hinzufügen.
             </div>`;
         DOM.copySchreibenBtn.disabled = true; 
         DOM.clearSchreibenBtn.style.display = 'none'; 
         return;
     }
 
-    // Gefüllter Zustand
     DOM.copySchreibenBtn.disabled = false;
     DOM.clearSchreibenBtn.style.display = 'flex';
 
@@ -310,26 +317,27 @@ export function renderDocumentView() {
         <div class="doc-item">
             <header class="doc-item-title-row">
                 <span class="doc-item-num">${idx + 1}.</span>
-                <input type="text" class="doc-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)">
+                <input type="text" class="doc-title-input js-item-title-input" data-id="${item.id}" value="${escapeHTML(item.titel)}" aria-label="Titel bearbeiten">
             </header>
             
-            <div class="doc-editable-text" contenteditable="true"
-                 oninput="updateItemText('${item.id}', this.innerText)"
-                 title="Klicken, um den Text zu bearbeiten">${escapeHTML(item.editedText)}</div>
+            <div class="doc-editable-text js-item-text-editable" contenteditable="true"
+                 data-id="${item.id}"
+                 title="Klicken, um den Text zu bearbeiten"
+                 aria-label="Inhalt bearbeiten">${escapeHTML(item.editedText)}</div>
                  
             <div class="doc-item-actions">
                 ${idx > 0 ? `
-                <button type="button" class="action-icon-btn" title="Nach oben" onclick="moveItem(${idx}, -1)">
-                    <span aria-hidden="true">▲</span>
+                <button type="button" class="action-icon-btn js-move-item-btn" data-idx="${idx}" data-dir="-1" title="Nach oben" aria-label="Punkt nach oben verschieben">
+                    ${icons.chevronUp}
                 </button>` : ''}
                 
                 ${idx < count - 1 ? `
-                <button type="button" class="action-icon-btn" title="Nach unten" onclick="moveItem(${idx}, 1)">
-                    <span aria-hidden="true">▼</span>
+                <button type="button" class="action-icon-btn js-move-item-btn" data-idx="${idx}" data-dir="1" title="Nach unten" aria-label="Punkt nach unten verschieben">
+                    ${icons.chevronDown}
                 </button>` : ''}
                 
-                <button type="button" class="action-icon-btn" style="color: #dc2626;" title="Punkt entfernen" onclick="removeFromSchreiben('${item.id}')">
-                    <span aria-hidden="true">🗑️</span>
+                <button type="button" class="action-icon-btn js-remove-item-btn" data-id="${item.id}" style="color: #dc2626;" title="Punkt entfernen" aria-label="Punkt entfernen">
+                    ${icons.trash}
                 </button>
             </div>
         </div>`;
@@ -343,12 +351,10 @@ export function renderDocumentView() {
 export function copyComposedSchreiben() {
     if (state.revisionsSchreibenListe.length === 0) return;
     
-    // 1. Plain Text generieren
     const plainText = state.revisionsSchreibenListe.map((item, idx) => {
         return `${idx + 1}. ${item.titel}\r\n\r\n${item.editedText}`;
     }).join("\r\n\r\n\r\n");
     
-    // 2. Formatiertes HTML generieren
     const htmlContent = state.revisionsSchreibenListe.map((item, idx) => {
         const paragraphs = item.editedText.split(/(?:\r?\n){2,}/).map(block => {
             const htmlBlock = escapeHTML(block).replace(/\r?\n/g, '<br>');
@@ -363,12 +369,10 @@ export function copyComposedSchreiben() {
     }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
 
     const clipboardHtmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
-
     const fallbackCopy = () => {
         navigator.clipboard.writeText(plainText).then(onCopySuccess);
     };
     
-    // 3. In Zwischenablage schreiben (Rich Text bevorzugt)
     if (navigator.clipboard && window.ClipboardItem) {
         navigator.clipboard.write([
             new ClipboardItem({

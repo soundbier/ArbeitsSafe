@@ -24,14 +24,14 @@
             
             <div class="header-right">
                 <div id="statusBadge" class="status-mini" title="Datenbank-Status">
-                    <span aria-hidden="true">🟢</span>
+                    <span id="icon-status" aria-hidden="true"></span>
                 </div>
                 <button type="button" id="reloadBtn" class="btn-mini" title="Daten neu laden">
-                    <span aria-hidden="true">🔄</span>
+                    <span id="icon-reload" aria-hidden="true"></span>
                 </button>
                 <div class="upload-wrapper">
                     <button type="button" class="btn-mini" title="Andere CSV laden">
-                        <span aria-hidden="true">📁</span>
+                        <span id="icon-upload" aria-hidden="true"></span>
                     </button>
                     <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
                 </div>
@@ -46,10 +46,10 @@
              ========================================== -->
         <nav class="tab-navigation" role="tablist">
             <button type="button" class="tab-btn active" data-tab="tab-search" role="tab" aria-selected="true" aria-controls="tab-search">
-                <span aria-hidden="true">🔍</span> Datenbank
+                <span id="icon-tab-search" aria-hidden="true"></span> Datenbank
             </button>
             <button type="button" class="tab-btn" data-tab="tab-document" role="tab" aria-selected="false" aria-controls="tab-document">
-                <span aria-hidden="true">📄</span> Entwurf 
+                <span id="icon-tab-document" aria-hidden="true"></span> Entwurf
                 <span id="tabCounter" class="tab-badge">0</span>
             </button>
         </nav>
@@ -120,16 +120,16 @@
                     <div id="schreibenList" class="doc-items-list">
                         <div class="doc-empty">
                             Das Schreiben ist noch leer.<br><br>
-                            Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf <strong>„➕ Zum Schreiben“</strong>.
+                            Wechseln Sie in den Reiter <strong>"Datenbank & Suche"</strong> und klicken Sie auf den Button zum Hinzufügen.
                         </div>
                     </div>
 
                     <footer class="doc-footer">
-                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; font-size: 1.1rem;" onclick="copyComposedSchreiben()" disabled>
-                            <span aria-hidden="true">📋</span> Dokument kopieren
+                        <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2; font-size: 1.1rem;" disabled>
+                            <span id="icon-copy-doc" aria-hidden="true"></span> Dokument kopieren
                         </button>
-                        <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;" onclick="clearSchreiben()">
-                            <span aria-hidden="true">🗑️</span> Leeren
+                        <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;">
+                            <span id="icon-clear-doc" aria-hidden="true"></span> Leeren
                         </button>
                     </footer>
                 </div>

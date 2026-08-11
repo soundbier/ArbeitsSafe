@@ -1,10 +1,9 @@
 // =========================================================================
 // UPDATE-STEUERUNG: 
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
-// Versionsnummer (z.B. auf 'revisions-tool-v1.1.1.2 [Major.Minor.Patch.Build]'). Der Browser weiß dann 
-// automatisch, dass er den alten Cache löschen und alles neu laden muss.
+// Versionsnummer.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.4.6';
+const CACHE_NAME = 'revisions-tool-v1.1.5.0';
 
 const ASSETS_TO_CACHE = [
     './index.html',
@@ -12,6 +11,7 @@ const ASSETS_TO_CACHE = [
     './js/app.js',
     './js/data.js',
     './js/ui.js',
+    './js/icons.js',
     './gesetze.csv',
     './manifest.json',
     './icons/img-192x192.png',  
@@ -47,21 +47,25 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. DATEN ABRUFEN: Der Cloudflare Pages & iOS Fix
+// 3. DATEN ABRUFEN: Strategie für Offline-Support
 self.addEventListener('fetch', event => {
-    // WICHTIG: Bei Seitenaufrufen (Navigation) greift der SW NICHT ein.
-    // Cloudflare Pages darf den Routing-Redirect ungestört machen.
+    if (event.request.method !== 'GET') return;
+
+    // Spezielle Behandlung für Navigation (Seitenaufrufe)
+    // Wenn offline, liefere die index.html aus dem Cache
     if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match('./index.html');
+            })
+        );
         return;
     }
 
-    if (event.request.method !== 'GET') return;
-
-    // Nur für statische Assets (CSS, JS, CSV, Bilder) greift der Cache
+    // Für alle anderen statischen Assets (CSS, JS, CSV, Bilder)
     event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                return cachedResponse || fetch(event.request);
-            })
+        caches.match(event.request).then(cachedResponse => {
+            return cachedResponse || fetch(event.request);
+        })
     );
 });

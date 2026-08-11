@@ -8,9 +8,27 @@ export const state = {
     rawCsvData: `gesetzKuerzel;gesetzName;paragraf;absatz;titel;inhalt;mangelVorgefunden;rechtsgrundlage;handlungsaufforderung\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 1;Beurteilung der Arbeitsbedingungen;"(1) Der Arbeitgeber hat durch eine Beurteilung der für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, welche Maßnahmen des Arbeitsschutzes erforderlich sind.";"Zum Zeitpunkt der Besichtigung konnte von Ihnen keine Gefährdungsbeurteilungen vorgelegt werden.";"Laut § 5 Arbeitsschutzgesetzes (ArbSchG) hat der Arbeitgeber durch eine Beurteilung die für die Beschäftigten mit ihrer Arbeit verbundenen Gefährdungen zu ermitteln, bei Erfordernis notwendige Maßnahmen gegen diese Gefährdungen zu treffen und die Wirksamkeit dieser Maßnahmen fortlaufend zu prüfen.";"Bitte überarbeiten Sie eigenverantwortlich Ihre Gefährdungsbeurteilungen, dokumentieren Sie zukünftig die umgesetzten Maßnahmen und führen Sie Wirksamkeitskontrollen durch."\nArbSchG;Arbeitsschutzgesetz;§ 5;Abs. 2;Beurteilung der Arbeitsbedingungen;"(2) Eine Beurteilung nach Absatz 1 ist unabhängig von der Zahl der Beschäftigten vorzunehmen.";;;`
 };
 
+export function saveState() {
+    try {
+        localStorage.setItem('arbeitsSafe_revisionsSchreiben', JSON.stringify(state.revisionsSchreibenListe));
+    } catch (e) {
+        console.error('Fehler beim Speichern des Zustands:', e);
+    }
+}
+
+export function loadState() {
+    try {
+        const saved = localStorage.getItem('arbeitsSafe_revisionsSchreiben');
+        if (saved) {
+            state.revisionsSchreibenListe = JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden des Zustands:', e);
+    }
+}
+
 export function parseCSV(text) {
-    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    const linesText = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    const linesText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim() !== '');
     if (linesText.length < 2) return [];
     
     const delimiter = (linesText[0].match(/;/g) || []).length >= (linesText[0].match(/,/g) || []).length ? ';' : ',';

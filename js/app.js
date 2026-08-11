@@ -134,6 +134,11 @@ document.addEventListener('click', e => {
         menu.setAttribute('aria-hidden', menu.classList.contains('hidden'));
     }
 
+    const uploadTrigger = e.target.closest('#uploadTrigger');
+    if (uploadTrigger) {
+        document.getElementById('csvFileInput').click();
+    }
+
     if (e.target.closest('#btn-clear-all')) {
         if (confirm('ACHTUNG: Dies löscht ALLE gespeicherten Daten unwiderruflich. Fortfahren?')) {
             localStorage.clear();

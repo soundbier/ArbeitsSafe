@@ -24,7 +24,8 @@ export const DOM = {
     clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
     statusBadge: document.getElementById('statusBadge'),
     csvFileInput: document.getElementById('csvFileInput'),
-    reloadBtn: document.getElementById('reloadBtn')
+    reloadBtn: document.getElementById('reloadBtn'),
+    settingsBtn: document.getElementById('settingsBtn')
 };
 
 /* ==========================================

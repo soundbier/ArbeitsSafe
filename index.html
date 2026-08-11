@@ -12,25 +12,28 @@
 </head>
 <body>
     <!-- App Header -->
-    <header class="card-base tool-header main-app-header">
-        <div class="header-titles">
-            <h1>ArbeitsSafe</h1>
+    <header class="main-app-header">
+        <div class="header-logo">
+            <span class="logo-text">ArbeitsSafe</span>
         </div>
         
-        <div class="header-right">
-            <div id="statusBadge" class="status-mini" title="Datenbank-Status">
+        <div class="header-actions">
+            <div id="statusBadge" class="status-indicator" title="Datenbank-Status">
                 <span id="icon-status" aria-hidden="true"></span>
             </div>
-            <button type="button" id="reloadBtn" class="btn-mini" title="Daten neu laden">
+
+            <button type="button" id="reloadBtn" class="header-btn" title="Daten neu laden">
                 <span id="icon-reload" aria-hidden="true"></span>
             </button>
-            <div class="upload-wrapper">
-                <button type="button" class="btn-mini" title="Andere CSV laden">
+
+            <div class="upload-custom">
+                <button type="button" id="uploadTrigger" class="header-btn" title="CSV laden">
                     <span id="icon-upload" aria-hidden="true"></span>
                 </button>
-                <input type="file" id="csvFileInput" accept=".csv" aria-label="CSV Datei hochladen">
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden-input">
             </div>
-            <button type="button" id="settingsBtn" class="btn-mini" title="Einstellungen">
+
+            <button type="button" id="settingsBtn" class="header-btn" title="Einstellungen">
                 <span id="icon-settings" aria-hidden="true"></span>
             </button>
         </div>
@@ -154,7 +157,7 @@
                     App Information
                 </button>
                 <hr class="settings-divider">
-                <div class="settings-info-text">Version 1.1.7.1</div>
+                <div class="settings-info-text">Version 1.1.8.0</div>
             </div>
         </div>
     </div>

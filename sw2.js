@@ -49,10 +49,10 @@ self.addEventListener('activate', event => {
 
 // 3. DATEN ABRUFEN: Der Cloudflare Pages & iOS Fix
 self.addEventListener('fetch', event => {
-    // WICHTIG: Bei Seitenaufrufen (Navigation) greift der SW NICHT ein. 
+    // WICHTIG: Bei Seitenaufrufen (Navigation) greift der SW NICHT ein.
     // Cloudflare Pages darf den Routing-Redirect ungestört machen.
     if (event.request.mode === 'navigate') {
-        return; 
+        return;
     }
 
     if (event.request.method !== 'GET') return;

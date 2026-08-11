@@ -83,21 +83,21 @@ export function escapeHTML(text) {
         .replace(/'/g, "&#39;"); 
 }
 
-export function escapeJS(str) { 
+export function escapeJS(str) {
     if (!str) return "";
     return str
         .replace(/\\/g, '\\\\')
         .replace(/`/g, '\\`')
-        .replace(/\n/g, '\\n'); 
+        .replace(/\n/g, '\\n');
 }
 
 export function containsExactWord(text, query) { 
     if (!text || !query) return false; 
-    
-    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
-    
-    return regex.test(text); 
+
+    return regex.test(text);
 }
 
 export function copyTextToClipboard(btn, text) {
@@ -149,7 +149,7 @@ export function updateDropdowns() {
     const absatzeSet = new Set();
     
     // 1. Gesetze füllen
-    state.gesetzeData.forEach(item => { 
+    state.gesetzeData.forEach(item => {
         const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
         if (!requireBaustein || hasBausteinData) {
             lawsMap.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel); 
@@ -164,7 +164,7 @@ export function updateDropdowns() {
     if (lawsMap.has(currentLaw)) DOM.lawFilter.value = currentLaw;
 
     // 2. Paragrafen füllen (abhängig vom Gesetz)
-    state.gesetzeData.forEach(item => { 
+    state.gesetzeData.forEach(item => {
         const lawMatches = !DOM.lawFilter.value || item.gesetzKuerzel === DOM.lawFilter.value;
         const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
         
@@ -182,7 +182,7 @@ export function updateDropdowns() {
     if (paragrafenMap.has(currentParagraf)) DOM.paragraphFilter.value = currentParagraf;
 
     // 3. Absätze füllen (abhängig vom Paragraf)
-    if (DOM.paragraphFilter.value) { 
+    if (DOM.paragraphFilter.value) {
         state.gesetzeData.forEach(item => { 
             const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
             if (item.paragraf === DOM.paragraphFilter.value && (!requireBaustein || hasBausteinData) && item.absatz) {
@@ -302,7 +302,7 @@ export function renderDocumentView() {
     }
 
     // Gefüllter Zustand
-    DOM.copySchreibenBtn.disabled = false; 
+    DOM.copySchreibenBtn.disabled = false;
     DOM.clearSchreibenBtn.style.display = 'flex';
 
     DOM.schreibenList.innerHTML = state.revisionsSchreibenListe.map((item, idx) => {
@@ -313,8 +313,8 @@ export function renderDocumentView() {
                 <input type="text" class="doc-title-input" value="${escapeHTML(item.titel)}" oninput="updateItemTitle('${item.id}', this.value)">
             </header>
             
-            <div class="doc-editable-text" contenteditable="true" 
-                 oninput="updateItemText('${item.id}', this.innerText)" 
+            <div class="doc-editable-text" contenteditable="true"
+                 oninput="updateItemText('${item.id}', this.innerText)"
                  title="Klicken, um den Text zu bearbeiten">${escapeHTML(item.editedText)}</div>
                  
             <div class="doc-item-actions">
@@ -363,7 +363,7 @@ export function copyComposedSchreiben() {
     }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
 
     const clipboardHtmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
-    
+
     const fallbackCopy = () => {
         navigator.clipboard.writeText(plainText).then(onCopySuccess);
     };

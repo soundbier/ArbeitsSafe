@@ -25,27 +25,27 @@ function toggleToSchreiben(itemId) {
     if (!item) return;
     const idx = state.revisionsSchreibenListe.findIndex(i => i.id === itemId);
     const btn = document.getElementById(`add-btn-${itemId}`);
-    
+
     if (idx > -1) { 
         state.revisionsSchreibenListe.splice(idx, 1); 
-        if(btn){ btn.classList.remove('added'); btn.innerHTML='➕ Zum Schreiben'; } 
-    } else { 
+        if(btn){ btn.classList.remove('added'); btn.innerHTML='➕ Zum Schreiben'; }
+    } else {
         let newItem = { ...item };
         newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
         state.revisionsSchreibenListe.push(newItem); 
-        if(btn){ btn.classList.add('added'); btn.innerHTML='✓ Im Schreiben'; } 
+        if(btn){ btn.classList.add('added'); btn.innerHTML='✓ Im Schreiben'; }
     }
     renderDocumentView();
 }
 
 function updateItemTitle(id, v) { const i = state.revisionsSchreibenListe.find(x => x.id === id); if(i) i.titel = v; }
 function updateItemText(id, v) { const i = state.revisionsSchreibenListe.find(x => x.id === id); if(i) i.editedText = v; }
-function moveItem(idx, dir) { 
+function moveItem(idx, dir) {
     const n = idx + dir; 
     if(n >= 0 && n < state.revisionsSchreibenListe.length){ 
         state.revisionsSchreibenListe.splice(n, 0, state.revisionsSchreibenListe.splice(idx, 1)[0]); 
         renderDocumentView(); 
-    } 
+    }
 }
 function removeFromSchreiben(id) { toggleToSchreiben(id); }
 function clearSchreiben() { state.revisionsSchreibenListe = []; renderResults(); renderDocumentView(); }

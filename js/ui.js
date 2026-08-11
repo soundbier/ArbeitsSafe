@@ -49,6 +49,7 @@ export function injectStaticIcons() {
         'icon-settings': icons.settings,
         'icon-clear-all': icons.trash,
         'icon-app-info': icons.info,
+        'icon-legal': icons.fileText,
         'icon-filter-toggle': icons.filter,
         'icon-update': icons.refresh,
         'icon-theme-toggle': document.body.classList.contains('dark-mode') ? icons.sun : icons.moon,

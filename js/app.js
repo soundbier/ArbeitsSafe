@@ -10,6 +10,11 @@ function initTheme() {
         document.body.classList.add('dark-mode');
     }
 
+    // Rechtliche Hinweise prüfen
+    if (!localStorage.getItem('arbeitsSafe_legal_accepted')) {
+        document.getElementById('legalModal').classList.remove('hidden');
+    }
+
     // Kompakt-Modus laden
     const isCompact = localStorage.getItem('arbeitsSafe_compact') === 'true';
     if (DOM.compactModeToggle) {
@@ -159,7 +164,17 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.3.1.0\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Premium Design & Intelligente Filter.');
+        alert('ArbeitsSafe v1.4.0.0\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Rechtssicherheit & Compliance.');
+    }
+
+    if (e.target.closest('#btn-show-legal')) {
+        document.getElementById('legalModal').classList.remove('hidden');
+        document.getElementById('settingsMenu').classList.add('hidden');
+    }
+
+    if (e.target.closest('#acceptLegalBtn')) {
+        localStorage.setItem('arbeitsSafe_legal_accepted', 'true');
+        document.getElementById('legalModal').classList.add('hidden');
     }
 
     const menu = document.getElementById('settingsMenu');

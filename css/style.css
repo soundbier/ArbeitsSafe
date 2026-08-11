@@ -464,6 +464,28 @@ body:not([data-active-route="#search"]) .filter-trigger {
     resize: none;
 }
 
+/* Legal Modal Specifics */
+.legal-modal-content {
+    max-width: 450px;
+}
+
+.legal-scroll-area {
+    max-height: 60vh;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.legal-list {
+    padding-left: 1.25rem;
+    margin: 1rem 0;
+}
+
+.legal-list li {
+    margin-bottom: 0.75rem;
+    color: var(--text-dark);
+}
+
 .settings-hint {
     font-size: 0.75rem;
     color: var(--text-muted);

@@ -152,6 +152,24 @@
     </nav>
 
     <!-- Overlays -->
+    <div id="legalModal" class="settings-menu hidden" aria-hidden="false">
+        <div class="settings-menu-content card-base legal-modal-content">
+            <header class="settings-menu-header">
+                <h3>Wichtiger Hinweis</h3>
+            </header>
+            <div class="settings-menu-body legal-scroll-area">
+                <p><strong>Willkommen bei ArbeitsSafe.</strong></p>
+                <p>Diese Anwendung dient als Unterstützung bei der Erstellung von Revisionsschreiben. Bitte beachten Sie:</p>
+                <ul class="legal-list">
+                    <li>Die bereitgestellten Inhalte ersetzen keine Rechtsberatung.</li>
+                    <li>Die Verantwortung für die Richtigkeit der finalen Dokumente liegt beim Anwender.</li>
+                    <li><strong>Datenschutz:</strong> Alle Daten werden ausschließlich lokal auf Ihrem Gerät gespeichert. Es findet keine Übertragung an externe Server statt.</li>
+                </ul>
+                <button type="button" id="acceptLegalBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Verstanden & Fortfahren</button>
+            </div>
+        </div>
+    </div>
+
     <div id="settingsMenu" class="settings-menu hidden" aria-hidden="true">
         <div class="settings-menu-content card-base">
             <header class="settings-menu-header">
@@ -180,13 +198,17 @@
                         <span id="icon-app-info" aria-hidden="true"></span>
                         App Information
                     </button>
+                    <button type="button" class="settings-item-btn" id="btn-show-legal">
+                        <span id="icon-legal" aria-hidden="true"></span>
+                        Rechtliche Hinweise
+                    </button>
                     <button type="button" class="settings-item-btn danger-text" id="btn-clear-all">
                         <span id="icon-clear-all" aria-hidden="true"></span>
                         Alle Daten löschen
                     </button>
                 </section>
 
-                <div class="settings-footer-info">Version 1.3.2.0</div>
+                <div class="settings-footer-info">Version 1.4.0.0</div>
             </div>
         </div>
     </div>
@@ -201,6 +223,6 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=1.3.2.0"></script>
+    <script type="module" src="js/app.js?v=1.4.0.0"></script>
 </body>
 </html>

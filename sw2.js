@@ -1,7 +1,7 @@
 // =========================================================================
-// UPDATE-STEUERUNG: v1.1.9.2
+// UPDATE-STEUERUNG: v1.1.9.3
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.9.2';
+const CACHE_NAME = 'revisions-tool-v1.1.9.3';
 
 const ASSETS_TO_CACHE = [
     'index.html',

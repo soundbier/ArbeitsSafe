@@ -117,7 +117,7 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.1.6.0\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Performance & UX optimiert.');
+        alert('ArbeitsSafe v1.1.6.1\n\nEin smarter Generator für Revisionsschreiben.\nEntwickelt für Arbeitsschutz-Experten.\n\nStatus: Performance & UX optimiert.');
     }
 
     const menu = document.getElementById('settingsMenu');
@@ -220,7 +220,6 @@ if ('serviceWorker' in navigator) {
                 newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // Neue Version ist bereit!
                         showUpdateBanner();
                     }
                 });

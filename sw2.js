@@ -3,9 +3,10 @@
 // Wenn du etwas an der App oder der gesetze.csv änderst, erhöhe diese 
 // Versionsnummer.
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.1.5.5';
+const CACHE_NAME = 'revisions-tool-v1.1.6.1';
 
 const ASSETS_TO_CACHE = [
+    './',
     './index.html',
     './css/style.css',
     './js/app.js',
@@ -51,7 +52,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
 
-    // Spezielle Behandlung für Navigation (Seitenaufrufe)
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).catch(() => {
@@ -61,10 +61,16 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Für alle anderen statischen Assets
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             return cachedResponse || fetch(event.request);
         })
     );
+});
+
+// 4. NACHRICHTEN: Skip Waiting
+self.addEventListener('message', event => {
+    if (event.data && event.data === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });

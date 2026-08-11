@@ -25,7 +25,9 @@ export const DOM = {
     statusBadge: document.getElementById('statusBadge'),
     csvFileInput: document.getElementById('csvFileInput'),
     reloadBtn: document.getElementById('reloadBtn'),
-    settingsBtn: document.getElementById('settingsBtn')
+    settingsBtn: document.getElementById('settingsBtn'),
+    signatureInput: document.getElementById('signatureInput'),
+    compactModeToggle: document.getElementById('compactModeToggle')
 };
 
 /* ==========================================
@@ -463,9 +465,13 @@ export function renderDocumentView() {
 export function copyComposedSchreiben() {
     if (state.revisionsSchreibenListe.length === 0) return;
     
+    const signature = DOM.signatureInput?.value || "";
+    const signaturePlain = signature ? `\r\n\r\nMit freundlichen Grüßen,\r\n${signature}` : "";
+    const signatureHtml = signature ? `<p style="margin-top:24pt;">Mit freundlichen Grüßen,<br>${escapeHTML(signature).replace(/\r?\n/g, '<br>')}</p>` : "";
+
     const plainText = state.revisionsSchreibenListe.map((item, idx) => {
         return `${idx + 1}. ${item.titel}\r\n\r\n${item.editedText}`;
-    }).join("\r\n\r\n\r\n");
+    }).join("\r\n\r\n\r\n") + signaturePlain;
     
     const htmlContent = state.revisionsSchreibenListe.map((item, idx) => {
         const paragraphs = item.editedText.split(/(?:\r?\n){2,}/).map(block => {
@@ -478,7 +484,7 @@ export function copyComposedSchreiben() {
                 <strong>${idx + 1}. ${escapeHTML(item.titel)}</strong>
             </p>
             ${paragraphs}`;
-    }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`); 
+    }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`) + signatureHtml;
 
     const clipboardHtmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
     const fallbackCopy = () => {

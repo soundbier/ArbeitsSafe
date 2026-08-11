@@ -9,6 +9,20 @@ function initTheme() {
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         document.body.classList.add('dark-mode');
     }
+
+    // Signatur laden
+    const savedSignature = localStorage.getItem('arbeitsSafe_signature');
+    if (savedSignature && DOM.signatureInput) {
+        DOM.signatureInput.value = savedSignature;
+    }
+
+    // Kompakt-Modus laden
+    const isCompact = localStorage.getItem('arbeitsSafe_compact') === 'true';
+    if (DOM.compactModeToggle) {
+        DOM.compactModeToggle.checked = isCompact;
+        document.body.classList.toggle('compact-mode', isCompact);
+    }
+
     injectStaticIcons(); // Update the theme icon
 }
 
@@ -166,6 +180,10 @@ document.addEventListener('click', e => {
         overlay.classList.toggle('hidden');
     }
 
+    if (e.target.closest('#closeSettingsBtn')) {
+        document.getElementById('settingsMenu').classList.add('hidden');
+    }
+
     if (e.target.closest('#closeFilterBtn') || e.target.closest('#applyFilterBtn')) {
         document.getElementById('filterOverlay').classList.add('hidden');
     }
@@ -192,6 +210,14 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('input', e => {
+    if (e.target.id === 'signatureInput') {
+        localStorage.setItem('arbeitsSafe_signature', e.target.value);
+    }
+    if (e.target.id === 'compactModeToggle') {
+        const isCompact = e.target.checked;
+        localStorage.setItem('arbeitsSafe_compact', isCompact);
+        document.body.classList.toggle('compact-mode', isCompact);
+    }
     if (e.target.classList.contains('js-item-title-input')) {
         updateItemTitle(e.target.dataset.id, e.target.value);
     }

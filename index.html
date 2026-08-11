@@ -156,22 +156,46 @@
         <div class="settings-menu-content card-base">
             <header class="settings-menu-header">
                 <h3>Einstellungen</h3>
+                <button type="button" id="closeSettingsBtn" class="close-modal-btn">&times;</button>
             </header>
             <div class="settings-menu-body">
-                <button type="button" class="settings-item-btn" id="btn-clear-all">
-                    <span id="icon-clear-all" aria-hidden="true"></span>
-                    Alle Daten löschen
-                </button>
-                <button type="button" class="settings-item-btn" id="btn-toggle-theme">
-                    <span id="icon-theme-toggle" aria-hidden="true"></span>
-                    Design umschalten
-                </button>
-                <button type="button" class="settings-item-btn" id="btn-app-info">
-                    <span id="icon-app-info" aria-hidden="true"></span>
-                    App Information
-                </button>
+                <!-- Sektion: Personalisierung -->
+                <section class="settings-section">
+                    <label for="signatureInput" class="settings-label">Eigene Signatur</label>
+                    <textarea id="signatureInput" class="settings-textarea" placeholder="Dein Name, Titel, Firma..."></textarea>
+                    <p class="settings-hint">Wird automatisch unter jedes kopierte Dokument gesetzt.</p>
+                </section>
+
                 <hr class="settings-divider">
-                <div class="settings-info-text">Version 1.2.0.3</div>
+
+                <!-- Sektion: Darstellung -->
+                <section class="settings-section">
+                    <label class="settings-label">Erscheinungsbild</label>
+                    <button type="button" class="settings-item-btn" id="btn-toggle-theme">
+                        <span id="icon-theme-toggle" aria-hidden="true"></span>
+                        Design umschalten
+                    </button>
+                    <label class="settings-toggle-wrapper">
+                        <input type="checkbox" id="compactModeToggle">
+                        Kompakt-Modus (Kürzere Texte)
+                    </label>
+                </section>
+
+                <hr class="settings-divider">
+
+                <!-- Sektion: System & Info -->
+                <section class="settings-section">
+                    <button type="button" class="settings-item-btn" id="btn-app-info">
+                        <span id="icon-app-info" aria-hidden="true"></span>
+                        App Information
+                    </button>
+                    <button type="button" class="settings-item-btn danger-text" id="btn-clear-all">
+                        <span id="icon-clear-all" aria-hidden="true"></span>
+                        Alle Daten löschen
+                    </button>
+                </section>
+
+                <div class="settings-footer-info">Version 1.2.2.1</div>
             </div>
         </div>
     </div>
@@ -186,6 +210,6 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=1.2.0.3"></script>
+    <script type="module" src="js/app.js?v=1.2.2.1"></script>
 </body>
 </html>

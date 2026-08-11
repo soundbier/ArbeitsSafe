@@ -38,6 +38,7 @@ const screenScrollPositions = {};
    ========================================== */
 
 export function injectStaticIcons() {
+    console.log("Injected static icons start...");
     const iconMap = {
         'icon-status': icons.database,
         'icon-reload': icons.refresh,
@@ -62,6 +63,7 @@ export function injectStaticIcons() {
             console.warn(`Icon element not found: ${id}`);
         }
     });
+    console.log("Injected static icons end.");
 }
 
 /* ==========================================

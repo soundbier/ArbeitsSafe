@@ -10,12 +10,6 @@ function initTheme() {
         document.body.classList.add('dark-mode');
     }
 
-    // Signatur laden
-    const savedSignature = localStorage.getItem('arbeitsSafe_signature');
-    if (savedSignature && DOM.signatureInput) {
-        DOM.signatureInput.value = savedSignature;
-    }
-
     // Kompakt-Modus laden
     const isCompact = localStorage.getItem('arbeitsSafe_compact') === 'true';
     if (DOM.compactModeToggle) {
@@ -165,7 +159,7 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.3.0.0\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Premium Design & Intelligente Filter.');
+        alert('ArbeitsSafe v1.3.1.0\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Premium Design & Intelligente Filter.');
     }
 
     const menu = document.getElementById('settingsMenu');
@@ -210,9 +204,6 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('input', e => {
-    if (e.target.id === 'signatureInput') {
-        localStorage.setItem('arbeitsSafe_signature', e.target.value);
-    }
     if (e.target.id === 'compactModeToggle') {
         const isCompact = e.target.checked;
         localStorage.setItem('arbeitsSafe_compact', isCompact);

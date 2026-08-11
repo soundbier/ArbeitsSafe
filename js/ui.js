@@ -26,7 +26,6 @@ export const DOM = {
     csvFileInput: document.getElementById('csvFileInput'),
     reloadBtn: document.getElementById('reloadBtn'),
     settingsBtn: document.getElementById('settingsBtn'),
-    signatureInput: document.getElementById('signatureInput'),
     compactModeToggle: document.getElementById('compactModeToggle')
 };
 
@@ -373,7 +372,7 @@ function renderChunks(isInitial = false) {
                                 ${icons.clipboard} Gesetz
                             </button>
                             ${hasBaustein ? `
-                            <button type="button" class="action-icon-btn js-toggle-item-btn ${isInDocument ? 'added' : ''}" data-id="${item.id}" aria-label="${isInDocument ? 'Aus dem Schreiben entfernen' : 'Zum Schreiben hinzufügen'}">
+                            <button type="button" class="action-icon-btn primary-action js-toggle-item-btn ${isInDocument ? 'added' : ''}" data-id="${item.id}" aria-label="${isInDocument ? 'Aus dem Schreiben entfernen' : 'Zum Schreiben hinzufügen'}">
                                 ${isInDocument ? icons.check + ' Im Schreiben' : icons.plus + ' Zum Schreiben'}
                             </button>` : ''}
                         </div>
@@ -386,9 +385,7 @@ function renderChunks(isInitial = false) {
 
                     ${hasBaustein ? `
                     <div class="revision-preview-box">
-                        <div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:0.35rem;">
-                            Vorschau Textbaustein
-                        </div>
+                        <div class="preview-label">Vorschau Textbaustein</div>
                         <div class="text-clamp">${highlightSearchTerm(bausteinText, lastSearchRegex)}</div>
                         <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Vorschautext ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
                     </div>` : ''}
@@ -465,13 +462,9 @@ export function renderDocumentView() {
 export function copyComposedSchreiben() {
     if (state.revisionsSchreibenListe.length === 0) return;
     
-    const signature = DOM.signatureInput?.value || "";
-    const signaturePlain = signature ? `\r\n\r\nMit freundlichen Grüßen,\r\n${signature}` : "";
-    const signatureHtml = signature ? `<p style="margin-top:24pt;">Mit freundlichen Grüßen,<br>${escapeHTML(signature).replace(/\r?\n/g, '<br>')}</p>` : "";
-
     const plainText = state.revisionsSchreibenListe.map((item, idx) => {
         return `${idx + 1}. ${item.titel}\r\n\r\n${item.editedText}`;
-    }).join("\r\n\r\n\r\n") + signaturePlain;
+    }).join("\r\n\r\n\r\n");
     
     const htmlContent = state.revisionsSchreibenListe.map((item, idx) => {
         const paragraphs = item.editedText.split(/(?:\r?\n){2,}/).map(block => {
@@ -484,7 +477,7 @@ export function copyComposedSchreiben() {
                 <strong>${idx + 1}. ${escapeHTML(item.titel)}</strong>
             </p>
             ${paragraphs}`;
-    }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`) + signatureHtml;
+    }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`);
 
     const clipboardHtmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
     const fallbackCopy = () => {

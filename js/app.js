@@ -12,7 +12,11 @@ const APP_VERSION = '2.0.0';
 const LS = {
     theme: 'arbeitsSafe_theme',
     density: 'arbeitsSafe_compact',
-    legal: 'arbeitsSafe_legal_accepted'
+    legal: 'arbeitsSafe_legal_accepted',
+    fontsize: 'arbeitsSafe_fontsize',
+    exportFormat: 'arbeitsSafe_exportformat',
+    autoReload: 'arbeitsSafe_autoreload',
+    confirmDelete: 'arbeitsSafe_confirmdelete'
 };
 
 /* =========================================================================
@@ -52,6 +56,45 @@ function applyDensity(compact) {
     if (DOM.compactModeToggle) DOM.compactModeToggle.checked = compact;
 }
 
+function applyFontSize(pref) {
+    document.documentElement.dataset.fontsize = pref;
+    document.querySelectorAll('[data-fontsize-choice]').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.fontsizeChoice === pref));
+    });
+}
+
+function setFontSize(pref) {
+    localStorage.setItem(LS.fontsize, pref);
+    applyFontSize(pref);
+}
+
+function getFontSizePref() {
+    return localStorage.getItem(LS.fontsize) || 'normal';
+}
+
+function applyExportFormat(pref) {
+    document.querySelectorAll('[data-exportformat-choice]').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.exportformatChoice === pref));
+    });
+}
+
+function setExportFormat(pref) {
+    localStorage.setItem(LS.exportFormat, pref);
+    applyExportFormat(pref);
+}
+
+function getExportFormatPref() {
+    return localStorage.getItem(LS.exportFormat) || 'doc';
+}
+
+function getAutoReloadPref() {
+    return localStorage.getItem(LS.autoReload) === 'true';
+}
+
+function getConfirmDeletePref() {
+    return localStorage.getItem(LS.confirmDelete) !== 'false';
+}
+
 /* =========================================================================
    DATEN
    ========================================================================= */
@@ -68,7 +111,8 @@ function initData(csvString, sourceLabel, status = 'ok') {
 
 function loadDatabase() {
     renderSkeletons();
-    return fetch('gesetze.csv')
+    const opts = getAutoReloadPref() ? { cache: 'no-store' } : {};
+    return fetch('gesetze.csv', opts)
         .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
         .then(text => initData(text, 'Standard-Datenbank', 'ok'))
         .catch(() => {
@@ -123,7 +167,7 @@ function moveDraftItem(idx, dir) {
 
 function clearDraft() {
     if (!state.revisionsSchreibenListe.length) return;
-    if (!confirm('Möchten Sie den gesamten Entwurf wirklich leeren?')) return;
+    if (getConfirmDeletePref() && !confirm('Möchten Sie den gesamten Entwurf wirklich leeren?')) return;
     const ids = state.revisionsSchreibenListe.map(i => i.id);
     state.revisionsSchreibenListe = [];
     ids.forEach(refreshNormCard);
@@ -199,6 +243,14 @@ function wireEvents() {
         // Theme-Auswahl
         const themeChoice = t.closest('[data-theme-choice]');
         if (themeChoice) { setTheme(themeChoice.dataset.themeChoice); return; }
+
+        // Schriftgröße
+        const fontSizeChoice = t.closest('[data-fontsize-choice]');
+        if (fontSizeChoice) { setFontSize(fontSizeChoice.dataset.fontsizeChoice); return; }
+
+        // Exportformat
+        const exportFormatChoice = t.closest('[data-exportformat-choice]');
+        if (exportFormatChoice) { setExportFormat(exportFormatChoice.dataset.exportformatChoice); return; }
     });
 
     // --- Header ---
@@ -284,13 +336,21 @@ function wireEvents() {
     });
 
     DOM.copyDraftBtn?.addEventListener('click', copyDraft);
-    DOM.downloadDraftBtn?.addEventListener('click', downloadDraft);
+    DOM.downloadDraftBtn?.addEventListener('click', () => downloadDraft(getExportFormatPref()));
     DOM.clearDraftBtn?.addEventListener('click', clearDraft);
 
     // --- Einstellungen ---
     DOM.compactModeToggle?.addEventListener('change', e => {
         localStorage.setItem(LS.density, String(e.target.checked));
         applyDensity(e.target.checked);
+    });
+
+    DOM.autoReloadToggle?.addEventListener('change', e => {
+        localStorage.setItem(LS.autoReload, String(e.target.checked));
+    });
+
+    DOM.confirmDeleteToggle?.addEventListener('change', e => {
+        localStorage.setItem(LS.confirmDelete, String(e.target.checked));
     });
 
     document.getElementById('showLegalBtn')?.addEventListener('click', () => {
@@ -305,7 +365,7 @@ function wireEvents() {
     });
 
     document.getElementById('clearAllBtn')?.addEventListener('click', () => {
-        if (!confirm('ACHTUNG: Alle lokal gespeicherten Daten werden unwiderruflich gelöscht. Fortfahren?')) return;
+        if (getConfirmDeletePref() && !confirm('ACHTUNG: Alle lokal gespeicherten Daten werden unwiderruflich gelöscht. Fortfahren?')) return;
         localStorage.clear();
         location.reload();
     });
@@ -345,6 +405,10 @@ function boot() {
     initIcons();
     applyTheme(getThemePref());
     applyDensity(localStorage.getItem(LS.density) === 'true');
+    applyFontSize(getFontSizePref());
+    applyExportFormat(getExportFormatPref());
+    if (DOM.autoReloadToggle) DOM.autoReloadToggle.checked = getAutoReloadPref();
+    if (DOM.confirmDeleteToggle) DOM.confirmDeleteToggle.checked = getConfirmDeletePref();
 
     loadState();
     renderDraft();

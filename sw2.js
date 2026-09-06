@@ -40,6 +40,13 @@ self.addEventListener('fetch', event => {
     if (request.method !== 'GET') return;
     if (!request.url.startsWith(self.location.origin)) return;
 
+    // Zwischenspeicher komplett umgehen, wenn explizit angefordert
+    // (Einstellung "Automatisch aktualisieren").
+    if (request.cache === 'no-store') {
+        event.respondWith(fetch(request).catch(() => caches.match(request, { ignoreSearch: true })));
+        return;
+    }
+
     event.respondWith(
         // ignoreSearch: Assets werden mit Cache-Busting-Query (?v=…) angefragt,
         // liegen im Precache aber ohne Query.

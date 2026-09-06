@@ -1,6 +1,11 @@
 import { state, parseCSV, saveState, loadState } from './data.js';
 import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard, navigateTo, toggleText, injectStaticIcons } from './ui.js';
 
+// Wiederholt abgefragte Overlays einmalig cachen statt bei jedem Klick neu per getElementById zu suchen.
+const settingsMenuEl = document.getElementById('settingsMenu');
+const legalModalEl = document.getElementById('legalModal');
+const filterOverlayEl = document.getElementById('filterOverlay');
+
 // --- Haupt-Logik ---
 function initTheme() {
     const savedTheme = localStorage.getItem('arbeitsSafe_theme');
@@ -12,7 +17,7 @@ function initTheme() {
 
     // Rechtliche Hinweise prüfen
     if (!localStorage.getItem('arbeitsSafe_legal_accepted')) {
-        document.getElementById('legalModal').classList.remove('hidden');
+        legalModalEl.classList.remove('hidden');
     }
 
     // Kompakt-Modus laden
@@ -142,14 +147,13 @@ document.addEventListener('click', e => {
 
     const settingsBtn = e.target.closest('#settingsBtn');
     if (settingsBtn) {
-        const menu = document.getElementById('settingsMenu');
-        menu.classList.toggle('hidden');
-        menu.setAttribute('aria-hidden', menu.classList.contains('hidden'));
+        settingsMenuEl.classList.toggle('hidden');
+        settingsMenuEl.setAttribute('aria-hidden', settingsMenuEl.classList.contains('hidden'));
     }
 
     const uploadTrigger = e.target.closest('#uploadTrigger');
     if (uploadTrigger) {
-        document.getElementById('csvFileInput').click();
+        DOM.csvFileInput.click();
     }
 
     if (e.target.closest('#btn-clear-all')) {
@@ -168,33 +172,31 @@ document.addEventListener('click', e => {
     }
 
     if (e.target.closest('#btn-show-legal')) {
-        document.getElementById('legalModal').classList.remove('hidden');
-        document.getElementById('settingsMenu').classList.add('hidden');
+        legalModalEl.classList.remove('hidden');
+        settingsMenuEl.classList.add('hidden');
     }
 
     if (e.target.closest('#acceptLegalBtn')) {
         localStorage.setItem('arbeitsSafe_legal_accepted', 'true');
-        document.getElementById('legalModal').classList.add('hidden');
+        legalModalEl.classList.add('hidden');
     }
 
-    const menu = document.getElementById('settingsMenu');
-    if (menu && !menu.classList.contains('hidden') && !e.target.closest('.settings-menu-content') && !e.target.closest('#settingsBtn')) {
-        menu.classList.add('hidden');
-        menu.setAttribute('aria-hidden', 'true');
+    if (!settingsMenuEl.classList.contains('hidden') && !e.target.closest('.settings-menu-content') && !e.target.closest('#settingsBtn')) {
+        settingsMenuEl.classList.add('hidden');
+        settingsMenuEl.setAttribute('aria-hidden', 'true');
     }
 
     const filterToggle = e.target.closest('#mobileFilterToggle');
     if (filterToggle) {
-        const overlay = document.getElementById('filterOverlay');
-        overlay.classList.toggle('hidden');
+        filterOverlayEl.classList.toggle('hidden');
     }
 
     if (e.target.closest('#closeSettingsBtn')) {
-        document.getElementById('settingsMenu').classList.add('hidden');
+        settingsMenuEl.classList.add('hidden');
     }
 
     if (e.target.closest('#closeFilterBtn') || e.target.closest('#applyFilterBtn')) {
-        document.getElementById('filterOverlay').classList.add('hidden');
+        filterOverlayEl.classList.add('hidden');
     }
 
     if (e.target.id === 'filterOverlay') {

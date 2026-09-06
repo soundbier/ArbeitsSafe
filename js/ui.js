@@ -229,17 +229,34 @@ export function updateDropdowns() {
     const currentAbsatz = DOM.absatzFilter.value;
     const requireBaustein = DOM.hasBausteinFilter?.checked || false;
     
+    // Der Absatz-Filter hängt vom (ggf. wiederhergestellten) Paragraf ab, der wiederum
+    // vom (ggf. wiederhergestellten) Gesetz abhängt. Wir kennen den späteren Auswahlwert
+    // schon vorab (currentLaw/currentParagraf, sofern die Auswahl noch gültig bleibt),
+    // daher genügt EIN Durchlauf über die komplette Datenmenge statt drei.
+    const matchesFilter = item => !requireBaustein || item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
+    // Bleibt die aktuelle Auswahl nach dem Filtern gültig? Muss vorab feststehen, weil
+    // die Paragraf-/Absatz-Optionen im selben Durchlauf danach eingeschränkt werden.
+    const effectiveLaw = currentLaw && state.gesetzeData.some(item => item.gesetzKuerzel === currentLaw && matchesFilter(item)) ? currentLaw : '';
+    const effectiveParagraf = currentParagraf && state.gesetzeData.some(item => item.paragraf === currentParagraf && matchesFilter(item)) ? currentParagraf : '';
+
     const lawsMap = new Map();
     const paragrafenMap = new Map();
     const absatzeSet = new Set();
-    
+
     state.gesetzeData.forEach(item => {
-        const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-        if (!requireBaustein || hasBausteinData) {
-            lawsMap.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel); 
+        if (!matchesFilter(item)) return;
+
+        lawsMap.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel);
+
+        if ((!effectiveLaw || item.gesetzKuerzel === effectiveLaw) && item.paragraf) {
+            paragrafenMap.set(item.paragraf, item.titel);
+        }
+
+        if (effectiveParagraf && item.paragraf === effectiveParagraf && item.absatz) {
+            absatzeSet.add(item.absatz);
         }
     });
-    
+
     let lawOptions = '<option value="">-- Alle Gesetze --</option>';
     Array.from(lawsMap).forEach(([kuerzel, name]) => {
         lawOptions += `<option value="${escapeHTML(kuerzel)}">${escapeHTML(kuerzel)} - ${escapeHTML(name)}</option>`;
@@ -247,15 +264,6 @@ export function updateDropdowns() {
     DOM.lawFilter.innerHTML = lawOptions;
     if (lawsMap.has(currentLaw)) DOM.lawFilter.value = currentLaw;
 
-    state.gesetzeData.forEach(item => {
-        const lawMatches = !DOM.lawFilter.value || item.gesetzKuerzel === DOM.lawFilter.value;
-        const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-        
-        if (lawMatches && (!requireBaustein || hasBausteinData) && item.paragraf) {
-            paragrafenMap.set(item.paragraf, item.titel); 
-        }
-    });
-    
     let paragrafOptions = '<option value="">-- Alle Paragrafen --</option>';
     Array.from(paragrafenMap).forEach(([paragraf, titel]) => {
         const displayTitel = titel ? ` — ${escapeHTML(titel)}` : '';
@@ -264,15 +272,6 @@ export function updateDropdowns() {
     DOM.paragraphFilter.innerHTML = paragrafOptions;
     if (paragrafenMap.has(currentParagraf)) DOM.paragraphFilter.value = currentParagraf;
 
-    if (DOM.paragraphFilter.value) {
-        state.gesetzeData.forEach(item => { 
-            const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-            if (item.paragraf === DOM.paragraphFilter.value && (!requireBaustein || hasBausteinData) && item.absatz) {
-                absatzeSet.add(item.absatz); 
-            }
-        }); 
-    }
-    
     let absatzOptions = '<option value="">-- Alle Absätze --</option>';
     Array.from(absatzeSet)
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))

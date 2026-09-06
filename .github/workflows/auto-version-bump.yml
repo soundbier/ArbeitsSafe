@@ -1,0 +1,52 @@
+name: Automatischer Versions-Bump
+
+# Erhöht bei jeder Code-Änderung auf main automatisch die App-Version und
+# den Service-Worker-Cache-Namen (sw2.js), damit Nutzer:innen nie eine
+# veraltete Version aus dem Cache ausgeliefert bekommen ("Response served
+# by service worker has redirections" & Co.).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'css/**'
+      - 'js/**'
+      - 'index.html'
+      - 'manifest.json'
+      - 'gesetze.csv'
+      - 'sw2.js'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-version-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Version erhöhen
+        run: node scripts/bump-version.js
+
+      - name: Änderungen committen und pushen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Keine Versionsänderung nötig."
+            exit 0
+          fi
+          git add js/app.js index.html sw2.js
+          git commit -m "chore: Version automatisch erhöht [skip ci]"
+          git push

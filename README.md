@@ -1,4 +1,4 @@
-# ArbeitsSafe 🛡️ (v1.3.2.0)
+# ArbeitsSafe 🛡️ (v2.0.0)
 
 Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arbeitsschutz. ArbeitsSafe unterstützt Arbeitsschutz-Experten dabei, festgestellte Mängel und gesetzliche Grundlagen schnell zu filtern, zu strukturieren und als professionelles Revisionsschreiben zusammenzustellen.
 
@@ -6,21 +6,23 @@ Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arb
 
 ## ✨ Highlights & Features
 
-* **Premium "2026" UI**: 
-  * Modernes, minimalistisches Design mit Glassmorphism-Effekten (Backdrop-Blur).
-  * **Optimierte Law-Cards**: Klare visuelle Trennung zwischen Gesetzestext und Textbausteinen für maximale Scanbarkeit.
-  * Vollständiger **Dark Mode** Support mit automatischer Systemerkennung.
-  * Native App-Haptik durch taktiles Feedback und flüssige Animationen.
+* **Adaptives UI (v2.0)**:
+  * Ein Layout, drei Ausbaustufen: Mobile (Bottom-Nav + Filter-Sheet), Tablet, Desktop (feste Filter-Sidebar) und ab 1280 px zusätzlich der Entwurf als permanente zweite Spalte.
+  * Konsistentes Token-Design-System (Farben, Radien, Abstände, Schatten) mit Hell-/Dunkel-Modus und Systemerkennung.
+  * Touch-optimiert: Ziele ab 44 px, `safe-area`-Insets, `100dvh`, kein erzwungenes Zoom-Verbot.
+  * Barrierearm: Fokus-Sichtbarkeit, ARIA-Rollen, Escape schließt Overlays, `prefers-reduced-motion` respektiert.
 
 * **Intelligentes Filtering**:
-  * **Modernes Bottom-Sheet** für mobile Filterung.
-  * Live-Statistik und Trefferanzeige direkt über den Suchergebnissen.
-  * Filterung nach Gesetzen, Paragraphen und Absätzen sowie globale Volltextsuche.
+  * Filter nach Gesetz, Paragraf und Absatz — abhängige Auswahllisten in einem einzigen Datendurchlauf.
+  * Entprellte Volltextsuche mit Treffer-Hervorhebung, Chip-Leiste mit aktiven Kriterien und Ein-Klick-Reset.
+  * Tastatur: `/` bzw. `Strg/Cmd + K` springt in die Suche.
 
 * **Effiziente Dokument-Komposition**:
-  * Kombiniert Mängel, Rechtsgrundlagen und Handlungsaufforderungen automatisch.
-  * Flexibler Export in HTML (für Word/Outlook) oder Reintext.
-  * Integriertes Draft-System mit Sortierfunktion.
+  * Übernahme einzelner Normen in den Entwurf, Sortierung, Inline-Bearbeitung von Titel und Text (auto-wachsende Textfelder).
+  * Export in die Zwischenablage (formatiertes HTML + Reintext) oder als `.doc`-Datei.
+  * Entwurf wird lokal gespeichert; nur die betroffene Karte wird neu gerendert.
+
+* **PWA**: Offline-fähig via Service Worker (Stale-While-Revalidate), Update-Banner mit Nutzerbestätigung, installierbar.
 
 ---
 
@@ -41,13 +43,15 @@ ArbeitsSafe strukturiert komplexe gesetzliche Anforderungen in klare, handlungsr
 ## 📂 Projektstruktur
 
 ```text
-├── index.html          # Hauptanwendung (UI & Layout)[cite: 1]
-├── manifest.json       # PWA-Manifest für die Installation[cite: 2]
-├── sw2.js              # Service Worker für Offline-Caching[cite: 3]
+├── index.html          # Hauptanwendung (UI & Layout)
+├── manifest.json       # PWA-Manifest für die Installation
+├── sw2.js              # Service Worker für Offline-Caching
 ├── gesetze.csv         # Standard-Datenbank für Gesetze und Bausteine
 ├── css/
-│   └── style.css       # Zentrales Stylesheet[cite: 1, 7]
+│   └── style.css       # Zentrales Stylesheet
 └── js/
-    ├── app.js          # App-Logik, Event-Listener & Initialisierung[cite: 5]
-    ├── data.js         # CSV-Parser und globaler State[cite: 6]
-    └── ui.js           # DOM-Rendering, Filter- und Clipboard-Funktionen[cite: 4]
+    ├── app.js          # App-Logik, Event-Wiring, Theme & Service Worker
+    ├── data.js         # CSV-Parser, globaler State & LocalStorage
+    ├── ui.js           # DOM-Referenzen, Rendering, Filter, Export
+    └── icons.js        # SVG-Icon-Registry
+```

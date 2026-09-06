@@ -1,7 +1,7 @@
 // =========================================================================
-// ArbeitsSafe Service Worker — v2.0.2
+// ArbeitsSafe Service Worker — v2.0.3
 // =========================================================================
-const CACHE_NAME = 'arbeitssafe-v2.0.2';
+const CACHE_NAME = 'arbeitssafe-v2.0.3';
 
 const ASSETS_TO_CACHE = [
     './',

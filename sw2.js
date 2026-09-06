@@ -23,7 +23,7 @@ self.addEventListener('install', event => {
     // damit der User über den Banner selbst entscheiden kann (bessere Stabilität)
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(ASSETS_TO_CACHE.map(asset => `${asset}?v=${CACHE_NAME}`));
+            return cache.addAll(ASSETS_TO_CACHE);
         })
     );
 });

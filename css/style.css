@@ -141,6 +141,10 @@ html {
     text-size-adjust: 100%;
 }
 
+/* Schriftgröße (Einstellungen) — skaliert alle rem-basierten Größen */
+html[data-fontsize="small"] { font-size: 93.75%; }
+html[data-fontsize="large"] { font-size: 112.5%; }
+
 body {
     margin: 0;
     font-family: var(--font);
@@ -1090,6 +1094,16 @@ button.settings-row:hover { border-color: var(--c-border-strong); background: va
 .settings-row.is-danger .icon-svg { color: var(--c-danger); }
 .settings-row-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
 .settings-row-sub { font-size: var(--fs-xs); font-weight: 500; color: var(--c-text-3); }
+.settings-row-sub kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 4px;
+    background: var(--c-surface);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+}
 
 .legal-body { font-size: var(--fs-base); color: var(--c-text-2); }
 .legal-body ul { margin: 0; padding-left: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2); }

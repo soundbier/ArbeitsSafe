@@ -61,6 +61,8 @@ export const DOM = {
     settingsModal: $('settingsModal'),
     legalModal: $('legalModal'),
     compactModeToggle: $('compactModeToggle'),
+    autoReloadToggle: $('autoReloadToggle'),
+    confirmDeleteToggle: $('confirmDeleteToggle'),
     dataSourceLabel: $('dataSourceLabel'),
     dataCountLabel: $('dataCountLabel'),
     toastStack: $('toastStack'),
@@ -640,14 +642,17 @@ export function copyDraft() {
     }
 }
 
-export function downloadDraft() {
+export function downloadDraft(format = 'doc') {
     if (!state.revisionsSchreibenListe.length) return;
-    const blob = new Blob(['﻿', buildHTML()], { type: 'application/msword' });
+    const isTxt = format === 'txt';
+    const blob = isTxt
+        ? new Blob([buildPlainText()], { type: 'text/plain;charset=utf-8' })
+        : new Blob(['﻿', buildHTML()], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `Revisionsschreiben_${stamp}.doc`;
+    a.download = `Revisionsschreiben_${stamp}.${isTxt ? 'txt' : 'doc'}`;
     document.body.appendChild(a);
     a.click();
     a.remove();

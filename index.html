@@ -219,6 +219,15 @@
                     </button>
                 </div>
 
+                <div class="field">
+                    <span class="field-label">Schriftgröße</span>
+                    <div class="segmented" role="group" aria-label="Schriftgröße">
+                        <button type="button" data-fontsize-choice="small" aria-pressed="false">Klein</button>
+                        <button type="button" data-fontsize-choice="normal" aria-pressed="false">Standard</button>
+                        <button type="button" data-fontsize-choice="large" aria-pressed="false">Groß</button>
+                    </div>
+                </div>
+
                 <label class="switch-row" for="compactModeToggle">
                     <span class="switch-text">
                         <span class="switch-title">Kompakte Ansicht</span>
@@ -247,14 +256,50 @@
                         <span class="settings-row-sub" id="dataCountLabel">0 Einträge</span>
                     </span>
                 </button>
+
+                <label class="switch-row" for="autoReloadToggle">
+                    <span class="switch-text">
+                        <span class="switch-title">Automatisch aktualisieren</span>
+                        <span class="switch-hint">Datenbank beim App-Start immer frisch laden statt aus dem Zwischenspeicher</span>
+                    </span>
+                    <span class="switch">
+                        <input type="checkbox" id="autoReloadToggle">
+                        <span class="track" aria-hidden="true"></span>
+                    </span>
+                </label>
+
+                <div class="field">
+                    <span class="field-label">Standard-Exportformat</span>
+                    <div class="segmented" role="group" aria-label="Exportformat">
+                        <button type="button" data-exportformat-choice="doc" aria-pressed="false">Word (.doc)</button>
+                        <button type="button" data-exportformat-choice="txt" aria-pressed="false">Klartext (.txt)</button>
+                    </div>
+                </div>
             </div>
 
             <div class="settings-group">
                 <span class="settings-group-title">Info</span>
+                <div class="settings-row">
+                    <span class="js-icon" data-icon="info"></span>
+                    <span class="settings-row-text">
+                        <span>Tastenkürzel</span>
+                        <span class="settings-row-sub"><kbd>/</kbd> oder <kbd>Strg</kbd>+<kbd>K</kbd> Suche fokussieren · <kbd>Esc</kbd> Overlay schließen</span>
+                    </span>
+                </div>
                 <button type="button" class="settings-row" id="showLegalBtn">
                     <span class="js-icon" data-icon="shield"></span>
                     <span class="settings-row-text"><span>Rechtliche Hinweise &amp; Datenschutz</span></span>
                 </button>
+                <label class="switch-row" for="confirmDeleteToggle">
+                    <span class="switch-text">
+                        <span class="switch-title">Sicherheitsabfragen bei Löschen</span>
+                        <span class="switch-hint">Vor dem Entfernen von Daten nachfragen</span>
+                    </span>
+                    <span class="switch">
+                        <input type="checkbox" id="confirmDeleteToggle" checked>
+                        <span class="track" aria-hidden="true"></span>
+                    </span>
+                </label>
                 <button type="button" class="settings-row is-danger" id="clearAllBtn">
                     <span class="js-icon" data-icon="trash"></span>
                     <span class="settings-row-text">

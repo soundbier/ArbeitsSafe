@@ -1,7 +1,7 @@
 // =========================================================================
-// UPDATE-STEUERUNG: v1.4.0.0
+// ArbeitsSafe Service Worker — v2.0.0
 // =========================================================================
-const CACHE_NAME = 'revisions-tool-v1.4.0.0';
+const CACHE_NAME = 'arbeitssafe-v2.0.0';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -17,56 +17,47 @@ const ASSETS_TO_CACHE = [
     'icons/img-512x512.png'
 ];
 
-// 1. INSTALLATION: Dateien mit Cache-Busting laden
+// 1. INSTALLATION — Precache
 self.addEventListener('install', event => {
-    // skipWaiting() wird hier bewusst NICHT gerufen,
-    // damit der User über den Banner selbst entscheiden kann (bessere Stabilität)
+    // Kein skipWaiting(): Der Nutzer entscheidet über den Update-Banner.
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
+        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
     );
 });
 
-// 2. AKTIVIERUNG: Alte Caches löschen
+// 2. AKTIVIERUNG — alte Caches entfernen
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) {
-                        return caches.delete(cache);
-                    }
-                })
-            );
-        }).then(() => self.clients.claim())
+        caches.keys()
+            .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+            .then(() => self.clients.claim())
     );
 });
 
-// 3. FETCH: Stale-While-Revalidate Strategie
+// 3. FETCH — Stale-While-Revalidate
 self.addEventListener('fetch', event => {
-    if (!event.request.url.startsWith(self.location.origin)) return;
+    const { request } = event;
+    if (request.method !== 'GET') return;
+    if (!request.url.startsWith(self.location.origin)) return;
 
     event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            const fetchPromise = fetch(event.request).then(networkResponse => {
-                if (networkResponse.status === 200) {
-                    const responseClone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseClone);
-                    });
+        // ignoreSearch: Assets werden mit Cache-Busting-Query (?v=…) angefragt,
+        // liegen im Precache aber ohne Query.
+        caches.match(request, { ignoreSearch: true }).then(cached => {
+            const network = fetch(request).then(response => {
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
                 }
-                return networkResponse;
-            });
-            // Gib den Cache zurück, falls vorhanden, sonst warte aufs Netzwerk
-            return cachedResponse || fetchPromise;
+                return response;
+            }).catch(() => cached);
+
+            return cached || network;
         })
     );
 });
 
-// 4. SKIP WAITING
+// 4. SKIP WAITING auf Nutzerwunsch
 self.addEventListener('message', event => {
-    if (event.data === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
+    if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });

@@ -1,497 +1,672 @@
 import { state } from './data.js';
-import { icons } from './icons.js';
+import { icon, hydrateIcons } from './icons.js';
 
-/* ==========================================
-   DOM ELEMENTE
-   ========================================== */
+/* =========================================================================
+   DOM-REFERENZEN
+   ========================================================================= */
+
+const $ = id => document.getElementById(id);
+
 export const DOM = {
-    // Filter & Suche
-    lawFilter: document.getElementById('lawFilter'), 
-    paragraphFilter: document.getElementById('paragraphFilter'),
-    absatzFilter: document.getElementById('absatzFilter'), 
-    searchInput: document.getElementById('searchInput'),
-    hasBausteinFilter: document.getElementById('hasBausteinFilter'), 
-    
-    // Container
-    resultsContainer: document.getElementById('results'),
-    schreibenList: document.getElementById('schreibenList'), 
-    errorContainer: document.getElementById('errorContainer'), 
-    
-    // UI-Elemente & Buttons
-    schreibenCounter: document.getElementById('schreibenCounter'),
-    tabCounter: document.getElementById('tabCounter'),
-    copySchreibenBtn: document.getElementById('copySchreibenBtn'), 
-    clearSchreibenBtn: document.getElementById('clearSchreibenBtn'),
-    statusBadge: document.getElementById('statusBadge'),
-    csvFileInput: document.getElementById('csvFileInput'),
-    reloadBtn: document.getElementById('reloadBtn'),
-    settingsBtn: document.getElementById('settingsBtn'),
-    compactModeToggle: document.getElementById('compactModeToggle')
+    root: document.documentElement,
+
+    // Header
+    statusBtn: $('statusBtn'),
+    statusDot: $('statusDot'),
+    uploadBtn: $('uploadBtn'),
+    csvFileInput: $('csvFileInput'),
+    themeBtn: $('themeBtn'),
+    themeIcon: $('themeIcon'),
+    draftToggle: $('draftToggle'),
+    settingsBtn: $('settingsBtn'),
+
+    // Filter-Panel
+    filterPanel: $('filterPanel'),
+    filterTrigger: $('filterTrigger'),
+    filterCloseBtn: $('filterCloseBtn'),
+    applyFilterBtn: $('applyFilterBtn'),
+    applyFilterLabel: $('applyFilterLabel'),
+    resetFilterBtn: $('resetFilterBtn'),
+    lawFilter: $('lawFilter'),
+    paragraphFilter: $('paragraphFilter'),
+    absatzFilter: $('absatzFilter'),
+    hasBausteinFilter: $('hasBausteinFilter'),
+
+    // Suche & Ergebnisse
+    searchField: $('searchField'),
+    searchInput: $('searchInput'),
+    searchClearBtn: $('searchClearBtn'),
+    resultsScroll: $('resultsScroll'),
+    resultsList: $('resultsList'),
+    resultsMeta: $('resultsMeta'),
+    resultsMetaTags: $('resultsMetaTags'),
+    metaResetBtn: $('metaResetBtn'),
+
+    // Entwurf
+    screenDocument: $('screen-document'),
+    draftList: $('draftList'),
+    draftCounter: $('draftCounter'),
+    draftCloseBtn: $('draftCloseBtn'),
+    copyDraftBtn: $('copyDraftBtn'),
+    downloadDraftBtn: $('downloadDraftBtn'),
+    clearDraftBtn: $('clearDraftBtn'),
+
+    // Zähler
+    draftCountHeader: $('draftCountHeader'),
+    draftCountNav: $('draftCountNav'),
+    filterCountBadge: $('filterCountBadge'),
+    filterCountNav: $('filterCountNav'),
+
+    // Overlays
+    settingsModal: $('settingsModal'),
+    legalModal: $('legalModal'),
+    compactModeToggle: $('compactModeToggle'),
+    dataSourceLabel: $('dataSourceLabel'),
+    dataCountLabel: $('dataCountLabel'),
+    toastStack: $('toastStack'),
+    updateBanner: $('updateBanner')
 };
 
-/* ==========================================
-   STATE FÜR ROUTING & UX
-   ========================================== */
-const screenScrollPositions = {};
+const DESKTOP_QUERY = window.matchMedia('(min-width: 1024px)');
+const SPLIT_QUERY = window.matchMedia('(min-width: 1280px)');
 
-/* ==========================================
-   UI INITIALISIERUNG (ICONS)
-   ========================================== */
+export const isDesktop = () => DESKTOP_QUERY.matches;
+export const isSplitView = () => SPLIT_QUERY.matches;
 
-export function injectStaticIcons() {
-    console.log("Injected static icons start...");
-    const iconMap = {
-        'icon-status': icons.database,
-        'icon-reload': icons.refresh,
-        'icon-upload': icons.folder,
-        'icon-copy-doc': icons.clipboard,
-        'icon-clear-doc': icons.trash,
-        'icon-settings': icons.settings,
-        'icon-clear-all': icons.trash,
-        'icon-app-info': icons.info,
-        'icon-legal': icons.fileText,
-        'icon-filter-toggle': icons.filter,
-        'icon-update': icons.refresh,
-        'icon-theme-toggle': document.body.classList.contains('dark-mode') ? icons.sun : icons.moon,
-        'icon-nav-search': icons.home,
-        'icon-nav-document': icons.fileText
-    };
+/* =========================================================================
+   HELFER
+   ========================================================================= */
 
-    Object.entries(iconMap).forEach(([id, svg]) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = svg;
-        } else {
-            console.warn(`Icon element not found: ${id}`);
-        }
-    });
-    console.log("Injected static icons end.");
-}
-
-/* ==========================================
-   ROUTING & SCREEN NAVIGATION
-   ========================================== */
-
-/**
- * Wechselt den Screen basierend auf dem Hash.
- */
-export function navigateTo(hash) {
-    const route = hash || '#search';
-    const screens = document.querySelectorAll('.app-screen');
-    const navItems = document.querySelectorAll('.nav-item');
-    
-    // 1. Vorherige Position speichern (falls vorhanden)
-    const activeScreen = document.querySelector('.app-screen.active');
-    if (activeScreen) {
-        screenScrollPositions[activeScreen.id] = activeScreen.scrollTop;
-    }
-
-    // 2. Screens umschalten
-    screens.forEach(screen => {
-        const isActive = screen.getAttribute('data-route') === route;
-        screen.classList.toggle('active', isActive);
-
-        // Position wiederherstellen
-        if (isActive && screenScrollPositions[screen.id]) {
-            requestAnimationFrame(() => {
-                screen.scrollTop = screenScrollPositions[screen.id];
-            });
-        }
-    });
-
-    // 3. Nav-Items aktualisieren
-    navItems.forEach(item => {
-        const isActive = item.getAttribute('href') === route;
-        item.classList.toggle('active', isActive);
-    });
-
-    // 4. Update Body Route Attribute for CSS logic
-    document.body.setAttribute('data-active-route', route);
-
-    // 5. Mobile Toolbar Verhalten
-    if (route !== '#search') {
-        const overlay = document.getElementById('filterOverlay');
-        if (overlay) overlay.classList.add('hidden');
-    }
-}
-
-/* ==========================================
-   UI HELPER FUNKTIONEN
-   ========================================== */
-
-export function showToast(message) {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = message;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2500);
-}
-
-// Text-Toggle für "Mehr lesen"
-export function toggleText(btn) {
-    const target = btn.previousElementSibling;
-    if (!target) return;
-    target.classList.toggle('text-clamp');
-    
-    const isClamped = target.classList.contains('text-clamp');
-    btn.innerHTML = isClamped
-        ? `Mehr anzeigen ${icons.chevronDown}`
-        : `Weniger anzeigen ${icons.chevronUp}`;
-}
-
-/* ==========================================
-   TEXT & CLIPBOARD HELPER
-   ========================================== */
-
-export function escapeHTML(text) { 
-    if (!text) return "";
+export function escapeHTML(text) {
+    if (text === null || text === undefined) return '';
     return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;"); 
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
-function highlightSearchTerm(text, regex) {
-    if (!text || !regex) return escapeHTML(text);
-    const escapedText = escapeHTML(text);
-    return escapedText.replace(regex, (match) => `<mark class="search-highlight">${match}</mark>`);
+const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function highlight(text, regex) {
+    const safe = escapeHTML(text);
+    if (!regex) return safe;
+    regex.lastIndex = 0;
+    return safe.replace(regex, m => `<mark class="hl">${m}</mark>`);
 }
 
-export function containsExactWord(text, regex) {
-    if (!text || !regex) return false;
-    return regex.test(text);
+function setCount(el, value) {
+    if (!el) return;
+    el.textContent = value;
+    el.dataset.count = String(value);
 }
 
-export function copyTextToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('Text erfolgreich kopiert');
+/* =========================================================================
+   TOASTS
+   ========================================================================= */
+
+export function showToast(message, type = 'default') {
+    if (!DOM.toastStack) return;
+    const el = document.createElement('div');
+    el.className = `toast${type !== 'default' ? ` toast--${type}` : ''}`;
+    el.innerHTML = `${icon(type === 'error' ? 'info' : 'check', 16)}<span>${escapeHTML(message)}</span>`;
+    DOM.toastStack.appendChild(el);
+
+    setTimeout(() => {
+        el.classList.add('is-leaving');
+        el.addEventListener('animationend', () => el.remove(), { once: true });
+        setTimeout(() => el.remove(), 400);
+    }, 2600);
+}
+
+/* =========================================================================
+   NAVIGATION & PANELS
+   ========================================================================= */
+
+const scrollMemory = {};
+
+export function navigateTo(hash) {
+    const route = hash === '#document' ? '#document' : '#search';
+
+    document.querySelectorAll('.app-screen').forEach(screen => {
+        const active = screen.dataset.route === route;
+        if (!active && screen.classList.contains('is-active')) {
+            const scroller = screen.querySelector('.scroll-area');
+            if (scroller) scrollMemory[screen.id] = scroller.scrollTop;
+        }
+        screen.classList.toggle('is-active', active);
+        if (active) {
+            const scroller = screen.querySelector('.scroll-area');
+            if (scroller && scrollMemory[screen.id]) {
+                requestAnimationFrame(() => { scroller.scrollTop = scrollMemory[screen.id]; });
+            }
+        }
     });
+
+    document.querySelectorAll('.nav-item[data-route]').forEach(item => {
+        item.classList.toggle('is-active', item.dataset.route === route);
+    });
+
+    document.body.dataset.route = route;
+    if (route !== '#search') closeFilterPanel();
+    if (route === '#document') refreshDraftSizes();
 }
 
-function onCopySuccess() { 
-    showToast('Gesamtes Schreiben erfolgreich kopiert!');
+/* --- Filter-Panel (Bottom-Sheet auf Mobile) --- */
+
+let scrimEl = null;
+
+export function openFilterPanel() {
+    if (isDesktop()) return;
+    if (!scrimEl) {
+        scrimEl = document.createElement('div');
+        scrimEl.className = 'scrim';
+        scrimEl.dataset.closeFilter = 'true';
+        document.body.appendChild(scrimEl);
+    }
+    DOM.filterPanel.classList.add('is-open');
+    DOM.filterTrigger?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
 }
 
-/* ==========================================
-   FILTER & DATENVERARBEITUNG
-   ========================================== */
+export function closeFilterPanel() {
+    DOM.filterPanel?.classList.remove('is-open');
+    DOM.filterTrigger?.setAttribute('aria-expanded', 'false');
+    scrimEl?.remove();
+    scrimEl = null;
+    document.body.style.overflow = '';
+}
 
-let lastSearchRegex = null;
+export function isFilterPanelOpen() {
+    return !!DOM.filterPanel?.classList.contains('is-open');
+}
+
+/* --- Entwurfs-Panel (Slide-Over 1024–1279px) --- */
+
+export function toggleDraftPanel(force) {
+    const panel = DOM.screenDocument;
+    if (!panel) return;
+    const open = force !== undefined ? force : !panel.classList.contains('is-open');
+    panel.classList.toggle('is-open', open);
+    DOM.draftToggle?.setAttribute('aria-expanded', String(open));
+    DOM.draftToggle?.classList.toggle('is-active', open);
+    if (DOM.draftCloseBtn) DOM.draftCloseBtn.hidden = !open;
+    if (open) refreshDraftSizes();
+}
+
+/* --- Modals --- */
+
+let lastFocused = null;
+
+export function openModal(modal) {
+    if (!modal) return;
+    lastFocused = document.activeElement;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    const focusable = modal.querySelector('button, [href], input, select, textarea');
+    focusable?.focus({ preventScroll: true });
+}
+
+export function closeModal(modal) {
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    if (!document.querySelector('.modal:not([hidden])') && !isFilterPanelOpen()) {
+        document.body.style.overflow = '';
+    }
+    lastFocused?.focus?.({ preventScroll: true });
+}
+
+export function closeTopMostOverlay() {
+    const openModals = [...document.querySelectorAll('.modal:not([hidden])')];
+    if (openModals.length) { closeModal(openModals[openModals.length - 1]); return true; }
+    if (isFilterPanelOpen()) { closeFilterPanel(); return true; }
+    if (DOM.screenDocument?.classList.contains('is-open')) { toggleDraftPanel(false); return true; }
+    return false;
+}
+
+/* =========================================================================
+   STATUS & META-ANZEIGEN
+   ========================================================================= */
+
+export function setDataStatus(status, sourceLabel, count) {
+    if (DOM.statusDot) DOM.statusDot.dataset.status = status;
+    const titles = {
+        ok: `${sourceLabel} · ${count} Einträge`,
+        demo: `Demo-Daten · ${count} Einträge`,
+        error: 'Datenbank konnte nicht geladen werden',
+        loading: 'Datenbank wird geladen …'
+    };
+    DOM.statusBtn?.setAttribute('title', titles[status] || '');
+    DOM.statusBtn?.setAttribute('aria-label', titles[status] || 'Datenbank-Status');
+    if (DOM.dataSourceLabel) DOM.dataSourceLabel.textContent = sourceLabel || 'Unbekannt';
+    if (DOM.dataCountLabel) DOM.dataCountLabel.textContent = `${count} Einträge`;
+}
+
+function activeFilterCount() {
+    let n = 0;
+    if (DOM.lawFilter?.value) n++;
+    if (DOM.paragraphFilter?.value) n++;
+    if (DOM.absatzFilter?.value) n++;
+    if (DOM.hasBausteinFilter?.checked) n++;
+    return n;
+}
+
+/* =========================================================================
+   FILTERUNG
+   ========================================================================= */
+
+let highlightRegex = null;
+
+export function getFilterValues() {
+    return {
+        law: DOM.lawFilter?.value || '',
+        paragraf: DOM.paragraphFilter?.value || '',
+        absatz: DOM.absatzFilter?.value || '',
+        query: (DOM.searchInput?.value || '').trim(),
+        onlyBaustein: !!DOM.hasBausteinFilter?.checked
+    };
+}
+
+const hasBaustein = item => !!(item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung);
 
 function getFilteredData() {
-    if (!DOM.lawFilter || !DOM.paragraphFilter || !DOM.absatzFilter || !DOM.searchInput || !DOM.hasBausteinFilter) return [];
+    const f = getFilterValues();
 
-    const selectedLaw = DOM.lawFilter.value;
-    const selectedParagraf = DOM.paragraphFilter.value;
-    const selectedAbsatz = DOM.absatzFilter.value;
-    const searchQuery = DOM.searchInput.value.trim();
-    const requireBaustein = DOM.hasBausteinFilter.checked;
-
-    lastSearchRegex = null;
-    if (searchQuery) {
-        const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        lastSearchRegex = new RegExp(`(${escapedQuery})`, 'gi');
-    }
-
-    let filterRegex = null;
-    if (searchQuery) {
-        const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        filterRegex = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedQuery})([^\\p{L}\\p{N}]|$)`, 'iu');
+    highlightRegex = null;
+    let matchRegex = null;
+    if (f.query) {
+        const esc = escapeRegExp(f.query);
+        highlightRegex = new RegExp(esc, 'gi');
+        matchRegex = new RegExp(`(^|[^\\p{L}\\p{N}])${esc}([^\\p{L}\\p{N}]|$)`, 'iu');
     }
 
     return state.gesetzeData.filter(item => {
-        const hasBausteinData = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-        
-        if (requireBaustein && !hasBausteinData) return false;
-        if (selectedLaw && item.gesetzKuerzel !== selectedLaw) return false;
-        if (selectedParagraf && item.paragraf !== selectedParagraf) return false;
-        if (selectedAbsatz && item.absatz !== selectedAbsatz) return false; 
-        
-        if (filterRegex) {
-            const searchableText = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
-            if (!containsExactWord(searchableText, filterRegex)) return false;
+        if (f.onlyBaustein && !hasBaustein(item)) return false;
+        if (f.law && item.gesetzKuerzel !== f.law) return false;
+        if (f.paragraf && item.paragraf !== f.paragraf) return false;
+        if (f.absatz && item.absatz !== f.absatz) return false;
+        if (matchRegex) {
+            const haystack = `${item.paragraf} ${item.absatz} ${item.titel} ${item.inhalt} ${item.mangelVorgefunden} ${item.rechtsgrundlage} ${item.handlungsaufforderung}`;
+            if (!matchRegex.test(haystack)) return false;
         }
-        
         return true;
     });
 }
 
 export function updateDropdowns() {
-    if (!DOM.lawFilter || !DOM.paragraphFilter || !DOM.absatzFilter) return;
+    if (!DOM.lawFilter) return;
 
     const currentLaw = DOM.lawFilter.value;
     const currentParagraf = DOM.paragraphFilter.value;
     const currentAbsatz = DOM.absatzFilter.value;
-    const requireBaustein = DOM.hasBausteinFilter?.checked || false;
-    
-    // Der Absatz-Filter hängt vom (ggf. wiederhergestellten) Paragraf ab, der wiederum
-    // vom (ggf. wiederhergestellten) Gesetz abhängt. Wir kennen den späteren Auswahlwert
-    // schon vorab (currentLaw/currentParagraf, sofern die Auswahl noch gültig bleibt),
-    // daher genügt EIN Durchlauf über die komplette Datenmenge statt drei.
-    const matchesFilter = item => !requireBaustein || item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-    // Bleibt die aktuelle Auswahl nach dem Filtern gültig? Muss vorab feststehen, weil
-    // die Paragraf-/Absatz-Optionen im selben Durchlauf danach eingeschränkt werden.
-    const effectiveLaw = currentLaw && state.gesetzeData.some(item => item.gesetzKuerzel === currentLaw && matchesFilter(item)) ? currentLaw : '';
-    const effectiveParagraf = currentParagraf && state.gesetzeData.some(item => item.paragraf === currentParagraf && matchesFilter(item)) ? currentParagraf : '';
+    const onlyBaustein = !!DOM.hasBausteinFilter?.checked;
 
-    const lawsMap = new Map();
-    const paragrafenMap = new Map();
-    const absatzeSet = new Set();
+    const passes = item => !onlyBaustein || hasBaustein(item);
 
-    state.gesetzeData.forEach(item => {
-        if (!matchesFilter(item)) return;
+    const laws = new Map();
+    const paragrafen = new Map();
+    const absaetze = new Set();
 
-        lawsMap.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel);
-
-        if ((!effectiveLaw || item.gesetzKuerzel === effectiveLaw) && item.paragraf) {
-            paragrafenMap.set(item.paragraf, item.titel);
+    // Ein einziger Durchlauf: Gesetzesliste immer, Paragrafen abhängig vom Gesetz,
+    // Absätze abhängig vom Paragrafen.
+    for (const item of state.gesetzeData) {
+        if (!passes(item)) continue;
+        if (item.gesetzKuerzel) laws.set(item.gesetzKuerzel, item.gesetzName || item.gesetzKuerzel);
+        if ((!currentLaw || item.gesetzKuerzel === currentLaw) && item.paragraf) {
+            if (!paragrafen.has(item.paragraf)) paragrafen.set(item.paragraf, item.titel);
         }
-
-        if (effectiveParagraf && item.paragraf === effectiveParagraf && item.absatz) {
-            absatzeSet.add(item.absatz);
+        if (currentParagraf && item.paragraf === currentParagraf && item.absatz &&
+            (!currentLaw || item.gesetzKuerzel === currentLaw)) {
+            absaetze.add(item.absatz);
         }
-    });
+    }
 
-    let lawOptions = '<option value="">-- Alle Gesetze --</option>';
-    Array.from(lawsMap).forEach(([kuerzel, name]) => {
-        lawOptions += `<option value="${escapeHTML(kuerzel)}">${escapeHTML(kuerzel)} - ${escapeHTML(name)}</option>`;
-    });
-    DOM.lawFilter.innerHTML = lawOptions;
-    if (lawsMap.has(currentLaw)) DOM.lawFilter.value = currentLaw;
+    DOM.lawFilter.innerHTML = '<option value="">Alle Gesetze</option>' +
+        [...laws].map(([k, n]) => `<option value="${escapeHTML(k)}">${escapeHTML(k)} — ${escapeHTML(n)}</option>`).join('');
+    DOM.lawFilter.value = laws.has(currentLaw) ? currentLaw : '';
 
-    let paragrafOptions = '<option value="">-- Alle Paragrafen --</option>';
-    Array.from(paragrafenMap).forEach(([paragraf, titel]) => {
-        const displayTitel = titel ? ` — ${escapeHTML(titel)}` : '';
-        paragrafOptions += `<option value="${escapeHTML(paragraf)}">${escapeHTML(paragraf)}${displayTitel}</option>`;
-    });
-    DOM.paragraphFilter.innerHTML = paragrafOptions;
-    if (paragrafenMap.has(currentParagraf)) DOM.paragraphFilter.value = currentParagraf;
+    DOM.paragraphFilter.innerHTML = '<option value="">Alle Paragrafen</option>' +
+        [...paragrafen].map(([p, t]) => {
+            const suffix = t && !t.startsWith(p) ? ` — ${escapeHTML(t)}` : '';
+            return `<option value="${escapeHTML(p)}">${escapeHTML(p)}${suffix}</option>`;
+        }).join('');
+    DOM.paragraphFilter.value = paragrafen.has(currentParagraf) ? currentParagraf : '';
 
-    let absatzOptions = '<option value="">-- Alle Absätze --</option>';
-    Array.from(absatzeSet)
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-        .forEach(absatz => {
-            absatzOptions += `<option value="${escapeHTML(absatz)}">${escapeHTML(absatz)}</option>`;
-        });
-        
-    DOM.absatzFilter.innerHTML = absatzOptions;
-    if (absatzeSet.has(currentAbsatz)) DOM.absatzFilter.value = currentAbsatz;
-    DOM.absatzFilter.disabled = absatzeSet.size === 0;
+    const sortedAbsaetze = [...absaetze].sort((a, b) => a.localeCompare(b, 'de', { numeric: true }));
+    DOM.absatzFilter.innerHTML = '<option value="">Alle Absätze</option>' +
+        sortedAbsaetze.map(a => `<option value="${escapeHTML(a)}">${escapeHTML(a)}</option>`).join('');
+    DOM.absatzFilter.value = absaetze.has(currentAbsatz) ? currentAbsatz : '';
+    DOM.absatzFilter.disabled = sortedAbsaetze.length === 0;
+
+    const n = activeFilterCount();
+    setCount(DOM.filterCountBadge, n);
+    setCount(DOM.filterCountNav, n);
+    DOM.filterTrigger?.classList.toggle('is-active', n > 0);
 }
 
-/* ==========================================
-   RENDER FUNKTIONEN (DOM Updates)
-   ========================================== */
+/* =========================================================================
+   ERGEBNIS-RENDERING
+   ========================================================================= */
 
-let currentRenderItems = [];
-let renderChunkSize = 30;
+const CHUNK_SIZE = 15;
+let pendingGroups = [];
+let renderToken = 0;
+
+function stateBox(iconName, title, text) {
+    return `
+        <div class="state-box">
+            <div class="state-icon">${icon(iconName, 26)}</div>
+            <p class="state-title">${escapeHTML(title)}</p>
+            <p class="state-text">${text}</p>
+        </div>`;
+}
+
+export function renderSkeletons() {
+    if (!DOM.resultsList) return;
+    DOM.resultsList.setAttribute('aria-busy', 'true');
+    DOM.resultsList.innerHTML = '<div class="skeleton-card"></div>'.repeat(3);
+}
 
 export function renderResults() {
-    if (!DOM.resultsContainer) return;
-    const data = getFilteredData();
-    updateFilterSummary(data.length);
+    if (!DOM.resultsList) return;
 
-    if (data.length === 0) { 
-        DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Keine passenden Einträge gefunden.</div>`; 
-        return; 
-    }
-    if (!DOM.searchInput?.value && !DOM.paragraphFilter?.value && !DOM.lawFilter?.value) {
-        DOM.resultsContainer.innerHTML = `<div class="card-base no-results">Wählen Sie Filter oder nutzen Sie die Suche.</div>`; 
-        return; 
-    }
+    const token = ++renderToken;
+    pendingGroups = [];
 
-    const groupMap = new Map();
-    data.forEach(item => { 
-        const key = `${item.gesetzKuerzel}_${item.paragraf}`; 
-        if (!groupMap.has(key)) {
-            groupMap.set(key, { ...item, entries: [] }); 
-        }
-        groupMap.get(key).entries.push(item); 
-    });
+    const f = getFilterValues();
+    const hasCriteria = !!(f.law || f.paragraf || f.absatz || f.query || f.onlyBaustein);
+    const data = hasCriteria ? getFilteredData() : [];
 
-    currentRenderItems = Array.from(groupMap.values());
-    renderChunks(true);
-}
+    updateResultsMeta(hasCriteria, data.length, f);
+    DOM.resultsList.setAttribute('aria-busy', 'false');
 
-function updateFilterSummary(count) {
-    const bar = document.getElementById('activeFilterBar');
-    const text = document.getElementById('filterSummaryText');
-    if (!bar || !text) return;
-
-    const isFiltered = DOM.lawFilter?.value || DOM.paragraphFilter?.value || DOM.searchInput?.value || DOM.hasBausteinFilter?.checked;
-
-    if (isFiltered) {
-        bar.classList.remove('hidden');
-        let summary = `${count} Treffer gefunden`;
-        if (DOM.lawFilter?.value) summary += ` in ${DOM.lawFilter.value}`;
-        text.textContent = summary;
-    } else {
-        bar.classList.add('hidden');
-    }
-}
-
-function renderChunks(isInitial = false) {
-    if (!DOM.resultsContainer) return;
-    if (isInitial) DOM.resultsContainer.innerHTML = '';
-
-    const itemsToRender = currentRenderItems.splice(0, renderChunkSize);
-    if (itemsToRender.length === 0) return;
-
-    const html = itemsToRender.map(group => {
-        const displayTitel = group.titel && !group.titel.startsWith(group.paragraf) ? group.titel : '';
-        const highlightedTitle = highlightSearchTerm(displayTitel, lastSearchRegex);
-        const titelErgaenzung = highlightedTitle ? ` — ${highlightedTitle}` : '';
-        
-        return `
-        <article class="card-base law-card">
-            <header class="card-top">
-                <div>
-                    <span class="badge">${escapeHTML(group.gesetzKuerzel)}</span>
-                    <span class="law-title-meta">${escapeHTML(group.gesetzName)}</span>
-                </div>
-            </header>
-            
-            <h2 class="paragraph-heading">${escapeHTML(group.paragraf)}${titelErgaenzung}</h2>
-            
-            ${group.entries.map(item => {
-                const hasBaustein = item.mangelVorgefunden || item.rechtsgrundlage || item.handlungsaufforderung;
-                const bausteinText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
-                const isInDocument = state.revisionsSchreibenListe.some(docItem => docItem.id === item.id);
-                
-                return `
-                <section class="paragraph-box" id="item-card-${item.id}">
-                    <header class="paragraph-box-header">
-                        <span class="absatz-tag">${escapeHTML(item.absatz || 'Norm')}</span>
-                        <div class="action-buttons-group">
-                            <button type="button" class="action-icon-btn js-copy-item-btn" data-text="${escapeHTML(item.inhalt)}" aria-label="Gesetzestext kopieren">
-                                ${icons.clipboard} Gesetz
-                            </button>
-                            ${hasBaustein ? `
-                            <button type="button" class="action-icon-btn primary-action js-toggle-item-btn ${isInDocument ? 'added' : ''}" data-id="${item.id}" aria-label="${isInDocument ? 'Aus dem Schreiben entfernen' : 'Zum Schreiben hinzufügen'}">
-                                ${isInDocument ? icons.check + ' Im Schreiben' : icons.plus + ' Zum Schreiben'}
-                            </button>` : ''}
-                        </div>
-                    </header>
-                    
-                    <div class="text-content-wrapper">
-                        <div class="paragraph-text text-clamp">${highlightSearchTerm(item.inhalt, lastSearchRegex)}</div>
-                        <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Text ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
-                    </div>
-
-                    ${hasBaustein ? `
-                    <div class="revision-preview-box">
-                        <div class="preview-label">Vorschau Textbaustein</div>
-                        <div class="text-clamp">${highlightSearchTerm(bausteinText, lastSearchRegex)}</div>
-                        <button type="button" class="toggle-more-btn js-toggle-more-btn" aria-label="Vorschautext ein/ausklappen">Mehr anzeigen ${icons.chevronDown}</button>
-                    </div>` : ''}
-                </section>`;
-            }).join('')}
-        </article>`;
-    }).join('');
-
-    DOM.resultsContainer.insertAdjacentHTML('beforeend', html);
-
-    if (currentRenderItems.length > 0) {
-        requestAnimationFrame(() => renderChunks());
-    }
-}
-
-export function renderDocumentView() {
-    if (!DOM.schreibenCounter || !DOM.schreibenList) return;
-    const count = state.revisionsSchreibenListe.length;
-    
-    DOM.schreibenCounter.textContent = `${count} Punkt${count !== 1 ? 'e' : ''}`;
-    const tabCounter = document.getElementById('tabCounter');
-    if(tabCounter) tabCounter.textContent = count;
-    
-    if (count === 0) {
-        DOM.schreibenList.innerHTML = `
-            <div class="doc-empty">
-                Das Schreiben ist noch leer.<br><br>
-                Wechseln Sie in die <strong>"Datenbank"</strong> und klicken Sie auf den Button zum Hinzufügen.
-            </div>`;
-        if (DOM.copySchreibenBtn) DOM.copySchreibenBtn.disabled = true;
-        if (DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.style.display = 'none';
+    if (!state.gesetzeData.length) {
+        DOM.resultsList.innerHTML = stateBox('database', 'Keine Datenbank geladen',
+            'Laden Sie über das Upload-Symbol eine eigene CSV-Datei.');
         return;
     }
 
-    if (DOM.copySchreibenBtn) DOM.copySchreibenBtn.disabled = false;
-    if (DOM.clearSchreibenBtn) DOM.clearSchreibenBtn.style.display = 'flex';
+    if (!hasCriteria) {
+        DOM.resultsList.innerHTML = stateBox('sparkles', 'Womit fangen wir an?',
+            `Suchen Sie nach einem Begriff oder wählen Sie ein Gesetz${isDesktop() ? ' links' : ' über den Filter'} aus.<br><strong>${state.gesetzeData.length}</strong> Normen stehen bereit.`);
+        return;
+    }
 
-    DOM.schreibenList.innerHTML = state.revisionsSchreibenListe.map((item, idx) => {
-        return `
-        <div class="doc-item">
-            <header class="doc-item-title-row">
-                <span class="doc-item-num">${idx + 1}.</span>
-                <input type="text" class="doc-title-input js-item-title-input" data-id="${item.id}" value="${escapeHTML(item.titel)}" aria-label="Titel bearbeiten">
-            </header>
-            
-            <div class="doc-editable-text js-item-text-editable" contenteditable="true"
-                 data-id="${item.id}"
-                 title="Klicken, um den Text zu bearbeiten"
-                 aria-label="Inhalt bearbeiten">${escapeHTML(item.editedText)}</div>
-                 
-            <div class="doc-item-actions">
-                ${idx > 0 ? `
-                <button type="button" class="action-icon-btn js-move-item-btn" data-idx="${idx}" data-dir="-1" title="Nach oben" aria-label="Punkt nach oben verschieben">
-                    ${icons.chevronUp}
-                </button>` : ''}
-                
-                ${idx < count - 1 ? `
-                <button type="button" class="action-icon-btn js-move-item-btn" data-idx="${idx}" data-dir="1" title="Nach unten" aria-label="Punkt nach unten verschieben">
-                    ${icons.chevronDown}
-                </button>` : ''}
-                
-                <button type="button" class="action-icon-btn js-remove-item-btn" data-id="${item.id}" style="color: #dc2626;" title="Punkt entfernen" aria-label="Punkt entfernen">
-                    ${icons.trash}
-                </button>
-            </div>
-        </div>`;
-    }).join('');
+    if (!data.length) {
+        DOM.resultsList.innerHTML = stateBox('searchOff', 'Keine Treffer',
+            'Passen Sie die Filter an oder verwenden Sie einen anderen Suchbegriff.');
+        return;
+    }
+
+    // Gruppieren nach Gesetz + Paragraf
+    const groups = new Map();
+    for (const item of data) {
+        const key = `${item.gesetzKuerzel}__${item.paragraf}`;
+        let group = groups.get(key);
+        if (!group) {
+            group = { kuerzel: item.gesetzKuerzel, name: item.gesetzName, paragraf: item.paragraf, titel: item.titel, entries: [] };
+            groups.set(key, group);
+        }
+        group.entries.push(item);
+    }
+
+    pendingGroups = [...groups.values()];
+    DOM.resultsList.innerHTML = '';
+    if (DOM.resultsScroll) DOM.resultsScroll.scrollTop = 0;
+    renderChunk(token);
 }
 
-/* ==========================================
-   EXPORT / CLIPBOARD
-   ========================================== */
+function renderChunk(token) {
+    if (token !== renderToken || !pendingGroups.length) return;
+    const chunk = pendingGroups.splice(0, CHUNK_SIZE);
+    const firstNew = DOM.resultsList.lastElementChild;
+    DOM.resultsList.insertAdjacentHTML('beforeend', chunk.map(groupTemplate).join(''));
 
-export function copyComposedSchreiben() {
-    if (state.revisionsSchreibenListe.length === 0) return;
-    
-    const plainText = state.revisionsSchreibenListe.map((item, idx) => {
-        return `${idx + 1}. ${item.titel}\r\n\r\n${item.editedText}`;
-    }).join("\r\n\r\n\r\n");
-    
-    const htmlContent = state.revisionsSchreibenListe.map((item, idx) => {
-        const paragraphs = item.editedText.split(/(?:\r?\n){2,}/).map(block => {
-            const htmlBlock = escapeHTML(block).replace(/\r?\n/g, '<br>');
-            return `<p style="margin-top:0; margin-bottom:12pt; text-align:justify;">${htmlBlock}</p>`;
-        }).join('');
-        
-        return `
-            <p style="margin-top:0; margin-bottom:12pt; text-align:justify;">
-                <strong>${idx + 1}. ${escapeHTML(item.titel)}</strong>
-            </p>
-            ${paragraphs}`;
-    }).join(`<p style="margin-top:0; margin-bottom:24pt;">&nbsp;</p>`);
+    // Nur die frisch eingefügten Karten prüfen, nicht die komplette Liste.
+    let node = firstNew ? firstNew.nextElementSibling : DOM.resultsList.firstElementChild;
+    while (node) { refreshClampButtons(node); node = node.nextElementSibling; }
 
-    const clipboardHtmlText = `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`;
-    const fallbackCopy = () => {
-        navigator.clipboard.writeText(plainText).then(onCopySuccess);
-    };
-    
+    if (pendingGroups.length) requestAnimationFrame(() => renderChunk(token));
+}
+
+function groupTemplate(group) {
+    const showTitle = group.titel && !group.titel.startsWith(group.paragraf);
+    const titleSuffix = showTitle ? ` — ${highlight(group.titel, highlightRegex)}` : '';
+
+    return `
+    <article class="law-card">
+        <header class="law-card-head">
+            <div class="law-card-tags">
+                <span class="chip chip--accent">${escapeHTML(group.kuerzel)}</span>
+                <span class="law-card-name">${escapeHTML(group.name || '')}</span>
+            </div>
+            <h3 class="law-card-title">${escapeHTML(group.paragraf)}${titleSuffix}</h3>
+        </header>
+        ${group.entries.map(normTemplate).join('')}
+    </article>`;
+}
+
+function normTemplate(item) {
+    const baustein = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join('\n\n');
+    const added = state.revisionsSchreibenListe.some(d => d.id === item.id);
+
+    return `
+    <section class="norm-item${added ? ' is-added' : ''}" id="norm-${item.id}">
+        <div class="norm-head">
+            <span class="chip">${escapeHTML(item.absatz || 'Norm')}</span>
+            <div class="norm-actions">
+                <button type="button" class="btn btn--ghost btn--sm js-copy-norm" data-id="${item.id}">
+                    ${icon('clipboard', 15)} Gesetzestext
+                </button>
+                ${baustein ? `
+                <button type="button" class="btn btn--sm ${added ? 'btn--added' : 'btn--primary'} js-toggle-norm" data-id="${item.id}"
+                        aria-pressed="${added}">
+                    ${added ? `${icon('check', 15)} Im Entwurf` : `${icon('plus', 15)} Übernehmen`}
+                </button>` : ''}
+            </div>
+        </div>
+
+        <div class="norm-text clamp js-clampable">${highlight(item.inhalt, highlightRegex)}</div>
+        <button type="button" class="toggle-more js-toggle-more">${icon('chevronDown', 14)} Mehr anzeigen</button>
+
+        ${baustein ? `
+        <div class="baustein-box">
+            <div class="baustein-label">${icon('sparkles', 12)} Textbaustein</div>
+            <div class="baustein-text clamp js-clampable">${highlight(baustein, highlightRegex)}</div>
+            <button type="button" class="toggle-more js-toggle-more">${icon('chevronDown', 14)} Mehr anzeigen</button>
+        </div>` : ''}
+    </section>`;
+}
+
+function updateResultsMeta(hasCriteria, count, f) {
+    if (!DOM.resultsMeta) return;
+    if (!hasCriteria) {
+        DOM.resultsMeta.classList.add('is-hidden');
+        return;
+    }
+    DOM.resultsMeta.classList.remove('is-hidden');
+
+    const tags = [`<span class="chip${count ? ' chip--accent' : ''}">${count} Treffer</span>`];
+    if (f.law) tags.push(`<span class="chip">${escapeHTML(f.law)}</span>`);
+    if (f.paragraf) tags.push(`<span class="chip">${escapeHTML(f.paragraf)}</span>`);
+    if (f.absatz) tags.push(`<span class="chip">${escapeHTML(f.absatz)}</span>`);
+    if (f.onlyBaustein) tags.push('<span class="chip">nur Bausteine</span>');
+    if (f.query) tags.push(`<span class="chip">„${escapeHTML(f.query)}“</span>`);
+
+    DOM.resultsMetaTags.innerHTML = tags.join('');
+}
+
+/** Blendet „Mehr anzeigen“ aus, wenn der Text ohnehin vollständig sichtbar ist. */
+export function refreshClampButtons(root = DOM.resultsList) {
+    root?.querySelectorAll('.js-clampable').forEach(el => {
+        const btn = el.nextElementSibling;
+        if (!btn?.classList.contains('js-toggle-more')) return;
+        const clipped = el.scrollHeight > el.clientHeight + 2;
+        btn.classList.toggle('is-hidden', !clipped && el.classList.contains('clamp'));
+    });
+}
+
+export function toggleClamp(btn) {
+    const target = btn.previousElementSibling;
+    if (!target) return;
+    const clamped = target.classList.toggle('clamp');
+    btn.innerHTML = clamped
+        ? `${icon('chevronDown', 14)} Mehr anzeigen`
+        : `${icon('chevronUp', 14)} Weniger anzeigen`;
+}
+
+/** Aktualisiert nur die betroffene Norm-Karte statt der kompletten Liste. */
+export function refreshNormCard(itemId) {
+    const el = document.getElementById(`norm-${itemId}`);
+    if (!el) return;
+    const item = state.gesetzeData.find(i => i.id === itemId);
+    if (!item) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = normTemplate(item);
+    const fresh = wrapper.firstElementChild;
+    el.replaceWith(fresh);
+    if (state.revisionsSchreibenListe.some(d => d.id === itemId)) {
+        fresh.classList.add('pulse');
+        setTimeout(() => fresh.classList.remove('pulse'), 700);
+    }
+    refreshClampButtons(fresh.parentElement);
+}
+
+/* =========================================================================
+   ENTWURFS-RENDERING
+   ========================================================================= */
+
+function autoSize(el) {
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+}
+
+export function autoSizeTextarea(el) { autoSize(el); }
+
+/**
+ * Textareas messen sich nur korrekt, wenn sie sichtbar sind.
+ * Nach dem Einblenden des Entwurfs daher erneut anpassen.
+ */
+export function refreshDraftSizes() {
+    if (!DOM.draftList) return;
+    requestAnimationFrame(() => DOM.draftList.querySelectorAll('.draft-textarea').forEach(autoSize));
+}
+
+export function renderDraft() {
+    const list = state.revisionsSchreibenListe;
+    const count = list.length;
+
+    if (DOM.draftCounter) DOM.draftCounter.textContent = `${count} Punkt${count === 1 ? '' : 'e'}`;
+    setCount(DOM.draftCountHeader, count);
+    setCount(DOM.draftCountNav, count);
+
+    [DOM.copyDraftBtn, DOM.downloadDraftBtn, DOM.clearDraftBtn].forEach(btn => {
+        if (btn) btn.disabled = count === 0;
+    });
+
+    if (!DOM.draftList) return;
+
+    if (count === 0) {
+        DOM.draftList.innerHTML = stateBox('inbox', 'Noch nichts übernommen',
+            'Übernehmen Sie Normen aus der Datenbank, um Ihr Revisionsschreiben aufzubauen.');
+        return;
+    }
+
+    DOM.draftList.innerHTML = list.map((item, idx) => `
+        <article class="draft-item">
+            <header class="draft-item-head">
+                <span class="draft-num">${idx + 1}</span>
+                <input type="text" class="draft-title-input js-draft-title" data-id="${item.id}"
+                       value="${escapeHTML(item.titel)}" aria-label="Titel von Punkt ${idx + 1}">
+                <div class="draft-item-tools">
+                    <button type="button" class="tool-btn js-draft-move" data-idx="${idx}" data-dir="-1"
+                            ${idx === 0 ? 'disabled' : ''} aria-label="Nach oben">${icon('arrowUp', 16)}</button>
+                    <button type="button" class="tool-btn js-draft-move" data-idx="${idx}" data-dir="1"
+                            ${idx === count - 1 ? 'disabled' : ''} aria-label="Nach unten">${icon('arrowDown', 16)}</button>
+                    <button type="button" class="tool-btn is-danger js-draft-remove" data-id="${item.id}"
+                            aria-label="Punkt entfernen">${icon('trash', 16)}</button>
+                </div>
+            </header>
+            <textarea class="draft-textarea js-draft-text" data-id="${item.id}"
+                      aria-label="Text von Punkt ${idx + 1}" rows="4">${escapeHTML(item.editedText)}</textarea>
+        </article>`).join('');
+
+    DOM.draftList.querySelectorAll('.draft-textarea').forEach(autoSize);
+}
+
+/* =========================================================================
+   EXPORT (Zwischenablage / Datei)
+   ========================================================================= */
+
+function buildPlainText() {
+    return state.revisionsSchreibenListe
+        .map((item, idx) => `${idx + 1}. ${item.titel}\r\n\r\n${item.editedText}`)
+        .join('\r\n\r\n\r\n');
+}
+
+function buildHTML() {
+    const body = state.revisionsSchreibenListe.map((item, idx) => {
+        const paras = item.editedText.split(/(?:\r?\n){2,}/).map(block =>
+            `<p style="margin:0 0 12pt;text-align:justify;">${escapeHTML(block).replace(/\r?\n/g, '<br>')}</p>`
+        ).join('');
+        return `<p style="margin:0 0 12pt;"><strong>${idx + 1}. ${escapeHTML(item.titel)}</strong></p>${paras}`;
+    }).join('<p style="margin:0 0 24pt;">&nbsp;</p>');
+
+    return `<html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt;">${body}</body></html>`;
+}
+
+export function copyText(text, message = 'In die Zwischenablage kopiert') {
+    if (!navigator.clipboard) { showToast('Zwischenablage nicht verfügbar', 'error'); return; }
+    navigator.clipboard.writeText(text)
+        .then(() => showToast(message, 'success'))
+        .catch(() => showToast('Kopieren fehlgeschlagen', 'error'));
+}
+
+export function copyDraft() {
+    if (!state.revisionsSchreibenListe.length) return;
+    const plain = buildPlainText();
+    const fallback = () => copyText(plain, 'Entwurf kopiert');
+
     if (navigator.clipboard && window.ClipboardItem) {
-        navigator.clipboard.write([
-            new ClipboardItem({
-                "text/plain": new Blob([plainText], { type: "text/plain" }), 
-                "text/html": new Blob([clipboardHtmlText], { type: "text/html" })
-            })
-        ]).then(onCopySuccess).catch(fallbackCopy);
+        navigator.clipboard.write([new ClipboardItem({
+            'text/plain': new Blob([plain], { type: 'text/plain' }),
+            'text/html': new Blob([buildHTML()], { type: 'text/html' })
+        })])
+            .then(() => showToast('Entwurf mit Formatierung kopiert', 'success'))
+            .catch(fallback);
     } else {
-        fallbackCopy();
+        fallback();
     }
 }
+
+export function downloadDraft() {
+    if (!state.revisionsSchreibenListe.length) return;
+    const blob = new Blob(['﻿', buildHTML()], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `Revisionsschreiben_${stamp}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Datei wird gespeichert', 'success');
+}
+
+/* =========================================================================
+   INITIALISIERUNG
+   ========================================================================= */
+
+export function initIcons() { hydrateIcons(); }
+
+export function setThemeIcon(theme) {
+    if (DOM.themeIcon) DOM.themeIcon.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon', 18);
+}
+
+export function syncSearchFieldState() {
+    DOM.searchField?.classList.toggle('has-value', !!DOM.searchInput?.value);
+}
+
+export { DESKTOP_QUERY, SPLIT_QUERY };

@@ -1,318 +1,408 @@
 import { state, parseCSV, saveState, loadState } from './data.js';
-import { DOM, updateDropdowns, renderResults, renderDocumentView, copyComposedSchreiben, copyTextToClipboard, navigateTo, toggleText, injectStaticIcons } from './ui.js';
+import {
+    DOM, initIcons, setThemeIcon, showToast, navigateTo,
+    openFilterPanel, closeFilterPanel, isFilterPanelOpen, toggleDraftPanel,
+    openModal, closeModal, closeTopMostOverlay,
+    updateDropdowns, renderResults, renderSkeletons, renderDraft, refreshNormCard,
+    toggleClamp, autoSizeTextarea, copyText, copyDraft, downloadDraft,
+    setDataStatus, syncSearchFieldState, isDesktop, isSplitView, DESKTOP_QUERY
+} from './ui.js';
 
-// Wiederholt abgefragte Overlays einmalig cachen statt bei jedem Klick neu per getElementById zu suchen.
-const settingsMenuEl = document.getElementById('settingsMenu');
-const legalModalEl = document.getElementById('legalModal');
-const filterOverlayEl = document.getElementById('filterOverlay');
+const APP_VERSION = '2.0.0';
+const LS = {
+    theme: 'arbeitsSafe_theme',
+    density: 'arbeitsSafe_compact',
+    legal: 'arbeitsSafe_legal_accepted'
+};
 
-// --- Haupt-Logik ---
-function initTheme() {
-    const savedTheme = localStorage.getItem('arbeitsSafe_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+/* =========================================================================
+   DESIGN & DARSTELLUNG
+   ========================================================================= */
 
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.body.classList.add('dark-mode');
-    }
+const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // Rechtliche Hinweise prüfen
-    if (!localStorage.getItem('arbeitsSafe_legal_accepted')) {
-        legalModalEl.classList.remove('hidden');
-    }
-
-    // Kompakt-Modus laden
-    const isCompact = localStorage.getItem('arbeitsSafe_compact') === 'true';
-    if (DOM.compactModeToggle) {
-        DOM.compactModeToggle.checked = isCompact;
-        document.body.classList.toggle('compact-mode', isCompact);
-    }
-
-    injectStaticIcons(); // Update the theme icon
+function resolveTheme(pref) {
+    return pref === 'system' ? (systemDark.matches ? 'dark' : 'light') : pref;
 }
 
-function toggleTheme() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('arbeitsSafe_theme', isDark ? 'dark' : 'light');
-    injectStaticIcons(); // Refresh icons to show sun/moon
+function applyTheme(pref) {
+    const theme = resolveTheme(pref);
+    document.documentElement.dataset.theme = theme;
+    setThemeIcon(theme);
+    document.querySelectorAll('[data-theme-choice]').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.themeChoice === pref));
+    });
 }
 
-function initData(csvString, fileName = null) {
-    state.lastLoadedFileText = csvString; 
-    state.lastLoadedFileName = fileName;
+function setTheme(pref) {
+    localStorage.setItem(LS.theme, pref);
+    applyTheme(pref);
+}
+
+function getThemePref() {
+    return localStorage.getItem(LS.theme) || 'system';
+}
+
+systemDark.addEventListener('change', () => {
+    if (getThemePref() === 'system') applyTheme('system');
+});
+
+function applyDensity(compact) {
+    document.documentElement.dataset.density = compact ? 'compact' : 'normal';
+    if (DOM.compactModeToggle) DOM.compactModeToggle.checked = compact;
+}
+
+/* =========================================================================
+   DATEN
+   ========================================================================= */
+
+function initData(csvString, sourceLabel, status = 'ok') {
+    state.lastLoadedFileText = csvString;
+    state.lastLoadedFileName = sourceLabel;
     state.gesetzeData = parseCSV(csvString);
-    
-    if (fileName) {
-        DOM.statusBadge.className = 'status-mini';
-        DOM.statusBadge.title = `${fileName} (${state.gesetzeData.length} Einträge)`;
-        DOM.statusBadge.style.color = 'var(--success-text)';
-    } else {
-        DOM.statusBadge.className = 'status-mini';
-        DOM.statusBadge.title = `Demo-Modus (${state.gesetzeData.length} Einträge)`;
-        DOM.statusBadge.style.color = '#eab308';
-    }
-    updateDropdowns(); 
+
+    setDataStatus(status, sourceLabel, state.gesetzeData.length);
+    updateDropdowns();
     renderResults();
 }
 
-function toggleToSchreiben(itemId) {
-    const item = state.gesetzeData.find(i => i.id === itemId); 
+function loadDatabase() {
+    renderSkeletons();
+    return fetch('gesetze.csv')
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(text => initData(text, 'Standard-Datenbank', 'ok'))
+        .catch(() => {
+            initData(state.rawCsvData, 'Demo-Daten', 'demo');
+            showToast('Datenbank nicht erreichbar – Demo-Daten aktiv', 'error');
+        });
+}
+
+/* =========================================================================
+   ENTWURF
+   ========================================================================= */
+
+function toggleInDraft(itemId) {
+    const item = state.gesetzeData.find(i => i.id === itemId);
     if (!item) return;
+
     const idx = state.revisionsSchreibenListe.findIndex(i => i.id === itemId);
-
-    if (idx > -1) { 
-        state.revisionsSchreibenListe.splice(idx, 1); 
+    if (idx > -1) {
+        state.revisionsSchreibenListe.splice(idx, 1);
+        showToast('Aus dem Entwurf entfernt');
     } else {
-        let newItem = { ...item };
-        newItem.editedText = [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung].filter(Boolean).join("\n\n");
-        state.revisionsSchreibenListe.push(newItem); 
-
-        const card = document.getElementById(`item-card-${itemId}`);
-        if (card) {
-            card.classList.add('pulse-confirm');
-            setTimeout(() => card.classList.remove('pulse-confirm'), 600);
-        }
+        state.revisionsSchreibenListe.push({
+            ...item,
+            editedText: [item.mangelVorgefunden, item.rechtsgrundlage, item.handlungsaufforderung]
+                .filter(Boolean).join('\n\n')
+        });
+        showToast('Zum Entwurf hinzugefügt', 'success');
     }
-    renderResults();
-    renderDocumentView();
+
+    refreshNormCard(itemId);
+    renderDraft();
+    saveState(true);
+}
+
+function removeFromDraft(itemId) {
+    const idx = state.revisionsSchreibenListe.findIndex(i => i.id === itemId);
+    if (idx === -1) return;
+    state.revisionsSchreibenListe.splice(idx, 1);
+    refreshNormCard(itemId);
+    renderDraft();
+    saveState(true);
+}
+
+function moveDraftItem(idx, dir) {
+    const target = idx + dir;
+    const list = state.revisionsSchreibenListe;
+    if (target < 0 || target >= list.length) return;
+    list.splice(target, 0, list.splice(idx, 1)[0]);
+    renderDraft();
+    saveState(true);
+}
+
+function clearDraft() {
+    if (!state.revisionsSchreibenListe.length) return;
+    if (!confirm('Möchten Sie den gesamten Entwurf wirklich leeren?')) return;
+    const ids = state.revisionsSchreibenListe.map(i => i.id);
+    state.revisionsSchreibenListe = [];
+    ids.forEach(refreshNormCard);
+    renderDraft();
+    saveState(true);
+    showToast('Entwurf geleert');
+}
+
+function updateDraftField(id, key, value) {
+    const item = state.revisionsSchreibenListe.find(i => i.id === id);
+    if (!item) return;
+    item[key] = value;
     saveState();
 }
 
-function updateItemTitle(id, v) {
-    const i = state.revisionsSchreibenListe.find(x => x.id === id);
-    if(i) {
-        i.titel = v;
-        saveState();
-    }
-}
+/* =========================================================================
+   FILTER-INTERAKTION
+   ========================================================================= */
 
-function updateItemText(id, v) {
-    const i = state.revisionsSchreibenListe.find(x => x.id === id);
-    if(i) {
-        i.editedText = v;
-        saveState();
-    }
-}
-
-function moveItem(idx, dir) {
-    const n = idx + dir; 
-    if(n >= 0 && n < state.revisionsSchreibenListe.length){ 
-        state.revisionsSchreibenListe.splice(n, 0, state.revisionsSchreibenListe.splice(idx, 1)[0]); 
-        renderDocumentView();
-        saveState(true);
-    }
-}
-
-function clearSchreiben() {
-    if(confirm('Möchten Sie den gesamten Entwurf wirklich leeren?')) {
-        state.revisionsSchreibenListe = [];
-        renderResults();
-        renderDocumentView();
-        saveState(true);
-    }
-}
-
-// --- Router ---
-function handleRouting() {
-    const hash = window.location.hash || '#search';
-    navigateTo(hash);
-}
-
-// --- Event Delegation ---
-
-document.addEventListener('click', e => {
-    // Navigation (handled by hashchange, but we prevent default for smooth internal feeling)
-    const navItem = e.target.closest('.nav-item');
-    if (navItem && navItem.getAttribute('href')) {
-        // Der Browser regelt den Hashchange selbst
-    }
-
-    const toggleBtn = e.target.closest('.js-toggle-more-btn');
-    if (toggleBtn) toggleText(toggleBtn);
-
-    const copyItemBtn = e.target.closest('.js-copy-item-btn');
-    if (copyItemBtn) copyTextToClipboard(copyItemBtn.dataset.text);
-
-    const toggleItemBtn = e.target.closest('.js-toggle-item-btn');
-    if (toggleItemBtn) toggleToSchreiben(toggleItemBtn.dataset.id);
-
-    const removeItemBtn = e.target.closest('.js-remove-item-btn');
-    if (removeItemBtn) toggleToSchreiben(removeItemBtn.dataset.id);
-
-    const moveItemBtn = e.target.closest('.js-move-item-btn');
-    if (moveItemBtn) moveItem(parseInt(moveItemBtn.dataset.idx), parseInt(moveItemBtn.dataset.dir));
-
-    if (e.target.closest('#copySchreibenBtn')) copyComposedSchreiben();
-    if (e.target.closest('#clearSchreibenBtn')) clearSchreiben();
-    if (e.target.closest('#reloadBtn')) initData(state.lastLoadedFileText, state.lastLoadedFileName);
-
-    const settingsBtn = e.target.closest('#settingsBtn');
-    if (settingsBtn) {
-        settingsMenuEl.classList.toggle('hidden');
-        settingsMenuEl.setAttribute('aria-hidden', settingsMenuEl.classList.contains('hidden'));
-    }
-
-    const uploadTrigger = e.target.closest('#uploadTrigger');
-    if (uploadTrigger) {
-        DOM.csvFileInput.click();
-    }
-
-    if (e.target.closest('#btn-clear-all')) {
-        if (confirm('ACHTUNG: Dies löscht ALLE gespeicherten Daten unwiderruflich. Fortfahren?')) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
-
-    if (e.target.closest('#btn-toggle-theme')) {
-        toggleTheme();
-    }
-
-    if (e.target.closest('#btn-app-info')) {
-        alert('ArbeitsSafe v1.4.0.0\n\nEin smarter Generator für Revisionsschreiben.\n\nNeu: Rechtssicherheit & Compliance.');
-    }
-
-    if (e.target.closest('#btn-show-legal')) {
-        legalModalEl.classList.remove('hidden');
-        settingsMenuEl.classList.add('hidden');
-    }
-
-    if (e.target.closest('#acceptLegalBtn')) {
-        localStorage.setItem('arbeitsSafe_legal_accepted', 'true');
-        legalModalEl.classList.add('hidden');
-    }
-
-    if (!settingsMenuEl.classList.contains('hidden') && !e.target.closest('.settings-menu-content') && !e.target.closest('#settingsBtn')) {
-        settingsMenuEl.classList.add('hidden');
-        settingsMenuEl.setAttribute('aria-hidden', 'true');
-    }
-
-    const filterToggle = e.target.closest('#mobileFilterToggle');
-    if (filterToggle) {
-        filterOverlayEl.classList.toggle('hidden');
-    }
-
-    if (e.target.closest('#closeSettingsBtn')) {
-        settingsMenuEl.classList.add('hidden');
-    }
-
-    if (e.target.closest('#closeFilterBtn') || e.target.closest('#applyFilterBtn')) {
-        filterOverlayEl.classList.add('hidden');
-    }
-
-    if (e.target.id === 'filterOverlay') {
-        e.target.classList.add('hidden');
-    }
-
-    if (e.target.closest('#resetFilterBtn')) {
-        DOM.lawFilter.value = '';
-        DOM.paragraphFilter.value = '';
-        DOM.absatzFilter.value = '';
-        DOM.searchInput.value = '';
-        DOM.hasBausteinFilter.checked = false;
-        updateDropdowns();
-        renderResults();
-    }
-
-    if (e.target.closest('#reloadUpdateBtn')) {
-        if (newWorker) {
-            newWorker.postMessage('SKIP_WAITING');
-        }
-    }
-});
-
-document.addEventListener('input', e => {
-    if (e.target.id === 'compactModeToggle') {
-        const isCompact = e.target.checked;
-        localStorage.setItem('arbeitsSafe_compact', isCompact);
-        document.body.classList.toggle('compact-mode', isCompact);
-    }
-    if (e.target.classList.contains('js-item-title-input')) {
-        updateItemTitle(e.target.dataset.id, e.target.value);
-    }
-    if (e.target.classList.contains('js-item-text-editable')) {
-        updateItemText(e.target.dataset.id, e.target.innerText);
-    }
-});
-
-// --- File Upload ---
-DOM.csvFileInput.addEventListener('change', e => { 
-    const f = e.target.files[0]; 
-    if(f){ 
-        const r = new FileReader(); 
-        r.onload = ev => initData(new TextDecoder('utf-8', {fatal:false}).decode(ev.target.result), f.name); 
-        r.readAsArrayBuffer(f); 
-    } 
-});
-
-// --- Filter Listeners ---
-DOM.lawFilter.addEventListener('change', () => {
-    updateDropdowns(); renderResults();
-    if(window.innerWidth <= 768) document.querySelector('.controls-toolbar').classList.add('collapsed');
-});
-DOM.paragraphFilter.addEventListener('change', () => {
-    updateDropdowns(); renderResults();
-    if(window.innerWidth <= 768) document.querySelector('.controls-toolbar').classList.add('collapsed');
-});
-DOM.absatzFilter.addEventListener('change', () => {
+function onFilterChange(rebuildDropdowns = true) {
+    if (rebuildDropdowns) updateDropdowns();
     renderResults();
-    if(window.innerWidth <= 768) document.querySelector('.controls-toolbar').classList.add('collapsed');
-});
-DOM.hasBausteinFilter.addEventListener('change', () => {
-    updateDropdowns(); renderResults();
-});
+}
 
-let searchTimeout;
-DOM.searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        renderResults();
-        if (DOM.searchInput.value.trim().length > 2 && window.innerWidth <= 768) {
-            document.querySelector('.controls-toolbar').classList.add('collapsed');
+function resetFilters() {
+    DOM.lawFilter.value = '';
+    DOM.paragraphFilter.value = '';
+    DOM.absatzFilter.value = '';
+    DOM.hasBausteinFilter.checked = false;
+    DOM.searchInput.value = '';
+    syncSearchFieldState();
+    onFilterChange();
+}
+
+/* =========================================================================
+   EVENT-WIRING
+   ========================================================================= */
+
+function wireEvents() {
+    // --- Globale Delegation (Klick) ---
+    document.addEventListener('click', e => {
+        const t = e.target;
+
+        if (t.closest('[data-close-filter]')) { closeFilterPanel(); return; }
+
+        const closeModalBtn = t.closest('[data-close-modal]');
+        if (closeModalBtn) { closeModal(closeModalBtn.closest('.modal')); return; }
+
+        // Modal-Hintergrund schließt (nur Settings, nicht das Legal-Gate)
+        if (t.classList.contains('modal') && t.id !== 'legalModal') { closeModal(t); return; }
+
+        // Ergebnisliste
+        const moreBtn = t.closest('.js-toggle-more');
+        if (moreBtn) { toggleClamp(moreBtn); return; }
+
+        const copyNorm = t.closest('.js-copy-norm');
+        if (copyNorm) {
+            const item = state.gesetzeData.find(i => i.id === copyNorm.dataset.id);
+            if (item) copyText(item.inhalt, 'Gesetzestext kopiert');
+            return;
         }
-    }, 500);
-});
 
-// --- App Start ---
-window.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    injectStaticIcons();
+        const toggleNorm = t.closest('.js-toggle-norm');
+        if (toggleNorm) { toggleInDraft(toggleNorm.dataset.id); return; }
+
+        // Entwurf
+        const removeBtn = t.closest('.js-draft-remove');
+        if (removeBtn) { removeFromDraft(removeBtn.dataset.id); return; }
+
+        const moveBtn = t.closest('.js-draft-move');
+        if (moveBtn) { moveDraftItem(Number(moveBtn.dataset.idx), Number(moveBtn.dataset.dir)); return; }
+
+        // Theme-Auswahl
+        const themeChoice = t.closest('[data-theme-choice]');
+        if (themeChoice) { setTheme(themeChoice.dataset.themeChoice); return; }
+    });
+
+    // --- Header ---
+    DOM.themeBtn?.addEventListener('click', () => {
+        const next = resolveTheme(getThemePref()) === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+    });
+
+    DOM.settingsBtn?.addEventListener('click', () => openModal(DOM.settingsModal));
+    DOM.statusBtn?.addEventListener('click', () => {
+        showToast(`${state.lastLoadedFileName || 'Datenbank'} · ${state.gesetzeData.length} Einträge`);
+    });
+
+    DOM.uploadBtn?.addEventListener('click', () => DOM.csvFileInput.click());
+    document.getElementById('settingsUploadBtn')?.addEventListener('click', () => {
+        closeModal(DOM.settingsModal);
+        DOM.csvFileInput.click();
+    });
+    document.getElementById('settingsReloadBtn')?.addEventListener('click', () => {
+        closeModal(DOM.settingsModal);
+        loadDatabase().then(() => showToast('Datenbank neu geladen', 'success'));
+    });
+
+    DOM.csvFileInput?.addEventListener('change', e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            initData(new TextDecoder('utf-8', { fatal: false }).decode(ev.target.result), file.name, 'ok');
+            showToast(`${file.name} geladen`, 'success');
+        };
+        reader.onerror = () => showToast('Datei konnte nicht gelesen werden', 'error');
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    });
+
+    DOM.draftToggle?.addEventListener('click', () => {
+        if (isSplitView()) { showToast('Der Entwurf ist bereits sichtbar'); return; }
+        if (isDesktop()) toggleDraftPanel();
+        else location.hash = '#document';
+    });
+    DOM.draftCloseBtn?.addEventListener('click', () => toggleDraftPanel(false));
+
+    // --- Filter ---
+    DOM.filterTrigger?.addEventListener('click', () => isFilterPanelOpen() ? closeFilterPanel() : openFilterPanel());
+    document.getElementById('navFilter')?.addEventListener('click', () => {
+        if (location.hash === '#document') location.hash = '#search';
+        isFilterPanelOpen() ? closeFilterPanel() : openFilterPanel();
+    });
+    DOM.filterCloseBtn?.addEventListener('click', closeFilterPanel);
+    DOM.applyFilterBtn?.addEventListener('click', closeFilterPanel);
+    DOM.resetFilterBtn?.addEventListener('click', resetFilters);
+    DOM.metaResetBtn?.addEventListener('click', resetFilters);
+
+    DOM.lawFilter?.addEventListener('change', () => onFilterChange());
+    DOM.paragraphFilter?.addEventListener('change', () => onFilterChange());
+    DOM.absatzFilter?.addEventListener('change', () => onFilterChange(false));
+    DOM.hasBausteinFilter?.addEventListener('change', () => onFilterChange());
+
+    // --- Suche (debounced) ---
+    let searchTimer;
+    DOM.searchInput?.addEventListener('input', () => {
+        syncSearchFieldState();
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => renderResults(), 220);
+    });
+    DOM.searchInput?.addEventListener('search', () => { syncSearchFieldState(); renderResults(); });
+    DOM.searchClearBtn?.addEventListener('click', () => {
+        DOM.searchInput.value = '';
+        syncSearchFieldState();
+        renderResults();
+        DOM.searchInput.focus();
+    });
+
+    // --- Entwurfs-Eingaben ---
+    DOM.draftList?.addEventListener('input', e => {
+        const t = e.target;
+        if (t.classList.contains('js-draft-title')) updateDraftField(t.dataset.id, 'titel', t.value);
+        if (t.classList.contains('js-draft-text')) {
+            updateDraftField(t.dataset.id, 'editedText', t.value);
+            autoSizeTextarea(t);
+        }
+    });
+
+    DOM.copyDraftBtn?.addEventListener('click', copyDraft);
+    DOM.downloadDraftBtn?.addEventListener('click', downloadDraft);
+    DOM.clearDraftBtn?.addEventListener('click', clearDraft);
+
+    // --- Einstellungen ---
+    DOM.compactModeToggle?.addEventListener('change', e => {
+        localStorage.setItem(LS.density, String(e.target.checked));
+        applyDensity(e.target.checked);
+    });
+
+    document.getElementById('showLegalBtn')?.addEventListener('click', () => {
+        closeModal(DOM.settingsModal);
+        document.getElementById('legalCloseBtn').hidden = false;
+        openModal(DOM.legalModal);
+    });
+
+    document.getElementById('acceptLegalBtn')?.addEventListener('click', () => {
+        localStorage.setItem(LS.legal, 'true');
+        closeModal(DOM.legalModal);
+    });
+
+    document.getElementById('clearAllBtn')?.addEventListener('click', () => {
+        if (!confirm('ACHTUNG: Alle lokal gespeicherten Daten werden unwiderruflich gelöscht. Fortfahren?')) return;
+        localStorage.clear();
+        location.reload();
+    });
+
+    // --- Tastatur ---
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { if (closeTopMostOverlay()) e.preventDefault(); return; }
+
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+        if (typing) return;
+
+        if (e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) {
+            e.preventDefault();
+            if (!isDesktop() && location.hash === '#document') location.hash = '#search';
+            DOM.searchInput?.focus();
+            DOM.searchInput?.select();
+        }
+    });
+
+    // --- Routing ---
+    window.addEventListener('hashchange', () => navigateTo(location.hash));
+
+    // Beim Wechsel auf Desktop offene Mobile-Overlays aufräumen
+    DESKTOP_QUERY.addEventListener('change', () => {
+        closeFilterPanel();
+        if (isSplitView()) toggleDraftPanel(false);
+        if (isDesktop()) navigateTo('#search');
+        else navigateTo(location.hash);
+    });
+}
+
+/* =========================================================================
+   START
+   ========================================================================= */
+
+function boot() {
+    initIcons();
+    applyTheme(getThemePref());
+    applyDensity(localStorage.getItem(LS.density) === 'true');
+
     loadState();
-    renderDocumentView();
-    handleRouting(); // Initial route
+    renderDraft();
+    navigateTo(isDesktop() ? '#search' : location.hash);
+    syncSearchFieldState();
+    wireEvents();
 
-    fetch('gesetze.csv')
-        .then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
-        .then(t => initData(t, "Datenbank geladen"))
-        .catch(e => { 
-            document.getElementById('errorContainer').innerHTML=`<div class="error-alert"><strong>Hinweis:</strong> Datenbank wird geladen...</div>`;
-            initData(state.rawCsvData); 
-        });
-});
+    if (!localStorage.getItem(LS.legal)) {
+        document.getElementById('legalCloseBtn').hidden = true;
+        openModal(DOM.legalModal);
+    }
 
-window.addEventListener('hashchange', handleRouting);
+    loadDatabase();
+}
 
-// --- Service Worker ---
-let newWorker;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+} else {
+    boot();
+}
+
+/* =========================================================================
+   SERVICE WORKER
+   ========================================================================= */
+
+let waitingWorker = null;
 let refreshing = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw2.js').then(reg => {
+            if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
             reg.addEventListener('updatefound', () => {
-                newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        const banner = document.getElementById('updateBanner');
-                        if (banner) banner.classList.remove('hidden');
+                const installing = reg.installing;
+                installing?.addEventListener('statechange', () => {
+                    if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateBanner(installing);
                     }
                 });
             });
-        });
+        }).catch(() => { /* SW optional */ });
     });
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
-        window.location.reload();
         refreshing = true;
+        location.reload();
     });
 }
+
+function showUpdateBanner(worker) {
+    waitingWorker = worker;
+    DOM.updateBanner.hidden = false;
+}
+
+document.getElementById('reloadUpdateBtn')?.addEventListener('click', () => {
+    waitingWorker?.postMessage('SKIP_WAITING');
+    DOM.updateBanner.hidden = true;
+});
+
+export { APP_VERSION };

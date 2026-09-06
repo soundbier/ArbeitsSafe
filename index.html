@@ -1,228 +1,305 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light" data-density="normal">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>ArbeitsSafe</title>
-    <meta name="theme-color" content="#0284c7">
-    
+    <meta name="description" content="Generator für Revisionsschreiben im Arbeitsschutz – offline nutzbar, alle Daten bleiben lokal.">
+
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#131c2e" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/img-192x192.png">
+    <link rel="stylesheet" href="css/style.css?v=2.0.0">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/img-192x192.png">
+    <link rel="apple-touch-icon" href="icons/img-192x192.png">
 </head>
 <body>
-    <!-- App Header -->
-    <header class="main-app-header">
-        <div class="header-logo">
-            <span class="logo-text">ArbeitsSafe</span>
-        </div>
-        
-        <div class="header-actions">
-            <div id="statusBadge" class="header-btn status-indicator" title="Datenbank-Status">
-                <span id="icon-status" aria-hidden="true"></span>
-            </div>
+<a class="skip-link" href="#resultsList">Zum Inhalt springen</a>
 
-            <button type="button" id="reloadBtn" class="header-btn" title="Daten neu laden">
-                <span id="icon-reload" aria-hidden="true"></span>
+<div class="app-shell">
+
+    <!-- ================= HEADER ================= -->
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">AS</span>
+            <span class="brand-name">ArbeitsSafe</span>
+        </div>
+
+        <div class="header-actions">
+            <button type="button" id="statusBtn" class="icon-btn" title="Datenbank-Status" aria-label="Datenbank-Status">
+                <span class="js-icon" data-icon="database"></span>
+                <span class="status-dot" id="statusDot" data-status="loading"></span>
             </button>
 
-            <div class="upload-custom">
-                <button type="button" id="uploadTrigger" class="header-btn" title="CSV laden">
-                    <span id="icon-upload" aria-hidden="true"></span>
-                </button>
-                <input type="file" id="csvFileInput" accept=".csv" class="hidden-input">
-            </div>
+            <button type="button" id="uploadBtn" class="icon-btn" title="Eigene CSV laden" aria-label="Eigene CSV-Datei laden">
+                <span class="js-icon" data-icon="upload"></span>
+            </button>
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" class="visually-hidden" tabindex="-1">
 
-            <button type="button" id="settingsBtn" class="header-btn" title="Einstellungen">
-                <span id="icon-settings" aria-hidden="true"></span>
+            <button type="button" id="themeBtn" class="icon-btn" title="Design umschalten" aria-label="Design umschalten">
+                <span class="js-icon" data-icon="moon" id="themeIcon"></span>
+            </button>
+
+            <button type="button" id="draftToggle" class="icon-btn draft-toggle" title="Entwurf anzeigen" aria-label="Entwurf anzeigen" aria-expanded="false">
+                <span class="js-icon" data-icon="fileText"></span>
+                <span class="count-badge" id="draftCountHeader" data-count="0">0</span>
+            </button>
+
+            <button type="button" id="settingsBtn" class="icon-btn" title="Einstellungen" aria-label="Einstellungen">
+                <span class="js-icon" data-icon="settings"></span>
             </button>
         </div>
     </header>
 
-    <!-- Error & Toast Container -->
-    <div id="errorContainer" aria-live="polite"></div>
-    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+    <!-- ================= FILTER (Sidebar / Bottom-Sheet) ================= -->
+    <aside class="filter-panel" id="filterPanel" aria-label="Filter und Auswahl">
+        <div class="sheet-grabber" aria-hidden="true"></div>
 
-    <!-- Main Content (Screens) -->
-    <main class="workspace-container screen-container">
+        <div class="panel-head">
+            <h2>Filter</h2>
+            <button type="button" class="icon-btn filter-panel-close" id="filterCloseBtn" aria-label="Filter schließen">
+                <span class="js-icon" data-icon="x"></span>
+            </button>
+        </div>
 
-        <!-- Screen 1: Datenbank & Suche -->
-        <section id="search" class="app-screen active" data-route="#search">
-            <div class="main-content-area">
-                <!-- Such- und Filterleiste (Desktop Inline / Mobile Modal) -->
-                <div id="filterOverlay" class="filter-overlay hidden">
-                    <div class="card-base controls-toolbar">
-                        <header class="filter-modal-header mobile-only">
-                            <h3>Filter & Suche</h3>
-                            <button type="button" id="closeFilterBtn" class="close-modal-btn" aria-label="Schließen">&times;</button>
-                        </header>
+        <div class="panel-body">
+            <div class="field">
+                <label class="field-label" for="lawFilter">Gesetz</label>
+                <select class="select" id="lawFilter">
+                    <option value="">Alle Gesetze</option>
+                </select>
+            </div>
 
-                        <div class="control-field">
-                            <label for="lawFilter">1. Gesetz</label>
-                            <select id="lawFilter">
-                                <option value="">-- Alle --</option>
-                            </select>
-                        </div>
+            <div class="field">
+                <label class="field-label" for="paragraphFilter">Paragraf</label>
+                <select class="select" id="paragraphFilter">
+                    <option value="">Alle Paragrafen</option>
+                </select>
+            </div>
 
-                        <div class="control-field">
-                            <label for="paragraphFilter">2. Paragraf</label>
-                            <select id="paragraphFilter">
-                                <option value="">-- Alle --</option>
-                            </select>
-                        </div>
+            <div class="field">
+                <label class="field-label" for="absatzFilter">Absatz</label>
+                <select class="select" id="absatzFilter" disabled>
+                    <option value="">Alle Absätze</option>
+                </select>
+            </div>
 
-                        <div class="control-field">
-                            <label for="absatzFilter">3. Absatz</label>
-                            <select id="absatzFilter" disabled>
-                                <option value="">-- Alle --</option>
-                            </select>
-                        </div>
+            <label class="switch-row" for="hasBausteinFilter">
+                <span class="switch-text">
+                    <span class="switch-title">Nur mit Textbaustein</span>
+                    <span class="switch-hint">Normen ohne Baustein ausblenden</span>
+                </span>
+                <span class="switch">
+                    <input type="checkbox" id="hasBausteinFilter">
+                    <span class="track" aria-hidden="true"></span>
+                </span>
+            </label>
 
-                        <div class="control-field search-full-width">
-                            <label for="searchInput">4. Globale Textsuche</label>
-                            <input type="text" id="searchInput" placeholder="Suchbegriff eingeben...">
-                        </div>
+            <button type="button" class="btn btn--ghost btn--block" id="resetFilterBtn">
+                <span class="js-icon" data-icon="rotate"></span> Filter zurücksetzen
+            </button>
+        </div>
 
-                        <div class="filter-footer">
-                            <label for="hasBausteinFilter" class="filter-checkbox-wrapper">
-                                <input type="checkbox" id="hasBausteinFilter">
-                                Nur mit Baustein
-                            </label>
-                            <button type="button" id="applyFilterBtn" class="btn btn-primary mobile-only">Anwenden</button>
-                        </div>
-                    </div>
+        <div class="panel-foot">
+            <button type="button" class="btn btn--primary btn--block" id="applyFilterBtn">
+                <span id="applyFilterLabel">Ergebnisse anzeigen</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="app-main">
+
+        <!-- Screen: Datenbank -->
+        <section class="app-screen is-active" id="screen-search" data-route="#search" aria-label="Datenbank">
+            <div class="results-toolbar">
+                <div class="search-field" id="searchField">
+                    <span class="search-icon js-icon" data-icon="search" aria-hidden="true"></span>
+                    <input type="search" class="input" id="searchInput" placeholder="Volltextsuche …"
+                           autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Volltextsuche">
+                    <button type="button" class="search-clear" id="searchClearBtn" aria-label="Suche leeren">
+                        <span class="js-icon" data-icon="x" data-size="16"></span>
+                    </button>
                 </div>
 
-                <!-- Aktive Filter Anzeige -->
-                <div id="activeFilterBar" class="active-filter-bar hidden">
-                    <span id="filterSummaryText" class="filter-summary">Filter aktiv...</span>
-                    <button type="button" id="resetFilterBtn" class="reset-link">Zurücksetzen</button>
-                </div>
+                <button type="button" class="icon-btn filter-trigger" id="filterTrigger" aria-label="Filter öffnen" aria-expanded="false">
+                    <span class="js-icon" data-icon="filter"></span>
+                    <span class="count-badge" id="filterCountBadge" data-count="0">0</span>
+                </button>
+            </div>
 
-                <!-- Suchergebnisse -->
-                <div id="results" class="results-container" aria-live="polite">
-                    <div class="card-base no-results">
-                        Wählen Sie oben Kriterien aus oder nutzen Sie die Textsuche.
-                    </div>
-                </div>
+            <div class="results-meta is-hidden" id="resultsMeta">
+                <div class="results-meta-tags" id="resultsMetaTags"></div>
+                <button type="button" class="link-btn" id="metaResetBtn">Zurücksetzen</button>
+            </div>
+
+            <div class="scroll-area results-scroll" id="resultsScroll">
+                <div class="results-list" id="resultsList" aria-live="polite" aria-busy="true"></div>
             </div>
         </section>
 
-        <!-- Screen 2: Dokumenten-Ansicht (Entwurf) -->
-        <section id="document" class="app-screen" data-route="#document">
-            <div class="document-view">
-                <header class="doc-header">
-                    <h3>Entwurf: Revisionsschreiben</h3>
-                    <span id="schreibenCounter" class="counter-badge">0 Punkte</span>
-                </header>
-
-                <div id="schreibenList" class="doc-items-list">
-                    <div class="doc-empty">
-                        Das Schreiben ist noch leer.
-                    </div>
+        <!-- Screen: Entwurf -->
+        <section class="app-screen" id="screen-document" data-route="#document" aria-label="Entwurf">
+            <div class="draft-head">
+                <div class="draft-head-titles">
+                    <h2>Entwurf</h2>
+                    <span class="chip chip--accent" id="draftCounter">0 Punkte</span>
                 </div>
+                <div class="draft-head-actions">
+                    <button type="button" class="icon-btn" id="draftCloseBtn" aria-label="Entwurf schließen" hidden>
+                        <span class="js-icon" data-icon="x"></span>
+                    </button>
+                </div>
+            </div>
 
-                <footer class="doc-footer">
-                    <button type="button" id="copySchreibenBtn" class="btn btn-tool btn-success" style="flex: 2;" disabled>
-                        <span id="icon-copy-doc" aria-hidden="true"></span> Dokument kopieren
-                    </button>
-                    <button type="button" id="clearSchreibenBtn" class="btn btn-tool btn-secondary" style="flex: 1; display: none;">
-                        <span id="icon-clear-doc" aria-hidden="true"></span> Leeren
-                    </button>
-                </footer>
+            <div class="scroll-area draft-scroll">
+                <div class="draft-list" id="draftList"></div>
+            </div>
+
+            <div class="draft-foot">
+                <button type="button" class="btn btn--primary btn--grow" id="copyDraftBtn" disabled>
+                    <span class="js-icon" data-icon="clipboard"></span> Kopieren
+                </button>
+                <button type="button" class="btn btn--ghost" id="downloadDraftBtn" title="Als Datei speichern" aria-label="Als Datei speichern" disabled>
+                    <span class="js-icon" data-icon="download"></span>
+                </button>
+                <button type="button" class="btn btn--danger" id="clearDraftBtn" title="Entwurf leeren" aria-label="Entwurf leeren" disabled>
+                    <span class="js-icon" data-icon="trash"></span>
+                </button>
             </div>
         </section>
+
     </main>
 
-    <!-- Bottom Navigation (Mobile First) -->
-    <nav class="bottom-nav" role="navigation">
-        <a href="#search" class="nav-item active" data-target="search">
-            <span class="nav-icon" id="icon-nav-search"></span>
-            <span class="nav-label">Datenbank</span>
+    <!-- ================= BOTTOM NAV (Mobile) ================= -->
+    <nav class="bottom-nav" aria-label="Hauptnavigation">
+        <a class="nav-item is-active" href="#search" data-route="#search">
+            <span class="nav-icon js-icon" data-icon="search" data-size="22"></span>
+            <span>Datenbank</span>
         </a>
-        <a href="#document" class="nav-item" data-target="document">
-            <span class="nav-icon" id="icon-nav-document"></span>
-            <span class="nav-label">Entwurf</span>
-            <span id="tabCounter" class="tab-badge">0</span>
-        </a>
-        <button type="button" id="mobileFilterToggle" class="nav-item filter-trigger" aria-label="Filter umschalten">
-            <span class="nav-icon" id="icon-filter-toggle"></span>
-            <span class="nav-label">Filter</span>
+        <button type="button" class="nav-item" id="navFilter">
+            <span class="nav-icon js-icon" data-icon="filter" data-size="22"></span>
+            <span>Filter</span>
+            <span class="count-badge" id="filterCountNav" data-count="0">0</span>
         </button>
+        <a class="nav-item" href="#document" data-route="#document">
+            <span class="nav-icon js-icon" data-icon="fileText" data-size="22"></span>
+            <span>Entwurf</span>
+            <span class="count-badge" id="draftCountNav" data-count="0">0</span>
+        </a>
     </nav>
+</div>
 
-    <!-- Overlays -->
-    <div id="legalModal" class="settings-menu hidden" aria-hidden="false">
-        <div class="settings-menu-content card-base legal-modal-content">
-            <header class="settings-menu-header">
-                <h3>Wichtiger Hinweis</h3>
-            </header>
-            <div class="settings-menu-body legal-scroll-area">
-                <p><strong>Willkommen bei ArbeitsSafe.</strong></p>
-                <p>Diese Anwendung dient als Unterstützung bei der Erstellung von Revisionsschreiben. Bitte beachten Sie:</p>
-                <ul class="legal-list">
-                    <li>Die bereitgestellten Inhalte ersetzen keine Rechtsberatung.</li>
-                    <li>Die Verantwortung für die Richtigkeit der finalen Dokumente liegt beim Anwender.</li>
-                    <li><strong>Datenschutz:</strong> Alle Daten werden ausschließlich lokal auf Ihrem Gerät gespeichert. Es findet keine Übertragung an externe Server statt.</li>
-                </ul>
-                <button type="button" id="acceptLegalBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Verstanden & Fortfahren</button>
-            </div>
+<!-- ================= MODALS ================= -->
+
+<div class="modal" id="settingsModal" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h2 id="settingsTitle">Einstellungen</h2>
+            <button type="button" class="icon-btn" data-close-modal aria-label="Schließen">
+                <span class="js-icon" data-icon="x"></span>
+            </button>
         </div>
-    </div>
-
-    <div id="settingsMenu" class="settings-menu hidden" aria-hidden="true">
-        <div class="settings-menu-content card-base">
-            <header class="settings-menu-header">
-                <h3>Einstellungen</h3>
-                <button type="button" id="closeSettingsBtn" class="close-modal-btn">&times;</button>
-            </header>
-            <div class="settings-menu-body">
-                <!-- Sektion: Darstellung -->
-                <section class="settings-section">
-                    <label class="settings-label">Erscheinungsbild</label>
-                    <button type="button" class="settings-item-btn" id="btn-toggle-theme">
-                        <span id="icon-theme-toggle" aria-hidden="true"></span>
-                        Design umschalten
+        <div class="modal-body">
+            <div class="settings-group">
+                <span class="settings-group-title">Erscheinungsbild</span>
+                <div class="segmented" role="group" aria-label="Design">
+                    <button type="button" data-theme-choice="light" aria-pressed="false">
+                        <span class="js-icon" data-icon="sun" data-size="16"></span> Hell
                     </button>
-                    <label class="settings-toggle-wrapper">
+                    <button type="button" data-theme-choice="dark" aria-pressed="false">
+                        <span class="js-icon" data-icon="moon" data-size="16"></span> Dunkel
+                    </button>
+                    <button type="button" data-theme-choice="system" aria-pressed="false">
+                        <span class="js-icon" data-icon="monitor" data-size="16"></span> System
+                    </button>
+                </div>
+
+                <label class="switch-row" for="compactModeToggle">
+                    <span class="switch-text">
+                        <span class="switch-title">Kompakte Ansicht</span>
+                        <span class="switch-hint">Kürzere Texte, mehr Treffer pro Bildschirm</span>
+                    </span>
+                    <span class="switch">
                         <input type="checkbox" id="compactModeToggle">
-                        Kompakt-Modus (Kürzere Texte)
-                    </label>
-                </section>
-
-                <hr class="settings-divider">
-
-                <!-- Sektion: System & Info -->
-                <section class="settings-section">
-                    <button type="button" class="settings-item-btn" id="btn-app-info">
-                        <span id="icon-app-info" aria-hidden="true"></span>
-                        App Information
-                    </button>
-                    <button type="button" class="settings-item-btn" id="btn-show-legal">
-                        <span id="icon-legal" aria-hidden="true"></span>
-                        Rechtliche Hinweise
-                    </button>
-                    <button type="button" class="settings-item-btn danger-text" id="btn-clear-all">
-                        <span id="icon-clear-all" aria-hidden="true"></span>
-                        Alle Daten löschen
-                    </button>
-                </section>
-
-                <div class="settings-footer-info">Version 1.4.0.0</div>
+                        <span class="track" aria-hidden="true"></span>
+                    </span>
+                </label>
             </div>
+
+            <div class="settings-group">
+                <span class="settings-group-title">Daten</span>
+                <button type="button" class="settings-row" id="settingsUploadBtn">
+                    <span class="js-icon" data-icon="upload"></span>
+                    <span class="settings-row-text">
+                        <span>Eigene CSV laden</span>
+                        <span class="settings-row-sub" id="dataSourceLabel">Standard-Datenbank</span>
+                    </span>
+                </button>
+                <button type="button" class="settings-row" id="settingsReloadBtn">
+                    <span class="js-icon" data-icon="rotate"></span>
+                    <span class="settings-row-text">
+                        <span>Datenbank neu laden</span>
+                        <span class="settings-row-sub" id="dataCountLabel">0 Einträge</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="settings-group">
+                <span class="settings-group-title">Info</span>
+                <button type="button" class="settings-row" id="showLegalBtn">
+                    <span class="js-icon" data-icon="shield"></span>
+                    <span class="settings-row-text"><span>Rechtliche Hinweise &amp; Datenschutz</span></span>
+                </button>
+                <button type="button" class="settings-row is-danger" id="clearAllBtn">
+                    <span class="js-icon" data-icon="trash"></span>
+                    <span class="settings-row-text">
+                        <span>Alle lokalen Daten löschen</span>
+                        <span class="settings-row-sub">Entwurf und Einstellungen zurücksetzen</span>
+                    </span>
+                </button>
+            </div>
+
+            <p class="app-version">ArbeitsSafe · Version 2.0.0</p>
         </div>
     </div>
+</div>
 
-    <!-- Update Notification Banner -->
-    <div id="updateBanner" class="update-banner hidden" role="alert" aria-live="assertive">
-        <div class="update-banner-content">
-            <span id="icon-update" aria-hidden="true"></span>
-            <span>Update verfügbar!</span>
-            <button type="button" id="reloadUpdateBtn" class="btn-update-reload">Jetzt laden</button>
+<div class="modal" id="legalModal" hidden role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h2 id="legalTitle">Wichtiger Hinweis</h2>
+            <button type="button" class="icon-btn" data-close-modal aria-label="Schließen" id="legalCloseBtn" hidden>
+                <span class="js-icon" data-icon="x"></span>
+            </button>
+        </div>
+        <div class="modal-body legal-body">
+            <p><strong>Willkommen bei ArbeitsSafe.</strong> Die App unterstützt Sie beim Erstellen von Revisionsschreiben.</p>
+            <ul>
+                <li>Die bereitgestellten Inhalte ersetzen <strong>keine Rechtsberatung</strong>.</li>
+                <li>Die Verantwortung für die Richtigkeit der finalen Dokumente liegt beim Anwender.</li>
+                <li><strong>Datenschutz:</strong> Alle Daten werden ausschließlich lokal auf Ihrem Gerät gespeichert. Es findet keine Übertragung an externe Server statt.</li>
+            </ul>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn--primary btn--block" id="acceptLegalBtn">Verstanden &amp; fortfahren</button>
         </div>
     </div>
+</div>
 
-    <!-- Scripts -->
-    <script type="module" src="js/app.js?v=1.4.0.0"></script>
+<!-- ================= FEEDBACK ================= -->
+<div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
+
+<div class="update-banner" id="updateBanner" hidden role="alert">
+    <span class="js-icon" data-icon="rotate"></span>
+    <span>Neue Version verfügbar</span>
+    <button type="button" class="btn btn--sm" id="reloadUpdateBtn">Laden</button>
+</div>
+
+<script type="module" src="js/app.js?v=2.0.0"></script>
 </body>
 </html>

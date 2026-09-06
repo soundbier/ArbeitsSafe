@@ -1,7 +1,7 @@
 // =========================================================================
-// ArbeitsSafe Service Worker — v2.0.0
+// ArbeitsSafe Service Worker — v2.0.1
 // =========================================================================
-const CACHE_NAME = 'arbeitssafe-v2.0.0';
+const CACHE_NAME = 'arbeitssafe-v2.0.1';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -46,8 +46,18 @@ self.addEventListener('fetch', event => {
         caches.match(request, { ignoreSearch: true }).then(cached => {
             const network = fetch(request).then(response => {
                 if (response && response.status === 200 && response.type === 'basic') {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+                    // Redirected Responses (z.B. "./" -> "index.html") dürfen nicht
+                    // 1:1 gecacht werden: Safari verweigert sie bei erneuter Auslieferung
+                    // an Navigations-Requests ("Response served by service worker has
+                    // redirections"). Deshalb den redirected-Flag entfernen.
+                    const toCache = response.redirected
+                        ? new Response(response.clone().body, {
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: response.headers
+                        })
+                        : response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(request, toCache));
                 }
                 return response;
             }).catch(() => cached);

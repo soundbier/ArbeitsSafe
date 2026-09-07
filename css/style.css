@@ -908,6 +908,16 @@ mark.hl {
 .draft-head h2 { font-size: var(--fs-md); font-weight: 800; letter-spacing: -.01em; }
 .draft-head-actions { display: flex; gap: var(--sp-1); }
 
+.draft-hint {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+    background: var(--c-surface-2);
+    border-bottom: 1px solid var(--c-border);
+}
+
 .draft-scroll {
     flex: 1 1 auto;
     min-height: 0;
@@ -1106,8 +1116,11 @@ button.settings-row:hover { border-color: var(--c-border-strong); background: va
 }
 
 .legal-body { font-size: var(--fs-base); color: var(--c-text-2); }
-.legal-body ul { margin: 0; padding-left: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2); }
+.legal-body ul { margin: 0 0 var(--sp-3); padding-left: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2); }
 .legal-body strong { color: var(--c-text); }
+.legal-body h4 { font-size: var(--fs-sm); color: var(--c-text); margin-bottom: var(--sp-1); }
+.legal-body code { font-size: .92em; background: var(--c-surface-2); padding: 0 4px; border-radius: var(--r-xs, 4px); }
+.legal-body section.settings-group:not(:first-child) { padding-top: var(--sp-4); border-top: 1px solid var(--c-border); }
 
 .app-version {
     text-align: center;
@@ -1215,7 +1228,7 @@ button.settings-row:hover { border-color: var(--c-border-strong); background: va
 
 @media (max-width: 479.98px) {
     .results-scroll, .draft-scroll { padding: var(--sp-3); }
-    .results-toolbar, .results-meta, .draft-head, .draft-foot { padding-left: var(--sp-3); padding-right: var(--sp-3); }
+    .results-toolbar, .results-meta, .draft-head, .draft-foot, .draft-hint { padding-left: var(--sp-3); padding-right: var(--sp-3); }
     .law-card-head, .norm-item { padding-left: var(--sp-3); padding-right: var(--sp-3); }
 
     .norm-head { flex-direction: column; align-items: stretch; }
@@ -1243,7 +1256,7 @@ button.settings-row:hover { border-color: var(--c-border-strong); background: va
     .modal-card { border-radius: var(--r-xl); }
 
     .results-scroll, .draft-scroll { padding: var(--sp-5); }
-    .results-toolbar, .results-meta, .draft-head { padding-left: var(--sp-5); padding-right: var(--sp-5); }
+    .results-toolbar, .results-meta, .draft-head, .draft-hint { padding-left: var(--sp-5); padding-right: var(--sp-5); }
 }
 
 /* -------------------------------------------------------------------------
@@ -1348,7 +1361,7 @@ button.settings-row:hover { border-color: var(--c-border-strong); background: va
 
 @media print {
     .app-header, .bottom-nav, .filter-panel, .results-toolbar,
-    .results-meta, .draft-head-actions, .draft-foot, .toast-stack { display: none !important; }
+    .results-meta, .draft-head-actions, .draft-foot, .draft-hint, .toast-stack { display: none !important; }
     .app-shell { height: auto; display: block; }
     .app-screen { display: block !important; }
     #screen-search { display: none !important; }

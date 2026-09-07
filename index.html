@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
 
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css?v=2.0.3">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/img-192x192.png">
@@ -155,6 +156,7 @@
                     </button>
                 </div>
             </div>
+            <p class="draft-hint">Hinweis: Vermeiden Sie nach Möglichkeit Namen und Gesundheitsdaten Dritter in den Texten.</p>
 
             <div class="scroll-area draft-scroll">
                 <div class="draft-list" id="draftList"></div>
@@ -323,12 +325,63 @@
             </button>
         </div>
         <div class="modal-body legal-body">
-            <p><strong>Willkommen bei ArbeitsSafe.</strong> Die App unterstützt Sie beim Erstellen von Revisionsschreiben.</p>
-            <ul>
-                <li>Die bereitgestellten Inhalte ersetzen <strong>keine Rechtsberatung</strong>.</li>
-                <li>Die Verantwortung für die Richtigkeit der finalen Dokumente liegt beim Anwender.</li>
-                <li><strong>Datenschutz:</strong> Alle Daten werden ausschließlich lokal auf Ihrem Gerät gespeichert. Es findet keine Übertragung an externe Server statt.</li>
-            </ul>
+            <section class="settings-group">
+                <span class="settings-group-title">Nutzungshinweise</span>
+                <p><strong>Willkommen bei ArbeitsSafe.</strong> Die App unterstützt Sie beim Erstellen von Revisionsschreiben.</p>
+                <ul>
+                    <li>Die bereitgestellten Inhalte ersetzen <strong>keine Rechtsberatung</strong>.</li>
+                    <li>Die Verantwortung für die Richtigkeit der finalen Dokumente liegt beim Anwender.</li>
+                </ul>
+            </section>
+
+            <section class="settings-group">
+                <span class="settings-group-title">Datenschutzerklärung</span>
+
+                <h4>1. Verantwortlicher</h4>
+                <p>Lukas Gehrke, Methfesselstr. 1, 37581 Bad Gandersheim, E-Mail: <a href="mailto:LukasGehrke@gmx.de">LukasGehrke@gmx.de</a></p>
+
+                <h4>2. Grundsatz: lokale Verarbeitung</h4>
+                <p>ArbeitsSafe ist eine clientseitige Web-App (Progressive Web App). Ihre Auswahl, Eingaben und erstellten Entwürfe werden ausschließlich im lokalen Speicher Ihres Browsers (<code>localStorage</code>) auf Ihrem eigenen Gerät abgelegt. Es findet keine Übertragung dieser Inhalte an den Betreiber oder sonstige Server statt; der Betreiber hat darauf keinen Zugriff.</p>
+
+                <h4>3. Welche Daten lokal gespeichert werden</h4>
+                <ul>
+                    <li>Einstellungen (Design, Schriftgröße, Exportformat u. Ä.)</li>
+                    <li>Ihr Entwurf (die zusammengestellte Punkteliste) inklusive der von Ihnen eingegebenen oder bearbeiteten Texte</li>
+                    <li>Die Bestätigung dieses Hinweises</li>
+                </ul>
+                <p>Diese Daten bleiben unbegrenzt im Browser gespeichert, bis Sie sie über „Alle lokalen Daten löschen“ (Einstellungen) oder Ihre Browser-Einstellungen selbst entfernen.</p>
+
+                <h4>4. Eigene Inhalte und hochgeladene CSV-Dateien</h4>
+                <p>Eine von Ihnen hochgeladene CSV-Datei wird ausschließlich lokal im Browser verarbeitet, nicht an den Betreiber übertragen. Enthalten Ihre eigene Datei oder von Ihnen erfasste Texte (z. B. „Mangel vorgefunden“) personenbezogene Daten Dritter – etwa Namen von Beschäftigten oder gesundheitsbezogene Angaben zu einem Vorfall – werden <strong>Sie selbst</strong> hierfür datenschutzrechtlich verantwortlich (Art. 4 Nr. 7 DSGVO). Bitte verzichten Sie nach Möglichkeit auf Namen und besondere Kategorien personenbezogener Daten (Art. 9 DSGVO) in den Texten und beachten Sie einschlägige Verschwiegenheitspflichten.</p>
+
+                <h4>5. Hosting / Server-Logfiles</h4>
+                <p>Beim Aufruf dieser Seite verarbeitet der Hosting-Anbieter technisch bedingt automatisch Zugriffsdaten (u. a. IP-Adresse, Datum/Uhrzeit, abgerufene Datei) in Server-Logfiles, um die Auslieferung zu ermöglichen. Rechtsgrundlage ist das berechtigte Interesse an einem sicheren und funktionsfähigen Betrieb (Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+                <h4>6. Cookies, Tracking, Drittanbieter</h4>
+                <p>Es werden keine Cookies gesetzt und keine Tracking- oder Analyse-Dienste eingebunden. Es erfolgt keine Einbindung von Drittanbieter-Inhalten wie externen Schriftarten.</p>
+
+                <h4>7. Speicherdauer</h4>
+                <p>Lokale Daten: bis zur Löschung durch Sie. Server-Logfiles: gemäß den Löschfristen des Hosting-Anbieters.</p>
+
+                <h4>8. Ihre Rechte</h4>
+                <p>Ihnen stehen die Rechte auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21) zu. Da lokal gespeicherte Inhalte ausschließlich auf Ihrem Gerät liegen, setzen Sie diese Rechte in der Regel selbst um (z. B. über „Alle lokalen Daten löschen“). Für Anfragen zu serverseitigen Verarbeitungen wenden Sie sich an den Verantwortlichen (Kontakt oben). Zudem steht Ihnen ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu.</p>
+
+                <h4>9. Automatisierte Entscheidungsfindung</h4>
+                <p>Es findet keine automatisierte Entscheidungsfindung einschließlich Profiling statt.</p>
+            </section>
+
+            <section class="settings-group">
+                <span class="settings-group-title">Impressum</span>
+                <p>Angaben gemäß § 5 DDG:</p>
+                <p>
+                    Lukas Gehrke<br>
+                    Methfesselstr. 1<br>
+                    37581 Bad Gandersheim
+                </p>
+                <p>Kontakt: E-Mail <a href="mailto:LukasGehrke@gmx.de">LukasGehrke@gmx.de</a></p>
+                <p>EU-Streitschlichtung: Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">ec.europa.eu/consumers/odr</a>. Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle ist der Betreiber nicht verpflichtet und nimmt daran nicht teil.</p>
+                <p>Haftung für Inhalte: Trotz sorgfältiger inhaltlicher Kontrolle wird keine Haftung für die Inhalte externer Links übernommen. Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
+            </section>
         </div>
         <div class="modal-foot">
             <button type="button" class="btn btn--primary btn--block" id="acceptLegalBtn">Verstanden &amp; fortfahren</button>

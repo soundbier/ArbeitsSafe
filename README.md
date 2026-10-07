@@ -27,7 +27,7 @@ Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arb
   * Mehrere Revisionen lokal speichern, duplizieren, löschen; Autosave; abwählbare Abschnitte; Fortschritt je Abschnitt.
   * Auswertung: Antworten „Nein“, Ampel gelb/rot und Bemerkungen als Feststellung übernehmen (Sachverhalt, Feststellung, Rechtsgrundlage, Maßnahme, Frist).
 
-* **PWA**: Offline-fähig via Service Worker (Stale-While-Revalidate), Update-Banner mit Nutzerbestätigung, installierbar.
+* **PWA**: Offline-fähig via Service Worker (versionierter Cache, Cache-First), installierbar. Neue Versionen werden erst nach Bestätigung im Update-Banner heruntergeladen; bis dahin läuft die zuletzt vollständig geladene Version weiter – auch offline.
 
 ---
 

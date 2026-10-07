@@ -19,6 +19,7 @@ const ASSETS_TO_CACHE = [
     'js/bogen/store.js',
     'js/bogen/progress.js',
     'js/bogen/auswertung.js',
+    'js/bogen/bausteine.js',
     'src/data/revisionsbogen.json',
     'gesetze.csv',
     'manifest.json',

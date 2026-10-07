@@ -75,6 +75,9 @@
                 <div class="bg-container">
                     <div class="bg-list-head">
                         <h2>Auswertung</h2>
+                        <button type="button" class="btn btn--primary js-to-draft" id="bgToDraftBtn" disabled>
+                            <span class="js-icon" data-icon="fileText"></span> In Entwurf übernehmen
+                        </button>
                     </div>
                     <div class="bg-section-tags" id="bgAuswertungMeta"></div>
                     <p class="bg-hint">Aufgeführt sind Antworten „Nein“, Ampel gelb/rot sowie alle Punkte mit Bemerkung. Abgewählte Abschnitte sind ausgeschlossen.</p>
@@ -89,6 +92,19 @@
                         </span>
                     </label>
                     <div class="bg-rev-list" id="bgAuswertung"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ansicht: Zuordnung Textbausteine (über Einstellungen erreichbar) -->
+        <section class="bg-view" data-route="#zuordnung" aria-label="Textbausteine zuordnen">
+            <div class="scroll-area bg-scroll">
+                <div class="bg-container">
+                    <div class="bg-list-head">
+                        <h2>Textbausteine zuordnen</h2>
+                    </div>
+                    <p class="bg-hint">Ordnen Sie den Fragen Textbausteine aus der Datenbank zu. Beim Übernehmen einer Feststellung werden Feststellung, Rechtsgrundlage (Wortlaut) und Maßnahme damit vorbelegt.</p>
+                    <div class="bg-rev-list" id="bgZuordnung"></div>
                 </div>
             </div>
         </section>
@@ -109,6 +125,21 @@
             <span>Auswertung</span>
         </a>
     </nav>
+</div>
+
+<div class="modal" id="bgPickModal" hidden role="dialog" aria-modal="true" aria-labelledby="bgPickTitle">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h2 id="bgPickTitle">Textbaustein wählen</h2>
+            <button type="button" class="icon-btn" data-close-pick aria-label="Schließen">
+                <span class="js-icon" data-icon="x"></span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <input type="search" class="input" id="bgPickSearch" placeholder="Gesetz, Paragraf oder Stichwort …" autocomplete="off" aria-label="Textbausteine durchsuchen">
+            <div class="bg-pick-list" id="bgPickList"></div>
+        </div>
+    </div>
 </div>
 
 <div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>

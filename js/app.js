@@ -385,6 +385,13 @@ function wireEvents() {
         }
     });
 
+    // --- Entwurf aus anderem Tab (z. B. Übernahme aus dem Revisionsbogen) ---
+    window.addEventListener('storage', e => {
+        if (e.key !== 'arbeitsSafe_revisionsSchreiben') return;
+        loadState();
+        renderDraft();
+    });
+
     // --- Routing ---
     window.addEventListener('hashchange', () => navigateTo(location.hash));
 

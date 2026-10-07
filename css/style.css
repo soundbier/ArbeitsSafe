@@ -1098,6 +1098,8 @@ mark.hl {
     font-weight: 600;
     transition: border-color var(--dur), background var(--dur);
 }
+a.settings-row { text-decoration: none; }
+a.settings-row:hover,
 button.settings-row:hover { border-color: var(--c-border-strong); background: var(--c-surface-3); }
 .settings-row .icon-svg { color: var(--c-text-3); }
 .settings-row.is-danger { color: var(--c-danger); }

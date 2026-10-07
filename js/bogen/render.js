@@ -71,7 +71,9 @@ export function feldTemplate(f, value, scope) {
         default: {
             const type = { datum: 'date', zeit: 'time', zahl: 'number' }[f.typ] || 'text';
             const extra = f.typ === 'zahl' ? ' inputmode="decimal" step="any"' : '';
-            control = `<input class="input" id="${id}" type="${type}"${extra} data-scope="${scope}" data-key="${esc(f.id)}" value="${esc(v)}" autocomplete="off">`;
+            // Einzeilige Angaben (Namen, Kontaktdaten, Bezeichnungen) nie an eine
+            // Online-Rechtschreibprüfung des Browsers geben.
+            control = `<input class="input" id="${id}" type="${type}"${extra} data-scope="${scope}" data-key="${esc(f.id)}" value="${esc(v)}" autocomplete="off" spellcheck="false">`;
         }
     }
 

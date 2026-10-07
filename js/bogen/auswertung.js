@@ -120,15 +120,39 @@ export function entwurfsPunkt(f) {
     };
 }
 
+function entwurfLesen() {
+    try {
+        const liste = JSON.parse(localStorage.getItem(LS_ENTWURF) || '[]');
+        return Array.isArray(liste) ? liste : [];
+    } catch {
+        return [];
+    }
+}
+
+const stammtAus = (punkt, revisionIds) => revisionIds.some(id => String(punkt?.id).startsWith(`bogen_${id}_`));
+
+/** Anzahl der Entwurfspunkte, die aus diesen Revisionen übernommen wurden. */
+export const entwurfsPunkteZaehlen = revisionIds => entwurfLesen().filter(p => stammtAus(p, revisionIds)).length;
+
+/**
+ * Entfernt die aus diesen Revisionen übernommenen Punkte aus dem Entwurf
+ * (Löschen einer Revision soll keine Kopien ihrer Daten zurücklassen).
+ * @returns {number} Anzahl entfernter Punkte
+ */
+export function entwurfsPunkteEntfernen(revisionIds) {
+    const liste = entwurfLesen();
+    const rest = liste.filter(p => !stammtAus(p, revisionIds));
+    if (rest.length !== liste.length) localStorage.setItem(LS_ENTWURF, JSON.stringify(rest));
+    return liste.length - rest.length;
+}
+
 /**
  * Hängt die Feststellungen an den gespeicherten Entwurf an.
  * Bereits übernommene Punkte (gleiche ID) werden nicht doppelt eingefügt.
  * @returns {{ neu: number, vorhanden: number }}
  */
 export function inEntwurfUebernehmen(feststellungen) {
-    let liste;
-    try { liste = JSON.parse(localStorage.getItem(LS_ENTWURF) || '[]'); } catch { liste = []; }
-    if (!Array.isArray(liste)) liste = [];
+    const liste = entwurfLesen();
     const ids = new Set(liste.map(p => p.id));
     let neu = 0;
     for (const f of feststellungen) {

@@ -1,4 +1,6 @@
-import { state, parseCSV, saveState, loadState } from './data.js';
+import { state, parseCSV, saveState, flushState, loadState } from './data.js';
+import { SPELLCHECK_KEY, spellcheckEnabled, applySpellcheck } from './appearance.js';
+import { RETENTION_KEY, retentionDays } from './bogen/store.js';
 import {
     DOM, initIcons, setThemeIcon, showToast, navigateTo,
     openFilterPanel, closeFilterPanel, isFilterPanelOpen, toggleDraftPanel,
@@ -93,6 +95,22 @@ function getAutoReloadPref() {
 
 function getConfirmDeletePref() {
     return localStorage.getItem(LS.confirmDelete) !== 'false';
+}
+
+function setSpellcheck(enabled) {
+    localStorage.setItem(SPELLCHECK_KEY, String(enabled));
+    applySpellcheck(enabled);
+}
+
+function applyRetention(days) {
+    document.querySelectorAll('[data-retention-choice]').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(Number(btn.dataset.retentionChoice) === days));
+    });
+}
+
+function setRetention(days) {
+    localStorage.setItem(RETENTION_KEY, String(days));
+    applyRetention(days);
 }
 
 /* =========================================================================
@@ -251,6 +269,10 @@ function wireEvents() {
         // Exportformat
         const exportFormatChoice = t.closest('[data-exportformat-choice]');
         if (exportFormatChoice) { setExportFormat(exportFormatChoice.dataset.exportformatChoice); return; }
+
+        // Aufbewahrungsfrist
+        const retentionChoice = t.closest('[data-retention-choice]');
+        if (retentionChoice) { setRetention(Number(retentionChoice.dataset.retentionChoice)); return; }
     });
 
     // --- Header ---
@@ -353,6 +375,8 @@ function wireEvents() {
         localStorage.setItem(LS.confirmDelete, String(e.target.checked));
     });
 
+    document.getElementById('spellcheckToggle')?.addEventListener('change', e => setSpellcheck(e.target.checked));
+
     document.getElementById('showLegalBtn')?.addEventListener('click', () => {
         closeModal(DOM.settingsModal);
         document.getElementById('legalCloseBtn').hidden = false;
@@ -365,8 +389,11 @@ function wireEvents() {
     });
 
     document.getElementById('clearAllBtn')?.addEventListener('click', () => {
-        if (getConfirmDeletePref() && !confirm('ACHTUNG: Alle lokal gespeicherten Daten werden unwiderruflich gelöscht. Fortfahren?')) return;
-        localStorage.clear();
+        // Immer nachfragen – unabhängig von „Sicherheitsabfragen bei Löschen“.
+        if (!confirm('ACHTUNG: Alle lokal gespeicherten Daten werden unwiderruflich gelöscht. Fortfahren?')) return;
+        flushState(); // keine verspätete Speicherung des Entwurfs nach dem Löschen
+        // Nur Daten dieser App; andere Anwendungen derselben Domain bleiben unberührt.
+        Object.keys(localStorage).filter(k => k.startsWith('arbeitsSafe_')).forEach(k => localStorage.removeItem(k));
         location.reload();
     });
 
@@ -390,6 +417,12 @@ function wireEvents() {
         if (e.key !== 'arbeitsSafe_revisionsSchreiben') return;
         loadState();
         renderDraft();
+    });
+
+    // --- Beim Verlassen nichts verlieren (der Entwurf wird entprellt gespeichert) ---
+    window.addEventListener('pagehide', flushState);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushState();
     });
 
     // --- Routing ---
@@ -416,6 +449,10 @@ function boot() {
     applyExportFormat(getExportFormatPref());
     if (DOM.autoReloadToggle) DOM.autoReloadToggle.checked = getAutoReloadPref();
     if (DOM.confirmDeleteToggle) DOM.confirmDeleteToggle.checked = getConfirmDeletePref();
+    applySpellcheck();
+    const spellcheckToggle = document.getElementById('spellcheckToggle');
+    if (spellcheckToggle) spellcheckToggle.checked = spellcheckEnabled();
+    applyRetention(retentionDays());
 
     loadState();
     renderDraft();

@@ -56,7 +56,8 @@ for (const asset of precached) {
 }
 // Der Service Worker liefert nur aus dem Precache aus: Jede App-Datei muss in der Liste stehen.
 const appFiles = [
-    'index.html', 'bogen.html', 'manifest.json', 'gesetze.csv',
+    'manifest.json', 'gesetze.csv',
+    ...fs.readdirSync(ROOT).filter(f => f.endsWith('.html')),
     ...['css', 'js', 'icons', 'src/data'].flatMap(dir => walk(path.join(ROOT, dir)))
         .filter(p => !path.basename(p).startsWith('.'))
         .map(p => path.relative(ROOT, p).split(path.sep).join('/'))

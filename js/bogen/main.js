@@ -4,11 +4,15 @@
 
 import { showToast, escapeHTML as esc } from '../ui.js';
 import { icon, hydrateIcons } from '../icons.js';
+import { applyAppearance } from '../appearance.js';
 import { loadBogen } from './schema.js';
 import * as store from './store.js';
 import { abschnittFortschritt, gesamtFortschritt, abschnittEntfaellt, istBeantwortet, zaehlt } from './progress.js';
 import { abschnittTemplate, kopfdatenTemplate, gruppeLabel, ANTWORT_LABEL } from './render.js';
-import { befunde, ensureFeststellung, getFeststellungen, inEntwurfUebernehmen, GRUND_LABEL } from './auswertung.js';
+import {
+    befunde, ensureFeststellung, getFeststellungen, inEntwurfUebernehmen, GRUND_LABEL,
+    entwurfsPunkteZaehlen, entwurfsPunkteEntfernen
+} from './auswertung.js';
 import { loadBausteine, findBaustein, zugeordnet, zuordnen, entfernen, vorbelegen } from './bausteine.js';
 
 const $ = id => document.getElementById(id);
@@ -17,6 +21,7 @@ const DOM = {
     views: document.querySelectorAll('.bg-view'),
     navItems: document.querySelectorAll('.bg-nav-item'),
     revList: $('bgRevList'),
+    retention: $('bgRetention'),
     newBtn: $('bgNewBtn'),
     sectionBar: $('bgSectionBar'),
     overall: $('bgOverall'),
@@ -45,17 +50,6 @@ const ui = {
     pickItem: null,       // Zuordnung: Item, für das gerade ein Baustein gewählt wird
     bausteineOk: false
 };
-
-/* =========================================================================
-   DARSTELLUNG (Einstellungen der Haupt-App übernehmen)
-   ========================================================================= */
-
-function applyAppearance() {
-    const pref = localStorage.getItem('arbeitsSafe_theme') || 'system';
-    const dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    document.documentElement.dataset.fontsize = localStorage.getItem('arbeitsSafe_fontsize') || 'normal';
-}
 
 const confirmDelete = () => localStorage.getItem('arbeitsSafe_confirmdelete') !== 'false';
 
@@ -91,8 +85,21 @@ const fmtDate = iso => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle:
 const fmtDay = d => (d ? new Date(`${d}T00:00:00`).toLocaleDateString('de-DE') : '');
 export const revTitel = rev => rev.kopfdaten.firma?.trim() || 'Ohne Firmenangabe';
 
+function renderRetention(expired, days) {
+    DOM.retention.hidden = !expired.length;
+    if (!expired.length) return;
+    const n = expired.length;
+    DOM.retention.innerHTML = `
+        <p><strong>${n} Revision${n === 1 ? '' : 'en'}</strong> ${n === 1 ? 'wurde' : 'wurden'} seit mehr als ${days} Tagen nicht geändert.
+           Bitte löschen Sie, was Sie nicht mehr benötigen.</p>
+        <button type="button" class="btn btn--danger btn--sm js-rev-del-expired">${icon('trash', 15)} Abgelaufene löschen</button>`;
+}
+
 function renderRevList() {
     const list = store.listRevisionen();
+    const days = store.retentionDays();
+    const expired = list.filter(rev => store.istAbgelaufen(rev, days));
+    renderRetention(expired, days);
     if (!list.length) {
         DOM.revList.innerHTML = `
             <div class="state-box">
@@ -110,6 +117,7 @@ function renderRevList() {
         <article class="bg-rev${ui.rev?.id === rev.id ? ' is-current' : ''}">
             <button type="button" class="bg-rev-main js-rev-open" data-id="${esc(rev.id)}">
                 <span class="bg-rev-title">${esc(revTitel(rev))}</span>
+                ${expired.includes(rev) ? '<span class="chip bg-expired">Aufbewahrungsfrist abgelaufen</span>' : ''}
                 <span class="bg-rev-meta">
                     ${rev.kopfdaten.datum ? `Revision am ${esc(fmtDay(rev.kopfdaten.datum))} · ` : ''}geändert ${esc(fmtDate(rev.geaendert))}
                     ${fremd ? ` · Bogenversion ${esc(rev.bogenVersion)}` : ''}
@@ -134,6 +142,23 @@ function openRevision(id, route = '#erfassen') {
     store.setActiveId(id);
     location.hash = route;
     navigate(route);
+}
+
+/** Zusatz für die Löschabfrage, wenn Punkte im Entwurf mitgelöscht werden. */
+function entwurfsHinweis(ids) {
+    const n = entwurfsPunkteZaehlen(ids);
+    if (!n) return '';
+    return n === 1
+        ? '\n\nDer daraus übernommene Punkt im Entwurf wird ebenfalls entfernt.'
+        : `\n\nDie ${n} daraus übernommenen Punkte im Entwurf werden ebenfalls entfernt.`;
+}
+
+/** Revisionen samt der daraus in den Entwurf übernommenen Punkte löschen. */
+function loeschen(ids) {
+    store.deleteRevisions(ids);
+    entwurfsPunkteEntfernen(ids);
+    if (ids.includes(ui.rev?.id)) ui.rev = null;
+    navigate('#revisionen');
 }
 
 /* =========================================================================
@@ -561,11 +586,21 @@ function wireEvents() {
         if (del) {
             const rev = store.getRevision(del.dataset.id);
             if (!rev) return;
-            if (confirmDelete() && !confirm(`Revision „${revTitel(rev)}“ unwiderruflich löschen?`)) return;
-            store.deleteRevision(rev.id);
-            if (ui.rev?.id === rev.id) ui.rev = null;
+            if (confirmDelete() && !confirm(`Revision „${revTitel(rev)}“ unwiderruflich löschen?${entwurfsHinweis([rev.id])}`)) return;
+            loeschen([rev.id]);
             showToast('Revision gelöscht');
-            navigate('#revisionen');
+            return;
+        }
+
+        if (t.closest('.js-rev-del-expired')) {
+            const days = store.retentionDays();
+            const ids = store.listRevisionen().filter(rev => store.istAbgelaufen(rev, days)).map(rev => rev.id);
+            if (!ids.length) return;
+            // Mehrere Revisionen auf einmal: immer nachfragen.
+            const was = ids.length === 1 ? 'Die abgelaufene Revision' : `Die ${ids.length} abgelaufenen Revisionen`;
+            if (!confirm(`${was} unwiderruflich löschen?${entwurfsHinweis(ids)}`)) return;
+            loeschen(ids);
+            showToast(`${ids.length} Revision${ids.length === 1 ? '' : 'en'} gelöscht`);
         }
     });
 

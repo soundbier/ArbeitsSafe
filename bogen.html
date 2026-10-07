@@ -54,17 +54,18 @@
 
         <!-- Ansicht: Erfassen -->
         <section class="bg-view" data-route="#erfassen" aria-label="Bogen erfassen">
+            <div class="bg-overall" id="bgOverall"></div>
             <nav class="bg-sectionbar" id="bgSectionBar" aria-label="Abschnitte"></nav>
             <div class="scroll-area bg-scroll" id="bgFormScroll">
                 <div class="bg-container" id="bgForm"></div>
             </div>
             <div class="bg-pager">
                 <button type="button" class="btn btn--ghost" id="bgPrevBtn">
-                    <span class="js-icon" data-icon="arrowUp"></span> Zurück
+                    <span class="js-icon" data-icon="arrowUp"></span> <span class="bg-pager-text">Zurück</span>
                 </button>
                 <span class="bg-pager-label" id="bgPagerLabel"></span>
                 <button type="button" class="btn btn--primary" id="bgNextBtn">
-                    Weiter <span class="js-icon" data-icon="arrowDown"></span>
+                    <span class="bg-pager-text">Weiter</span> <span class="js-icon" data-icon="arrowDown"></span>
                 </button>
             </div>
         </section>

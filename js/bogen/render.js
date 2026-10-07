@@ -175,11 +175,11 @@ export function itemTemplate(def, abschnitt, item, antworten) {
         ${listDetails('Rechtsgrundlagen', item.rechtsgrundlagen, 'bg-rg')}
         ${item.referenz ? referenzTemplate(def, item.referenz) : ''}
 
-        <div class="field bg-field">
-            <label class="field-label" for="${esc(bemerkungId(item.id))}">Bemerkung / Stichprobe</label>
+        <details class="bg-bemerkung"${antworten[bemerkungId(item.id)] ? ' open' : ''}>
+            <summary>${icon('plus', 14)} Bemerkung / Stichprobe</summary>
             <textarea class="input bg-textarea" rows="2" id="${esc(bemerkungId(item.id))}" data-scope="antwort"
-                      data-key="${esc(bemerkungId(item.id))}">${esc(antworten[bemerkungId(item.id)] ?? '')}</textarea>
-        </div>
+                      data-key="${esc(bemerkungId(item.id))}" aria-label="Bemerkung / Stichprobe">${esc(antworten[bemerkungId(item.id)] ?? '')}</textarea>
+        </details>
     </article>`;
 }
 

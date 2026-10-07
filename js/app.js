@@ -441,22 +441,50 @@ if (document.readyState === 'loading') {
    SERVICE WORKER
    ========================================================================= */
 
-let waitingWorker = null;
+// Download einer neuen Version erst nach Zustimmung, über einen von zwei Wegen:
+// - wartender SW (Normalfall): herunterladen, aktivieren, bei controllerchange neu laden;
+// - bereits aktiver SW (wurde beim Schließen der App aktiv und liefert bis zur
+//   Zustimmung die alte Version aus): herunterladen, dann neu laden.
+const update = { worker: null, active: false, requested: false };
 let refreshing = false;
-let updateRequested = false;
+
+function reloadOnce() {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+}
+
+/** Nachricht an einen Service Worker; die Antwort kommt über einen eigenen Kanal. */
+function askWorker(worker, message) {
+    return new Promise(resolve => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = e => resolve(e.data);
+        worker.postMessage(message, [channel.port2]);
+    });
+}
 
 if ('serviceWorker' in navigator) {
+    const sw = navigator.serviceWorker;
+    const hadController = !!sw.controller;
+
     window.addEventListener('load', () => {
         // updateViaCache 'none': sw2.js nie aus dem HTTP-Cache prüfen.
-        navigator.serviceWorker.register('./sw2.js', { updateViaCache: 'none' }).then(reg => {
-            if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
-            reg.addEventListener('updatefound', () => {
-                const installing = reg.installing;
-                installing?.addEventListener('statechange', () => {
-                    if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-                        showUpdateBanner(installing);
-                    }
+        sw.register('./sw2.js', { updateViaCache: 'none' }).then(reg => {
+            if (reg.waiting && sw.controller) {
+                offerUpdate(reg.waiting);
+            } else if (sw.controller) {
+                const active = sw.controller;
+                askWorker(active, 'GET_VERSION').then(info => {
+                    if (info?.ready === false && !update.worker) offerUpdate(active, info.version, true);
                 });
+            }
+            reg.addEventListener('updatefound', () => {
+                const installing = reg.installing || reg.waiting;
+                const onState = () => {
+                    if (installing?.state === 'installed' && sw.controller) offerUpdate(installing);
+                };
+                installing?.addEventListener('statechange', onState);
+                onState(); // Ohne Download ist die Installation evtl. schon abgeschlossen.
             });
             // Beim Start und bei Rückkehr in die App aktiv nach neuer Version suchen.
             const check = () => { if (navigator.onLine) reg.update().catch(() => {}); };
@@ -467,21 +495,16 @@ if ('serviceWorker' in navigator) {
         }).catch(() => { /* SW optional */ });
     });
 
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // Nur nach ausdrücklicher Zustimmung neu laden.
-        if (refreshing || !updateRequested) return;
-        refreshing = true;
-        location.reload();
+    sw.addEventListener('controllerchange', () => {
+        // Nur nach ausdrücklicher Zustimmung automatisch neu laden.
+        if (update.requested) reloadOnce();
+        // Update wurde in einem anderen Fenster installiert: alten Code nicht weiterlaufen lassen.
+        else if (hadController) offerReload();
     });
 
-    navigator.serviceWorker.addEventListener('message', ({ data }) => {
-        if (data?.type === 'VERSION' && data.version !== APP_VERSION) {
-            setUpdateText(`Version ${data.version} verfügbar. Jetzt herunterladen und installieren?`);
-        } else if (data?.type === 'UPDATE_FAILED') {
-            updateRequested = false;
-            setUpdateText('Download fehlgeschlagen. Erneut versuchen?');
-            setUpdateButtonsDisabled(false);
-        }
+    // Dasselbe, wenn der SW schon aktiv war (dann gibt es kein controllerchange).
+    sw.addEventListener('message', ({ data }) => {
+        if (data?.type === 'UPDATE_INSTALLED' && !update.requested) offerReload();
     });
 }
 
@@ -497,20 +520,45 @@ function setUpdateButtonsDisabled(disabled) {
     }
 }
 
-function showUpdateBanner(worker) {
-    waitingWorker = worker;
-    setUpdateText('Neue Version verfügbar. Jetzt herunterladen und installieren?');
+function showUpdateBanner(text, actionLabel) {
+    setUpdateText(text);
+    const btn = document.getElementById('reloadUpdateBtn');
+    if (btn) btn.textContent = actionLabel;
     setUpdateButtonsDisabled(false);
-    worker.postMessage('GET_VERSION');
     DOM.updateBanner.hidden = false;
 }
 
+const updateText = version =>
+    `${version ? `Version ${version}` : 'Neue Version'} verfügbar. Jetzt herunterladen und installieren?`;
+
+function offerUpdate(worker, version, active = false) {
+    Object.assign(update, { worker, active, requested: false });
+    showUpdateBanner(updateText(version), 'Installieren');
+    if (version) return;
+    askWorker(worker, 'GET_VERSION').then(info => {
+        if (update.worker === worker && !update.requested && info?.version) setUpdateText(updateText(info.version));
+    });
+}
+
+function offerReload() {
+    Object.assign(update, { worker: null, active: false, requested: false });
+    showUpdateBanner('Eine neue Version wurde installiert. Jetzt neu laden?', 'Neu laden');
+}
+
 document.getElementById('reloadUpdateBtn')?.addEventListener('click', () => {
-    if (!waitingWorker) return;
-    updateRequested = true;
+    if (!update.worker) { reloadOnce(); return; }
+    update.requested = true;
     setUpdateText('Neue Version wird heruntergeladen …');
     setUpdateButtonsDisabled(true);
-    waitingWorker.postMessage('INSTALL_UPDATE');
+    askWorker(update.worker, 'INSTALL_UPDATE').then(result => {
+        if (result?.type === 'UPDATE_FAILED') {
+            update.requested = false;
+            setUpdateText('Download fehlgeschlagen. Erneut versuchen?');
+            setUpdateButtonsDisabled(false);
+        } else if (update.active) {
+            reloadOnce(); // SW war schon aktiv: kein controllerchange
+        }
+    });
 });
 
 document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {

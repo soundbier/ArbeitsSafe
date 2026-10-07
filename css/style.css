@@ -1223,6 +1223,11 @@ button.settings-row:hover { border-color: var(--c-border-strong); background: va
     background: color-mix(in srgb, var(--c-accent-fg) 90%, transparent);
     color: var(--c-accent);
 }
+.update-banner .btn--ghost {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--c-accent-fg) 60%, transparent);
+    color: var(--c-accent-fg);
+}
 
 /* -------------------------------------------------------------------------
    11. RESPONSIVE — KLEINE PHONES (< 480px)

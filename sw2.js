@@ -27,12 +27,21 @@ const ASSETS_TO_CACHE = [
     'icons/img-512x512.png'
 ];
 
-// 1. INSTALLATION — Precache
-self.addEventListener('install', event => {
-    // Kein skipWaiting(): Der Nutzer entscheidet über den Update-Banner.
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
+const SW_VERSION = CACHE_NAME.replace('arbeitssafe-v', '');
+
+// Assets am HTTP-Cache vorbei laden, damit wirklich die neue Version im Cache landet.
+function precache() {
+    return caches.open(CACHE_NAME).then(cache =>
+        cache.addAll(ASSETS_TO_CACHE.map(url => new Request(url, { cache: 'reload' })))
     );
+}
+
+// 1. INSTALLATION
+// Erstinstallation: sofort precachen (Offline-Fähigkeit).
+// Update: nichts herunterladen — erst nach Zustimmung im Update-Dialog
+// (Nachricht 'INSTALL_UPDATE'). Kein skipWaiting().
+self.addEventListener('install', event => {
+    if (!self.registration.active) event.waitUntil(precache());
 });
 
 // 2. AKTIVIERUNG — alte Caches entfernen
@@ -84,7 +93,22 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// 4. SKIP WAITING auf Nutzerwunsch
+// 4. UPDATE auf Nutzerwunsch: herunterladen, dann aktivieren
 self.addEventListener('message', event => {
-    if (event.data === 'SKIP_WAITING') self.skipWaiting();
+    const reply = msg => event.source?.postMessage(msg);
+    switch (event.data) {
+        case 'GET_VERSION':
+            reply({ type: 'VERSION', version: SW_VERSION });
+            break;
+        case 'INSTALL_UPDATE':
+            event.waitUntil(
+                precache()
+                    .then(() => self.skipWaiting())
+                    .catch(() => reply({ type: 'UPDATE_FAILED' }))
+            );
+            break;
+        case 'SKIP_WAITING':
+            self.skipWaiting();
+            break;
+    }
 });

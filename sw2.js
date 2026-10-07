@@ -1,5 +1,5 @@
 // =========================================================================
-// ArbeitsSafe Service Worker — v2.0.9
+// ArbeitsSafe Service Worker — v2.0.10
 // -------------------------------------------------------------------------
 // Jede Version liefert ausschließlich aus ihrem eigenen, vollständig geladenen
 // Cache aus (Cache-First, kein Nachschreiben aus dem Netz). Eine neue Version
@@ -8,7 +8,7 @@
 // Service Worker beim Schließen der App schon aktiv wird –, damit die App
 // jederzeit offline startet.
 // =========================================================================
-const CACHE_NAME = 'arbeitssafe-v2.0.9';
+const CACHE_NAME = 'arbeitssafe-v2.0.10';
 
 const ASSETS_TO_CACHE = [
     './',

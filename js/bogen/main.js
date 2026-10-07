@@ -7,7 +7,8 @@ import { icon, hydrateIcons } from '../icons.js';
 import { loadBogen } from './schema.js';
 import * as store from './store.js';
 import { abschnittFortschritt, gesamtFortschritt, abschnittEntfaellt, istBeantwortet, zaehlt } from './progress.js';
-import { abschnittTemplate, kopfdatenTemplate } from './render.js';
+import { abschnittTemplate, kopfdatenTemplate, gruppeLabel, ANTWORT_LABEL } from './render.js';
+import { befunde, ensureFeststellung, getFeststellungen, GRUND_LABEL } from './auswertung.js';
 
 const $ = id => document.getElementById(id);
 const DOM = {
@@ -22,13 +23,17 @@ const DOM = {
     prevBtn: $('bgPrevBtn'),
     nextBtn: $('bgNextBtn'),
     pagerLabel: $('bgPagerLabel'),
-    errorBanner: $('bgErrorBanner')
+    errorBanner: $('bgErrorBanner'),
+    auswertung: $('bgAuswertung'),
+    auswertungMeta: $('bgAuswertungMeta'),
+    rundgangToggle: $('bgRundgangNein')
 };
 
 const ui = {
     def: null,
     rev: null,
-    page: 'kopf'          // 'kopf' oder Abschnitts-ID
+    page: 'kopf',         // 'kopf' oder Abschnitts-ID
+    rundgangNein: false   // Auswertung: „Nein“ im Rundgang (= nicht vorhanden) einbeziehen
 };
 
 /* =========================================================================
@@ -48,7 +53,7 @@ const confirmDelete = () => localStorage.getItem('arbeitsSafe_confirmdelete') !=
    ROUTING
    ========================================================================= */
 
-const VIEWS = ['#revisionen', '#erfassen'];
+const VIEWS = ['#revisionen', '#erfassen', '#auswertung'];
 
 function navigate(hash) {
     let route = VIEWS.includes(hash) ? hash : '#revisionen';
@@ -62,6 +67,7 @@ function navigate(hash) {
 
     if (route === '#revisionen') renderRevList();
     if (route === '#erfassen') renderForm();
+    if (route === '#auswertung') renderAuswertung();
     if (location.hash !== route) history.replaceState(null, '', route);
 }
 
@@ -247,6 +253,105 @@ function onEntfaellt(input) {
     renderForm();
 }
 
+/* =========================================================================
+   AUSWERTUNG
+   ========================================================================= */
+
+function feststellungEditor(item, fs) {
+    const id = esc(item.id);
+    const area = (key, label, value, rows = 3, hint = '') => `
+        <div class="field bg-field">
+            <label class="field-label" for="fs-${id}-${key}">${label}</label>
+            <textarea class="input bg-textarea" id="fs-${id}-${key}" rows="${rows}" data-fs-item="${id}" data-fs-key="${key}">${esc(value)}</textarea>
+            ${hint ? `<p class="bg-hint">${hint}</p>` : ''}
+        </div>`;
+    return `
+    <div class="bg-fs-editor">
+        ${area('sachverhalt', 'Sachverhalt', fs.sachverhalt)}
+        ${area('feststellung', 'Feststellung', fs.feststellung)}
+        ${area('rechtsgrundlage', 'Rechtsgrundlage', fs.rechtsgrundlage.join('\n'), 2, 'Eine Rechtsgrundlage je Zeile.')}
+        ${area('massnahme', 'Maßnahme', fs.massnahme)}
+        <div class="field bg-field">
+            <label class="field-label" for="fs-${id}-frist">Frist</label>
+            <input class="input" type="date" id="fs-${id}-frist" data-fs-item="${id}" data-fs-key="frist" value="${esc(fs.frist)}">
+        </div>
+    </div>`;
+}
+
+function befundTemplate(b) {
+    const fs = ui.rev.feststellungen[b.item.id];
+    const checked = !!fs?.uebernehmen;
+    const rundgang = b.abschnitt.gruppe === 'rundgang' && b.gruende.includes('nein');
+    return `
+    <article class="bg-item bg-befund${checked ? ' is-selected' : ''}" data-befund="${esc(b.item.id)}">
+        <header class="bg-item-head">
+            ${b.item.nr ? `<span class="chip chip--accent">${esc(b.item.nr)}</span>` : ''}
+            <h3>${esc(b.item.titel || b.item.frage)}</h3>
+        </header>
+        <p class="bg-hint">${esc(gruppeLabel(b.abschnitt.gruppe))} · ${esc(b.abschnitt.titel)}</p>
+        <div class="bg-section-tags">
+            ${b.gruende.map(g => `<span class="chip bg-grund" data-grund="${g}">${esc(GRUND_LABEL[g])}</span>`).join('')}
+            ${b.antwort && !b.gruende.includes(b.antwort) ? `<span class="chip">Antwort: ${esc(ANTWORT_LABEL[b.antwort] || b.antwort)}</span>` : ''}
+            ${rundgang ? '<span class="chip">Rundgang: nicht vorhanden</span>' : ''}
+        </div>
+        ${b.bemerkung ? `<blockquote class="bg-quote">${esc(b.bemerkung)}</blockquote>` : ''}
+        <label class="bg-check bg-take">
+            <input type="checkbox" data-take="${esc(b.item.id)}"${checked ? ' checked' : ''}>
+            <span>Feststellung übernehmen</span>
+        </label>
+        ${checked ? feststellungEditor(b.item, fs) : ''}
+        <button type="button" class="link-btn js-goto-item" data-abschnitt="${esc(b.abschnitt.id)}" data-item="${esc(b.item.id)}">Zur Frage im Bogen</button>
+    </article>`;
+}
+
+function renderAuswertung() {
+    if (!ui.def || !ui.rev) return;
+    DOM.rundgangToggle.checked = ui.rundgangNein;
+    const list = befunde(ui.def, ui.rev, { rundgangNein: ui.rundgangNein });
+    updateAuswertungMeta(list.length);
+    DOM.auswertung.innerHTML = list.length
+        ? list.map(befundTemplate).join('')
+        : `<div class="state-box">
+               <div class="state-icon">${icon('check', 26)}</div>
+               <p class="state-title">Keine Auffälligkeiten</p>
+               <p class="state-text">Es gibt keine Antworten „Nein“, keine Ampel gelb/rot und keine Bemerkungen.</p>
+           </div>`;
+}
+
+function updateAuswertungMeta(count) {
+    const n = getFeststellungen(ui.def, ui.rev).length;
+    DOM.auswertungMeta.innerHTML = `
+        <span class="chip">${count} auffällige Punkte</span>
+        <span class="chip${n ? ' chip--accent' : ''}">${n} Feststellung${n === 1 ? '' : 'en'} übernommen</span>`;
+}
+
+function onTake(input) {
+    const item = ui.def.abschnitte.flatMap(a => a.items).find(i => i.id === input.dataset.take);
+    if (!item) return;
+    ensureFeststellung(ui.rev, item).uebernehmen = input.checked;
+    afterChange();
+    const card = input.closest('.bg-befund');
+    const scroller = card.closest('.scroll-area');
+    const top = scroller.scrollTop;
+    renderAuswertung();
+    scroller.scrollTop = top;
+}
+
+function onFeststellungInput(el) {
+    const fs = ui.rev.feststellungen[el.dataset.fsItem];
+    if (!fs) return;
+    const key = el.dataset.fsKey;
+    fs[key] = key === 'rechtsgrundlage' ? el.value.split('\n').map(s => s.trim()).filter(Boolean) : el.value;
+    afterChange();
+}
+
+function gotoItem(abschnittId, itemId) {
+    ui.page = abschnittId;
+    location.hash = '#erfassen';
+    navigate('#erfassen');
+    requestAnimationFrame(() => document.getElementById(`item-${itemId}`)?.scrollIntoView({ block: 'start' }));
+}
+
 /* --- Speicheranzeige --- */
 
 function setSaveState(s) {
@@ -273,6 +378,9 @@ function wireEvents() {
 
         const choice = t.closest('.choice');
         if (choice) { onChoice(choice); return; }
+
+        const goto = t.closest('.js-goto-item');
+        if (goto) { gotoItem(goto.dataset.abschnitt, goto.dataset.item); return; }
 
         const page = t.closest('.js-page');
         if (page) { goToPage(page.dataset.page); return; }
@@ -306,6 +414,17 @@ function wireEvents() {
     });
     DOM.form.addEventListener('change', e => {
         if (e.target.dataset.entfaellt) onEntfaellt(e.target);
+    });
+
+    DOM.auswertung.addEventListener('input', e => {
+        if (e.target.dataset.fsItem) onFeststellungInput(e.target);
+    });
+    DOM.auswertung.addEventListener('change', e => {
+        if (e.target.dataset.take) onTake(e.target);
+    });
+    DOM.rundgangToggle.addEventListener('change', e => {
+        ui.rundgangNein = e.target.checked;
+        renderAuswertung();
     });
 
     DOM.newBtn.addEventListener('click', () => {

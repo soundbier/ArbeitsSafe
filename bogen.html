@@ -69,6 +69,30 @@
             </div>
         </section>
 
+        <!-- Ansicht: Auswertung -->
+        <section class="bg-view" data-route="#auswertung" aria-label="Auswertung">
+            <div class="scroll-area bg-scroll">
+                <div class="bg-container">
+                    <div class="bg-list-head">
+                        <h2>Auswertung</h2>
+                    </div>
+                    <div class="bg-section-tags" id="bgAuswertungMeta"></div>
+                    <p class="bg-hint">Aufgeführt sind Antworten „Nein“, Ampel gelb/rot sowie alle Punkte mit Bemerkung. Abgewählte Abschnitte sind ausgeschlossen.</p>
+                    <label class="switch-row" for="bgRundgangNein">
+                        <span class="switch-text">
+                            <span class="switch-title">Rundgang: „Nein“ einbeziehen</span>
+                            <span class="switch-hint">Im Rundgang bedeutet „Nein“: im Betrieb nicht vorhanden</span>
+                        </span>
+                        <span class="switch">
+                            <input type="checkbox" id="bgRundgangNein">
+                            <span class="track" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <div class="bg-rev-list" id="bgAuswertung"></div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <nav class="bg-nav" aria-label="Revisionsbogen-Navigation">
@@ -79,6 +103,10 @@
         <a class="bg-nav-item" href="#erfassen" data-route="#erfassen">
             <span class="nav-icon js-icon" data-icon="fileText" data-size="22"></span>
             <span>Erfassen</span>
+        </a>
+        <a class="bg-nav-item" href="#auswertung" data-route="#auswertung">
+            <span class="nav-icon js-icon" data-icon="checkSquare" data-size="22"></span>
+            <span>Auswertung</span>
         </a>
     </nav>
 </div>

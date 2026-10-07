@@ -11,8 +11,7 @@ on:
     paths:
       - 'css/**'
       - 'js/**'
-      - 'index.html'
-      - 'bogen.html'
+      - '*.html'
       - 'src/**'
       - 'manifest.json'
       - 'gesetze.csv'

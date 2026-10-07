@@ -85,6 +85,23 @@
 .bg-rev-meta { font-size: var(--fs-xs); color: var(--c-text-3); }
 .bg-rev-actions { display: flex; gap: var(--sp-2); padding: 0 var(--sp-4) var(--sp-4); flex-wrap: wrap; }
 
+/* Aufbewahrungsfrist: Erinnerung und Kennzeichnung abgelaufener Revisionen */
+.bg-retention {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2) var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1px solid color-mix(in srgb, var(--c-warn) 35%, transparent);
+    border-radius: var(--r-md);
+    background: var(--c-warn-soft);
+    font-size: var(--fs-sm);
+}
+.bg-retention p { flex: 1 1 260px; margin: 0; color: var(--c-text); }
+.chip.bg-expired { align-self: flex-start; background: var(--c-warn-soft); color: var(--c-warn); }
+.bg-legal { justify-content: center; padding: var(--sp-4) 0 var(--sp-2); }
+
 .bg-progress { display: block; height: 6px; border-radius: var(--r-full); background: var(--c-surface-3); overflow: hidden; }
 .bg-progress > span { display: block; height: 100%; background: var(--c-accent); border-radius: inherit; }
 

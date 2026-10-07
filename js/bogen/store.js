@@ -13,6 +13,24 @@
 const LS_KEY = 'arbeitsSafe_revisionen';
 const LS_ACTIVE = 'arbeitsSafe_revision_aktiv';
 
+/* --- Aufbewahrungsfrist (Einstellung in der Haupt-App) --- */
+
+export const RETENTION_KEY = 'arbeitsSafe_aufbewahrung';
+export const RETENTION_OPTIONS = [30, 90, 180, 365];
+const RETENTION_DEFAULT = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function retentionDays() {
+    const days = Number(localStorage.getItem(RETENTION_KEY));
+    return RETENTION_OPTIONS.includes(days) ? days : RETENTION_DEFAULT;
+}
+
+/** Länger als die Aufbewahrungsfrist nicht geändert? */
+export function istAbgelaufen(rev, days = retentionDays(), now = Date.now()) {
+    const stand = Date.parse(rev.geaendert || rev.erstellt);
+    return Number.isFinite(stand) && now - stand > days * DAY_MS;
+}
+
 let cache = null;
 
 function readAll() {
@@ -74,14 +92,17 @@ export function duplicateRevision(id) {
     return copy;
 }
 
-export function deleteRevision(id) {
+export function deleteRevisions(ids) {
+    const drop = new Set(ids);
     const list = readAll();
-    const idx = list.findIndex(r => r.id === id);
-    if (idx === -1) return false;
-    list.splice(idx, 1);
-    if (getActiveId() === id) setActiveId(null);
+    const rest = list.filter(r => !drop.has(r.id));
+    if (rest.length === list.length) return false;
+    list.splice(0, list.length, ...rest);
+    if (drop.has(getActiveId())) setActiveId(null);
     return writeAll();
 }
+
+export const deleteRevision = id => deleteRevisions([id]);
 
 /* --- Autosave (entprellt) --- */
 

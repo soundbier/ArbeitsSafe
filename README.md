@@ -27,6 +27,12 @@ Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arb
   * Mehrere Revisionen lokal speichern, duplizieren, löschen; Autosave; abwählbare Abschnitte; Fortschritt je Abschnitt.
   * Auswertung: Antworten „Nein“, Ampel gelb/rot und Bemerkungen als Feststellung übernehmen (Sachverhalt, Feststellung, Rechtsgrundlage, Maßnahme, Frist).
 
+* **Datenschutz**:
+  * Alle Inhalte bleiben im Browser; keine Cookies, kein Tracking, keine Drittanbieter.
+  * Aufbewahrungsfrist (30/90/180/365 Tage): Der Revisionsbogen erinnert an das Löschen nicht mehr geänderter Revisionen. Beim Löschen einer Revision werden auch ihre Punkte im Entwurf entfernt.
+  * Keine Rechtschreibprüfung in einzeiligen Feldern (Namen, Kontaktdaten); für Freitexte abschaltbar.
+  * Datenschutzerklärung und Impressum als eigene, auch ohne JavaScript lesbare Seiten.
+
 * **PWA**: Offline-fähig via Service Worker (versionierter Cache, Cache-First), installierbar. Neue Versionen werden erst nach Bestätigung im Update-Banner heruntergeladen; bis dahin läuft die zuletzt vollständig geladene Version weiter – auch offline.
 
 ---
@@ -50,6 +56,8 @@ ArbeitsSafe strukturiert komplexe gesetzliche Anforderungen in klare, handlungsr
 ```text
 ├── index.html          # Hauptanwendung (UI & Layout)
 ├── bogen.html          # Revisionsbogen (Erfassung & Auswertung)
+├── datenschutz.html    # Datenschutzerklärung (statisch)
+├── impressum.html      # Impressum (statisch)
 ├── package.json        # nur Skript „build“ (Prüfung, keine Abhängigkeiten)
 ├── src/data/
 │   └── revisionsbogen.json  # Bogendefinition
@@ -63,5 +71,7 @@ ArbeitsSafe strukturiert komplexe gesetzliche Anforderungen in klare, handlungsr
     ├── data.js         # CSV-Parser, globaler State & LocalStorage
     ├── ui.js           # DOM-Referenzen, Rendering, Filter, Export
     ├── icons.js        # SVG-Icon-Registry
+    ├── appearance.js   # Design & Rechtschreibprüfung für Revisionsbogen und rechtliche Seiten
+    ├── legal.js        # Rechtliche Seiten (Darstellung, Zurück-Link)
     └── bogen/          # Revisionsbogen: schema, store, progress, render, auswertung, main
 ```

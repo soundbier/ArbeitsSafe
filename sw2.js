@@ -19,6 +19,10 @@ const ASSETS_TO_CACHE = [
     'js/ui.js',
     'js/icons.js',
     'bogen.html',
+    'datenschutz.html',
+    'impressum.html',
+    'js/appearance.js',
+    'js/legal.js',
     'css/bogen.css',
     'js/bogen/main.js',
     'js/bogen/render.js',
@@ -38,6 +42,8 @@ const SW_VERSION = CACHE_NAME.replace('arbeitssafe-v', '');
 // Wird erst geschrieben, wenn alle Dateien im Cache liegen.
 const COMPLETE_MARKER = '__precache_complete__';
 // Caches bis einschließlich dieser Version kennen die Markierung noch nicht.
+// Sie wurden mit der damaligen Dateiliste befüllt und taugen als Rückfallebene,
+// sobald die Startseite darin liegt.
 const LEGACY_UNTIL = [2, 0, 8];
 // ignoreSearch: Assets werden mit Cache-Busting-Query (?v=…) angefragt.
 const MATCH = { ignoreSearch: true, ignoreVary: true };
@@ -75,8 +81,7 @@ async function isComplete(name) {
     const cache = await caches.open(name);
     if (await cache.match(COMPLETE_MARKER)) return true;
     if (compareVersions(parseVersion(name), LEGACY_UNTIL) > 0) return false;
-    const hits = await Promise.all(ASSETS_TO_CACHE.map(url => cache.match(url, MATCH)));
-    return hits.every(Boolean);
+    return !!(await cache.match('index.html', MATCH));
 }
 
 /**

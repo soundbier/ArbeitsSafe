@@ -291,6 +291,40 @@
             </div>
 
             <div class="settings-group">
+                <span class="settings-group-title">Datenschutz</span>
+
+                <label class="switch-row" for="spellcheckToggle">
+                    <span class="switch-text">
+                        <span class="switch-title">Rechtschreibprüfung in Freitexten</span>
+                        <span class="switch-hint">Erweiterte Prüfungen mancher Browser senden Text an den Hersteller. Namen und Kontaktdaten sind immer ausgenommen.</span>
+                    </span>
+                    <span class="switch">
+                        <input type="checkbox" id="spellcheckToggle" checked>
+                        <span class="track" aria-hidden="true"></span>
+                    </span>
+                </label>
+
+                <div class="field">
+                    <span class="field-label">Aufbewahrung von Revisionen</span>
+                    <div class="segmented" role="group" aria-label="Aufbewahrungsfrist für Revisionen">
+                        <button type="button" data-retention-choice="30" aria-pressed="false">30 Tage</button>
+                        <button type="button" data-retention-choice="90" aria-pressed="false">90 Tage</button>
+                        <button type="button" data-retention-choice="180" aria-pressed="false">180 Tage</button>
+                        <button type="button" data-retention-choice="365" aria-pressed="false">365 Tage</button>
+                    </div>
+                    <span class="switch-hint">Danach erinnert der Revisionsbogen ans Löschen (gezählt ab der letzten Änderung).</span>
+                </div>
+
+                <button type="button" class="settings-row is-danger" id="clearAllBtn">
+                    <span class="js-icon" data-icon="trash"></span>
+                    <span class="settings-row-text">
+                        <span>Alle lokalen Daten löschen</span>
+                        <span class="settings-row-sub">Entwurf, Revisionsbögen und Einstellungen zurücksetzen</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="settings-group">
                 <span class="settings-group-title">Info</span>
                 <div class="settings-row">
                     <span class="js-icon" data-icon="info"></span>
@@ -300,9 +334,17 @@
                     </span>
                 </div>
                 <button type="button" class="settings-row" id="showLegalBtn">
-                    <span class="js-icon" data-icon="shield"></span>
-                    <span class="settings-row-text"><span>Rechtliche Hinweise &amp; Datenschutz</span></span>
+                    <span class="js-icon" data-icon="info"></span>
+                    <span class="settings-row-text"><span>Nutzungshinweise</span></span>
                 </button>
+                <a class="settings-row" href="datenschutz.html">
+                    <span class="js-icon" data-icon="shield"></span>
+                    <span class="settings-row-text"><span>Datenschutzerklärung</span></span>
+                </a>
+                <a class="settings-row" href="impressum.html">
+                    <span class="js-icon" data-icon="fileText"></span>
+                    <span class="settings-row-text"><span>Impressum</span></span>
+                </a>
                 <label class="switch-row" for="confirmDeleteToggle">
                     <span class="switch-text">
                         <span class="switch-title">Sicherheitsabfragen bei Löschen</span>
@@ -313,13 +355,6 @@
                         <span class="track" aria-hidden="true"></span>
                     </span>
                 </label>
-                <button type="button" class="settings-row is-danger" id="clearAllBtn">
-                    <span class="js-icon" data-icon="trash"></span>
-                    <span class="settings-row-text">
-                        <span>Alle lokalen Daten löschen</span>
-                        <span class="settings-row-sub">Entwurf, Revisionsbögen und Einstellungen zurücksetzen</span>
-                    </span>
-                </button>
             </div>
 
             <p class="app-version">ArbeitsSafe · Version 2.0.9</p>
@@ -346,53 +381,17 @@
             </section>
 
             <section class="settings-group">
-                <span class="settings-group-title">Datenschutzerklärung</span>
-
-                <h4>1. Verantwortlicher</h4>
-                <p>Lukas Gehrke, Methfesselstr. 1, 37581 Bad Gandersheim, E-Mail: <a href="mailto:LukasGehrke@gmx.de">LukasGehrke@gmx.de</a></p>
-
-                <h4>2. Grundsatz: lokale Verarbeitung</h4>
-                <p>ArbeitsSafe ist eine clientseitige Web-App (Progressive Web App). Ihre Auswahl, Eingaben und erstellten Entwürfe werden ausschließlich im lokalen Speicher Ihres Browsers (<code>localStorage</code>) auf Ihrem eigenen Gerät abgelegt. Es findet keine Übertragung dieser Inhalte an den Betreiber oder sonstige Server statt; der Betreiber hat darauf keinen Zugriff.</p>
-
-                <h4>3. Welche Daten lokal gespeichert werden</h4>
+                <span class="settings-group-title">Datenschutz in Kürze</span>
                 <ul>
-                    <li>Einstellungen (Design, Schriftgröße, Exportformat u. Ä.)</li>
-                    <li>Ihr Entwurf (die zusammengestellte Punkteliste) inklusive der von Ihnen eingegebenen oder bearbeiteten Texte</li>
-                    <li>Ihre Revisionsbögen (Kopfdaten, Antworten, Bemerkungen und markierte Feststellungen)</li>
-                    <li>Die Bestätigung dieses Hinweises</li>
+                    <li>Ihre Eingaben, Entwürfe und Revisionsbögen bleiben ausschließlich im Browser auf diesem Gerät. Sie werden nicht an den Betreiber übertragen.</li>
+                    <li>Die App setzt keine Cookies und verwendet kein Tracking.</li>
+                    <li>Beim Aufruf verarbeitet der Hoster (Cloudflare) technisch bedingt Zugriffsdaten wie die IP-Adresse.</li>
+                    <li>Bitte vermeiden Sie Namen und Gesundheitsdaten Dritter in den Texten.</li>
                 </ul>
-                <p>Diese Daten bleiben unbegrenzt im Browser gespeichert, bis Sie sie über „Alle lokalen Daten löschen“ (Einstellungen) oder Ihre Browser-Einstellungen selbst entfernen.</p>
-
-                <h4>4. Eigene Inhalte und hochgeladene CSV-Dateien</h4>
-                <p>Eine von Ihnen hochgeladene CSV-Datei wird ausschließlich lokal im Browser verarbeitet, nicht an den Betreiber übertragen. Enthalten Ihre eigene Datei oder von Ihnen erfasste Texte (z. B. „Mangel vorgefunden“) personenbezogene Daten Dritter – etwa Namen von Beschäftigten oder gesundheitsbezogene Angaben zu einem Vorfall – werden <strong>Sie selbst</strong> hierfür datenschutzrechtlich verantwortlich (Art. 4 Nr. 7 DSGVO). Bitte verzichten Sie nach Möglichkeit auf Namen und besondere Kategorien personenbezogener Daten (Art. 9 DSGVO) in den Texten und beachten Sie einschlägige Verschwiegenheitspflichten.</p>
-
-                <h4>5. Hosting / Server-Logfiles</h4>
-                <p>Beim Aufruf dieser Seite verarbeitet der Hosting-Anbieter technisch bedingt automatisch Zugriffsdaten (u. a. IP-Adresse, Datum/Uhrzeit, abgerufene Datei) in Server-Logfiles, um die Auslieferung zu ermöglichen. Rechtsgrundlage ist das berechtigte Interesse an einem sicheren und funktionsfähigen Betrieb (Art. 6 Abs. 1 lit. f DSGVO).</p>
-
-                <h4>6. Cookies, Tracking, Drittanbieter</h4>
-                <p>Es werden keine Cookies gesetzt und keine Tracking- oder Analyse-Dienste eingebunden. Es erfolgt keine Einbindung von Drittanbieter-Inhalten wie externen Schriftarten.</p>
-
-                <h4>7. Speicherdauer</h4>
-                <p>Lokale Daten: bis zur Löschung durch Sie. Server-Logfiles: gemäß den Löschfristen des Hosting-Anbieters.</p>
-
-                <h4>8. Ihre Rechte</h4>
-                <p>Ihnen stehen die Rechte auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21) zu. Da lokal gespeicherte Inhalte ausschließlich auf Ihrem Gerät liegen, setzen Sie diese Rechte in der Regel selbst um (z. B. über „Alle lokalen Daten löschen“). Für Anfragen zu serverseitigen Verarbeitungen wenden Sie sich an den Verantwortlichen (Kontakt oben). Zudem steht Ihnen ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu.</p>
-
-                <h4>9. Automatisierte Entscheidungsfindung</h4>
-                <p>Es findet keine automatisierte Entscheidungsfindung einschließlich Profiling statt.</p>
-            </section>
-
-            <section class="settings-group">
-                <span class="settings-group-title">Impressum</span>
-                <p>Angaben gemäß § 5 DDG:</p>
-                <p>
-                    Lukas Gehrke<br>
-                    Methfesselstr. 1<br>
-                    37581 Bad Gandersheim
+                <p class="legal-links">
+                    <a href="datenschutz.html">Datenschutzerklärung</a>
+                    <a href="impressum.html">Impressum</a>
                 </p>
-                <p>Kontakt: E-Mail <a href="mailto:LukasGehrke@gmx.de">LukasGehrke@gmx.de</a></p>
-                <p>EU-Streitschlichtung: Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">ec.europa.eu/consumers/odr</a>. Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle ist der Betreiber nicht verpflichtet und nimmt daran nicht teil.</p>
-                <p>Haftung für Inhalte: Trotz sorgfältiger inhaltlicher Kontrolle wird keine Haftung für die Inhalte externer Links übernommen. Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
             </section>
         </div>
         <div class="modal-foot">

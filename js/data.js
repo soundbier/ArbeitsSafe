@@ -12,9 +12,10 @@ export const state = {
  * Speichert den aktuellen Zustand in den LocalStorage.
  * Mit Debounce-Mechanismus, um die Performance beim Tippen nicht zu beeinträchtigen.
  */
-let saveTimeout;
+let saveTimeout = null;
 export function saveState(immediate = false) {
     const doSave = () => {
+        saveTimeout = null;
         try {
             localStorage.setItem('arbeitsSafe_revisionsSchreiben', JSON.stringify(state.revisionsSchreibenListe));
         } catch (e) {
@@ -22,13 +23,17 @@ export function saveState(immediate = false) {
         }
     };
 
+    clearTimeout(saveTimeout);
     if (immediate) {
-        clearTimeout(saveTimeout);
         doSave();
     } else {
-        clearTimeout(saveTimeout);
         saveTimeout = setTimeout(doSave, 1000); // 1 Sekunde Verzögerung
     }
+}
+
+/** Ausstehende (entprellte) Speicherung sofort ausführen, z. B. beim Verlassen der Seite. */
+export function flushState() {
+    if (saveTimeout) saveState(true);
 }
 
 export function loadState() {

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Revisionsbogen · ArbeitsSafe</title>
+    <meta name="description" content="Revisionsbogen für die Betriebsbegehung – offline nutzbar, alle Daten bleiben lokal.">
+
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#131c2e" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css?v=2.0.4">
+    <link rel="stylesheet" href="css/bogen.css?v=2.0.4">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/img-192x192.png">
+    <link rel="apple-touch-icon" href="icons/img-192x192.png">
+</head>
+<body class="bogen-page">
+
+<div class="bg-shell">
+
+    <header class="app-header">
+        <a class="icon-btn" href="index.html" title="Zurück zur Datenbank" aria-label="Zurück zur Datenbank">
+            <span class="js-icon" data-icon="bookOpen"></span>
+        </a>
+        <div class="brand">
+            <span class="brand-name">Revisionsbogen</span>
+        </div>
+        <span class="bg-save-state" id="bgSaveState" aria-live="polite"></span>
+    </header>
+
+    <div class="bg-error-banner" id="bgErrorBanner" role="alert" hidden></div>
+
+    <main class="bg-main">
+
+        <!-- Ansicht: Revisionen -->
+        <section class="bg-view" data-route="#revisionen" aria-label="Revisionen">
+            <div class="scroll-area bg-scroll">
+                <div class="bg-container">
+                    <div class="bg-list-head">
+                        <h2>Revisionen</h2>
+                        <button type="button" class="btn btn--primary" id="bgNewBtn">
+                            <span class="js-icon" data-icon="plus"></span> Neue Revision
+                        </button>
+                    </div>
+                    <p class="draft-hint">Alle Revisionen werden ausschließlich lokal auf diesem Gerät gespeichert.</p>
+                    <div class="bg-rev-list" id="bgRevList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ansicht: Erfassen -->
+        <section class="bg-view" data-route="#erfassen" aria-label="Bogen erfassen">
+            <nav class="bg-sectionbar" id="bgSectionBar" aria-label="Abschnitte"></nav>
+            <div class="scroll-area bg-scroll" id="bgFormScroll">
+                <div class="bg-container" id="bgForm"></div>
+            </div>
+            <div class="bg-pager">
+                <button type="button" class="btn btn--ghost" id="bgPrevBtn">
+                    <span class="js-icon" data-icon="arrowUp"></span> Zurück
+                </button>
+                <span class="bg-pager-label" id="bgPagerLabel"></span>
+                <button type="button" class="btn btn--primary" id="bgNextBtn">
+                    Weiter <span class="js-icon" data-icon="arrowDown"></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Ansicht: Auswertung -->
+        <section class="bg-view" data-route="#auswertung" aria-label="Auswertung">
+            <div class="scroll-area bg-scroll">
+                <div class="bg-container">
+                    <div class="bg-list-head">
+                        <h2>Auswertung</h2>
+                    </div>
+                    <div class="bg-section-tags" id="bgAuswertungMeta"></div>
+                    <p class="bg-hint">Aufgeführt sind Antworten „Nein“, Ampel gelb/rot sowie alle Punkte mit Bemerkung. Abgewählte Abschnitte sind ausgeschlossen.</p>
+                    <label class="switch-row" for="bgRundgangNein">
+                        <span class="switch-text">
+                            <span class="switch-title">Rundgang: „Nein“ einbeziehen</span>
+                            <span class="switch-hint">Im Rundgang bedeutet „Nein“: im Betrieb nicht vorhanden</span>
+                        </span>
+                        <span class="switch">
+                            <input type="checkbox" id="bgRundgangNein">
+                            <span class="track" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <div class="bg-rev-list" id="bgAuswertung"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="bg-nav" aria-label="Revisionsbogen-Navigation">
+        <a class="bg-nav-item" href="#revisionen" data-route="#revisionen">
+            <span class="nav-icon js-icon" data-icon="inbox" data-size="22"></span>
+            <span>Revisionen</span>
+        </a>
+        <a class="bg-nav-item" href="#erfassen" data-route="#erfassen">
+            <span class="nav-icon js-icon" data-icon="fileText" data-size="22"></span>
+            <span>Erfassen</span>
+        </a>
+        <a class="bg-nav-item" href="#auswertung" data-route="#auswertung">
+            <span class="nav-icon js-icon" data-icon="checkSquare" data-size="22"></span>
+            <span>Auswertung</span>
+        </a>
+    </nav>
+</div>
+
+<div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/bogen/main.js?v=2.0.4"></script>
+</body>
+</html>

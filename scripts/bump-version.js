@@ -16,6 +16,7 @@ const ROOT = path.resolve(__dirname, '..');
 const APP_JS = path.join(ROOT, 'js', 'app.js');
 const INDEX_HTML = path.join(ROOT, 'index.html');
 const SW_JS = path.join(ROOT, 'sw2.js');
+const BOGEN_HTML = path.join(ROOT, 'bogen.html');
 
 function readCurrentVersion() {
     const content = fs.readFileSync(APP_JS, 'utf8');
@@ -49,6 +50,14 @@ function updateIndexHtml(newVersion) {
     fs.writeFileSync(INDEX_HTML, content);
 }
 
+function updateBogenHtml(newVersion) {
+    if (!fs.existsSync(BOGEN_HTML)) return;
+    let content = fs.readFileSync(BOGEN_HTML, 'utf8');
+    content = content.replace(/(href="css\/(?:style|bogen)\.css\?v=)[\d.]+(")/g, `$1${newVersion}$2`);
+    content = content.replace(/(src="js\/bogen\/main\.js\?v=)[\d.]+(")/, `$1${newVersion}$2`);
+    fs.writeFileSync(BOGEN_HTML, content);
+}
+
 function updateServiceWorker(newVersion) {
     let content = fs.readFileSync(SW_JS, 'utf8');
     content = content.replace(
@@ -69,6 +78,7 @@ function main() {
 
     updateAppJs(next);
     updateIndexHtml(next);
+    updateBogenHtml(next);
     updateServiceWorker(next);
 
     console.log(`Version aktualisiert: ${current} -> ${next}`);

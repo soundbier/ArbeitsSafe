@@ -1,0 +1,8 @@
+{
+  "name": "arbeitssafe",
+  "private": true,
+  "description": "PWA für Revisionsschreiben im Arbeitsschutz (ohne Build-Tooling, keine Abhängigkeiten)",
+  "scripts": {
+    "build": "node --experimental-vm-modules --no-warnings scripts/build-check.mjs"
+  }
+}

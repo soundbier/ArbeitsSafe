@@ -22,6 +22,11 @@ Ein smarter, moderner Generator für Revisionsschreiben und Textbausteine im Arb
   * Export in die Zwischenablage (formatiertes HTML + Reintext) oder als `.doc`-Datei.
   * Entwurf wird lokal gespeichert; nur die betroffene Karte wird neu gerendert.
 
+* **Revisionsbogen** (`bogen.html`):
+  * Eingabemasken werden generisch aus `src/data/revisionsbogen.json` erzeugt (Validierung beim Laden und in `npm run build`).
+  * Mehrere Revisionen lokal speichern, duplizieren, löschen; Autosave; abwählbare Abschnitte; Fortschritt je Abschnitt.
+  * Auswertung: Antworten „Nein“, Ampel gelb/rot und Bemerkungen als Feststellung übernehmen (Sachverhalt, Feststellung, Rechtsgrundlage, Maßnahme, Frist).
+
 * **PWA**: Offline-fähig via Service Worker (Stale-While-Revalidate), Update-Banner mit Nutzerbestätigung, installierbar.
 
 ---
@@ -44,6 +49,10 @@ ArbeitsSafe strukturiert komplexe gesetzliche Anforderungen in klare, handlungsr
 
 ```text
 ├── index.html          # Hauptanwendung (UI & Layout)
+├── bogen.html          # Revisionsbogen (Erfassung & Auswertung)
+├── package.json        # nur Skript „build“ (Prüfung, keine Abhängigkeiten)
+├── src/data/
+│   └── revisionsbogen.json  # Bogendefinition
 ├── manifest.json       # PWA-Manifest für die Installation
 ├── sw2.js              # Service Worker für Offline-Caching
 ├── gesetze.csv         # Standard-Datenbank für Gesetze und Bausteine
@@ -53,5 +62,6 @@ ArbeitsSafe strukturiert komplexe gesetzliche Anforderungen in klare, handlungsr
     ├── app.js          # App-Logik, Event-Wiring, Theme & Service Worker
     ├── data.js         # CSV-Parser, globaler State & LocalStorage
     ├── ui.js           # DOM-Referenzen, Rendering, Filter, Export
-    └── icons.js        # SVG-Icon-Registry
+    ├── icons.js        # SVG-Icon-Registry
+    └── bogen/          # Revisionsbogen: schema, store, progress, render, auswertung, main
 ```

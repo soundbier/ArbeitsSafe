@@ -12,6 +12,8 @@ on:
       - 'css/**'
       - 'js/**'
       - 'index.html'
+      - 'bogen.html'
+      - 'src/**'
       - 'manifest.json'
       - 'gesetze.csv'
       - 'sw2.js'
@@ -47,6 +49,6 @@ jobs:
             echo "Keine Versionsänderung nötig."
             exit 0
           fi
-          git add js/app.js index.html sw2.js
+          git add js/app.js index.html bogen.html sw2.js
           git commit -m "chore: Version automatisch erhöht [skip ci]"
           git push

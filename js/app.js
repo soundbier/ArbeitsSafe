@@ -443,10 +443,12 @@ if (document.readyState === 'loading') {
 
 let waitingWorker = null;
 let refreshing = false;
+let updateRequested = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw2.js').then(reg => {
+        // updateViaCache 'none': sw2.js nie aus dem HTTP-Cache prüfen.
+        navigator.serviceWorker.register('./sw2.js', { updateViaCache: 'none' }).then(reg => {
             if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
             reg.addEventListener('updatefound', () => {
                 const installing = reg.installing;
@@ -456,23 +458,63 @@ if ('serviceWorker' in navigator) {
                     }
                 });
             });
+            // Beim Start und bei Rückkehr in die App aktiv nach neuer Version suchen.
+            const check = () => { if (navigator.onLine) reg.update().catch(() => {}); };
+            check();
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') check();
+            });
         }).catch(() => { /* SW optional */ });
     });
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
+        // Nur nach ausdrücklicher Zustimmung neu laden.
+        if (refreshing || !updateRequested) return;
         refreshing = true;
         location.reload();
     });
+
+    navigator.serviceWorker.addEventListener('message', ({ data }) => {
+        if (data?.type === 'VERSION' && data.version !== APP_VERSION) {
+            setUpdateText(`Version ${data.version} verfügbar. Jetzt herunterladen und installieren?`);
+        } else if (data?.type === 'UPDATE_FAILED') {
+            updateRequested = false;
+            setUpdateText('Download fehlgeschlagen. Erneut versuchen?');
+            setUpdateButtonsDisabled(false);
+        }
+    });
+}
+
+function setUpdateText(text) {
+    const el = document.getElementById('updateBannerText');
+    if (el) el.textContent = text;
+}
+
+function setUpdateButtonsDisabled(disabled) {
+    for (const id of ['reloadUpdateBtn', 'dismissUpdateBtn']) {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = disabled;
+    }
 }
 
 function showUpdateBanner(worker) {
     waitingWorker = worker;
+    setUpdateText('Neue Version verfügbar. Jetzt herunterladen und installieren?');
+    setUpdateButtonsDisabled(false);
+    worker.postMessage('GET_VERSION');
     DOM.updateBanner.hidden = false;
 }
 
 document.getElementById('reloadUpdateBtn')?.addEventListener('click', () => {
-    waitingWorker?.postMessage('SKIP_WAITING');
+    if (!waitingWorker) return;
+    updateRequested = true;
+    setUpdateText('Neue Version wird heruntergeladen …');
+    setUpdateButtonsDisabled(true);
+    waitingWorker.postMessage('INSTALL_UPDATE');
+});
+
+document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
+    // Banner erscheint beim nächsten Start erneut.
     DOM.updateBanner.hidden = true;
 });
 

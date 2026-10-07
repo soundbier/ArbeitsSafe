@@ -1,0 +1,1035 @@
+{
+  "meta": {
+    "id": "revisionsbogen-gaa",
+    "titel": "Revisionsbogen Arbeits- und Umweltschutz",
+    "version": "1.0-digitalisiert",
+    "quelle": "Revisionsbogen Gewerbeaufsichtsamt (PDF, 8 Seiten)",
+    "hinweise_schema": {
+      "antworttypen": {
+        "jn": "Ja | Nein",
+        "jne": "Ja | Nein | entfällt",
+        "ampel": "grün | gelb | rot",
+        "auswahl": "Einfachauswahl aus 'optionen'",
+        "text": "Freitext",
+        "keine": "reiner Hinweis- bzw. Eingabeblock ohne eigene Bewertung (nur 'felder' / 'pruefpunkte')"
+      },
+      "pruefpunkte": "Array von Strings (Checkboxen). Stabile ID je Punkt: '<item.id>_p<index+1>' (1-basiert). Reihenfolge nicht ändern.",
+      "felder": "Zusatzeingaben mit eigener ID. Typen: text, datum, zeit, zahl, jn, auswahl, mehrfach.",
+      "bemerkung": "Jedes Item besitzt implizit ein Freitextfeld 'Bemerkung / Stichprobe' (ID: '<item.id>_bemerkung').",
+      "abschnitt.entfaellt": "Wenn true, besitzt der Abschnitt eine Schaltfläche 'entfällt' (gesamter Abschnitt).",
+      "item.entfaelltMoeglich": "Wenn true, ist 'entfällt' als eigene Option für das Item vorgesehen.",
+      "referenz": "Verweis auf Eintrag in 'referenzdaten'.",
+      "rundgang": "Bei Abschnitten der Gruppe 'rundgang' bedeutet Ja/Nein = Gegenstand im Betrieb vorhanden."
+    }
+  },
+
+  "kopfdaten": [
+    { "id": "datum", "label": "Datum", "typ": "datum" },
+    { "id": "uhrzeit_start", "label": "Start", "typ": "zeit" },
+    { "id": "uhrzeit_ende", "label": "Ende", "typ": "zeit" },
+    { "id": "firma", "label": "Firma", "typ": "text" },
+    { "id": "tel", "label": "Telefon", "typ": "text" },
+    { "id": "email", "label": "E-Mail", "typ": "text" },
+
+    { "id": "gp_sifa", "label": "Fachkraft für Arbeitssicherheit (Sifa)", "typ": "text", "gruppe": "Gesprächspartner/Teilnehmer" },
+    { "id": "gp_interessenvertretung", "label": "Betriebliche Interessenvertretung (BR, PR)", "typ": "text", "gruppe": "Gesprächspartner/Teilnehmer" },
+    { "id": "gp_umweltschutzbeauftragte", "label": "Umweltschutzbeauftragte", "typ": "text", "gruppe": "Gesprächspartner/Teilnehmer" },
+    { "id": "gp_betriebsarzt", "label": "Betriebsarzt (BA)", "typ": "text", "gruppe": "Gesprächspartner/Teilnehmer" },
+    { "id": "gp_sibe", "label": "Sicherheitsbeauftragte", "typ": "text", "gruppe": "Gesprächspartner/Teilnehmer" },
+
+    { "id": "gf_teilnahme", "label": "Geschäftsführer Teilnahme", "typ": "jn" },
+    { "id": "gf_name", "label": "Geschäftsführer Name", "typ": "text" },
+    { "id": "betreiber52_teilnahme", "label": "Betreiber § 52 BImSchG Teilnahme", "typ": "jn" },
+    { "id": "betreiber52_name", "label": "Betreiber § 52 BImSchG Name", "typ": "text" },
+    { "id": "pr_br_vorhanden", "label": "Personalrat (PR) / Betriebsrat (BR) vorhanden?", "typ": "auswahl", "optionen": ["Ja", "Nein", "entfällt"] },
+    { "id": "pr_br_informiert", "label": "Wurde dieser informiert?", "typ": "auswahl", "optionen": ["Ja", "Nein", "entfällt"] },
+
+    { "id": "bg", "label": "Berufsgenossenschaft", "typ": "text" },
+    { "id": "bg_letzter_besuch", "label": "Letzter Besuch BG?", "typ": "text" },
+    { "id": "bg_vertreter", "label": "BG Vertreter?", "typ": "text" },
+
+    { "id": "an_gesamt", "label": "AN gesamt", "typ": "zahl" },
+    { "id": "an_maennlich", "label": "AN männlich", "typ": "zahl" },
+    { "id": "an_weiblich", "label": "AN weiblich", "typ": "zahl" },
+    { "id": "an_unter18", "label": "AN unter 18 Jahre", "typ": "zahl" },
+
+    { "id": "auswahlverfahren", "label": "Auswahlverfahren", "typ": "auswahl", "optionen": ["risikoorientiert (1 - 249 AN)", "statistisch (20-99 AN)"] },
+    { "id": "gda_arbeitsprogramm", "label": "Welches der drei GDA-Arbeitsprogramme wurde durchgeführt?", "typ": "auswahl", "optionen": ["keine AP", "MSB", "AP PSYCHE", "AP Krebserzeugende Gefahrstoffe"] },
+    {
+      "id": "zert_mgmt",
+      "label": "Zertifizierte Managementsysteme?",
+      "typ": "jn",
+      "hinweis": "30 % Ermäßigung bei Genehmigung, Anzeigen, Änderungen. AS: DIN ISO 18001/OHSAS, 9001; US: 14001/EMAS",
+      "_pruefhinweis": "Bogenwortlaut übernommen; OHSAS 18001 ist durch ISO 45001 abgelöst."
+    },
+    { "id": "gesundheitsfoerderung", "label": "Gesundheitsfördernde Maßnahmen?", "typ": "jn" }
+  ],
+
+  "referenzdaten": {
+    "pruefungen": [
+      { "id": "ref_elektro", "objekt": "Elektrische Anlagen, ortsfest", "intervall": "i. d. R. 4 Jahre (Fristen legt GB fest)", "rechtsgrundlage": [], "pruefer": "" },
+      { "id": "ref_elektro_oe", "objekt": "Elektrische Anlagen, ortsveränderlich", "intervall": "i. d. R. jährlich (Fristen legt GB fest)", "rechtsgrundlage": [], "pruefer": "" },
+      { "id": "ref_arbeitsmittel", "objekt": "Sonstige Arbeitsmittel allgemein", "intervall": "GB legt Fristen fest", "rechtsgrundlage": ["§ 3 BetrSichV"], "pruefer": "zur Prüfung befähigte Person (Ausbildung, Berufserfahrung, zeitnahe berufliche Tätigkeit)" },
+      { "id": "ref_leitern", "objekt": "Leitern", "intervall": "GB, i. d. R. jährlich", "rechtsgrundlage": ["TRBS 2121 Teil 2", "DGUV I 208-016"], "pruefer": "" },
+      { "id": "ref_regale", "objekt": "Regale", "intervall": "GB, i. d. R. jährlich", "rechtsgrundlage": ["TRBS 1201", "DGUV Regel 108-007"], "pruefer": "" },
+      { "id": "ref_feuerloescher", "objekt": "Feuerlöscher", "intervall": "GB, i. d. R. alle 2 Jahre", "rechtsgrundlage": [], "pruefer": "" },
+      { "id": "ref_tore", "objekt": "Kraftbetriebene Türen und Tore", "intervall": "Inbetriebnahme und jährlich", "rechtsgrundlage": ["ASR A1.7 Nr. 10.2"], "pruefer": "" },
+      { "id": "ref_stapler", "objekt": "Gabelstapler/Flurförderzeuge", "intervall": "jährlich", "rechtsgrundlage": ["DGUV V 68"], "pruefer": "" },
+      { "id": "ref_kraene", "objekt": "Kräne", "intervall": "jährlich", "rechtsgrundlage": ["Anhang 3 Abschnitt 1 BetrSichV"], "pruefer": "" },
+      {
+        "id": "ref_absaugung",
+        "objekt": "Absauganlagen",
+        "intervall": "Inbetriebnahme und jährlich; technische Schutzmaßnahmen regelmäßig, mindestens jedes dritte Jahr",
+        "rechtsgrundlage": ["§ 3 BetrSichV (GB)", "§ 6 Abs. 1 Nr. 7 GefStoffV (GB)", "Anhang I Nr. 2.3 Abs. 7 GefStoffV", "§ 7 Abs. 7 GefStoffV"],
+        "pruefer": "",
+        "hinweis": "Filter: Filterprüfzeugnis, z. B. bei quarzhaltigen Stäuben mind. Staubklasse M"
+      },
+      {
+        "id": "ref_aufzuege",
+        "objekt": "Aufzüge",
+        "intervall": "regelmäßig auf offensichtliche Mängel; Prüfung vor Inbetriebnahme, nach prüfpflichtiger Änderung; wiederkehrend (zwei Jahre)",
+        "rechtsgrundlage": ["TRBS 3121", "TRBS 1201 Teil 4", "Anhang 1 Nr. 4 BetrSichV", "Anhang 2 BetrSichV", "Anhang 1 Abschnitt 2 BetrSichV"],
+        "pruefer": ""
+      },
+      {
+        "id": "ref_druckbehaelter",
+        "objekt": "Druckbehälter",
+        "intervall": "Innere Prüfung alle 5 Jahre, Festigkeitsprüfung (FP) alle 10 Jahre",
+        "rechtsgrundlage": ["Anhang 2 BetrSichV"],
+        "pruefer": "ZÜS bei PS x V > 1000, ansonsten befähigte Person (BP)",
+        "felder": ["V (l)", "P (bar)"]
+      },
+      {
+        "id": "ref_dampfkessel",
+        "objekt": "Dampfkessel",
+        "intervall": "",
+        "rechtsgrundlage": ["Anhang 2 Abschnitt 4 BetrSichV"],
+        "pruefer": "Kat III: PS x V > 1000; Kat IV: PS x V > 3000",
+        "felder": ["V (l)", "P (bar)"]
+      },
+      {
+        "id": "ref_rohrleitungen",
+        "objekt": "Rohrleitungen",
+        "intervall": "Äußere Prüfung alle 5 Jahre, FP alle 5 Jahre",
+        "rechtsgrundlage": ["Anhang 2 BetrSichV"],
+        "pruefer": "ZÜS bei PS x DN > 2000 oder DN > 25 und PS > 0,5 (bestimmte Fluide), ansonsten BP",
+        "felder": ["V (l)", "P (bar)", "DN (Nennweite)"]
+      },
+      { "id": "ref_neue_maschinen", "objekt": "Neue Maschinen", "intervall": "", "rechtsgrundlage": [], "pruefer": "CE-Kennzeichnung und Konformitätserklärung" }
+    ]
+  },
+
+  "abschnitte": [
+    {
+      "id": "s_verantwortung",
+      "gruppe": "arbeitsschutz",
+      "titel": "Verantwortung, Aufgabenübertragung und Regelung der Kompetenzen im Arbeits- und Umweltschutz",
+      "entfaellt": false,
+      "gdaRelevant": true,
+      "_anmerkung": "Im Bogen ist hier 'GDA-Relevant' vermerkt; Zuordnung im PDF-Layout nicht eindeutig.",
+      "items": [
+        {
+          "id": "b1_1", "nr": "B1.1",
+          "frage": "Verantwortung und Aufgabenbereich im Arbeitsschutz-/Umweltschutz sind geregelt.",
+          "antwort": "jn",
+          "hinweise": ["Organigramm?"],
+          "felder": [
+            { "id": "b1_1_form", "label": "Regelung", "typ": "auswahl", "optionen": ["Arbeitgeber selbst", "schriftliche Übertragung", "entfällt"] }
+          ]
+        },
+        {
+          "id": "b1_2", "nr": "B1.2",
+          "frage": "Kennen Führungskräfte ihre Pflichten?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 13 Abs. 2 ArbSchG", "DGUV V1"],
+          "hinweise": ["Arbeitsvertrag / Beauftragung / Vereinbarung", "Z. B. Einhaltung von Arbeitszeiten"],
+          "pruefpunkte": [
+            "Der Arbeitgeber/die Führungskräfte kennen ihre Aufgaben und Verantwortung",
+            "sind für diese Aufgaben qualifiziert",
+            "sind mit Befugnissen ausgestattet",
+            "verfügen über notwendige Ressourcen"
+          ],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "b1_3", "nr": "B1.3",
+          "frage": "Wie erfolgt die Kommunikation im Arbeits- und Umweltschutz?",
+          "antwort": "jn",
+          "hinweise": ["Prüfung Wirksamkeit der Arbeitsschutzorganisation.", "Wo können Mitarbeiter Mängel melden?"],
+          "pruefpunkte": [
+            "Der Arbeitgeber überwacht die Wahrnehmung der Aufgaben",
+            "kontrolliert die Aufgabenerledigung",
+            "leitet ggf. Korrekturmaßnahmen ein"
+          ],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "b6", "nr": "B6",
+          "titel": "Zusammenarbeit mehrerer Arbeitgeber",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 8 ArbSchG"],
+          "hinweise": ["Unterweisung, Anweisung, Flyer, Infomaterial", "Schriftliche Bestätigung!"],
+          "pruefpunkte": ["Die Aufgaben, Zuständigkeiten und Kompetenzen sind organisiert und berücksichtigt"],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "b7", "nr": "B7",
+          "titel": "Zusammenarbeit zeitlich befristeter AN",
+          "antwort": "jn",
+          "hinweise": ["Regelungen bezüglich: Unterweisung, Arbeitsmedizinischer Vorsorge, PSA"],
+          "pruefpunkte": ["organisiert und berücksichtigt"],
+          "entfaelltMoeglich": true
+        }
+      ]
+    },
+
+    {
+      "id": "s_asig",
+      "gruppe": "arbeitsschutz",
+      "titel": "Organisationspflichten aus dem ASiG",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "b2_1", "nr": "B2.1",
+          "titel": "Sicherheitsfachkraft (Sifa)",
+          "frage": "Die sicherheitstechnische Betreuung ist geregelt.",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["DGUV V 2"],
+          "hinweise": ["Alle 5 Jahre Fortbildung und bis max. 50 AN (DGUV V 2)"],
+          "felder": [
+            { "id": "b2_1_regel", "label": "Regelbetreuung", "typ": "auswahl", "optionen": ["intern", "extern"] },
+            { "id": "b2_1_umodell", "label": "Alternative Betreuung (U-Modell)", "typ": "jn" },
+            { "id": "b2_1_fortbildung", "label": "Letzte Fortbildung", "typ": "datum" },
+            { "id": "b2_1_einsatzzeit", "label": "Einsatzzeit", "typ": "text" }
+          ],
+          "pruefpunkte": [
+            "schriftliche Bestellung (Vertrag)",
+            "Einsatzzeit",
+            "Beteiligung",
+            "Einbindung bei Anlässen (U-Modell)",
+            "Tätigkeitsbericht § 5 DGUV V2",
+            "Fachkundenachweis"
+          ]
+        },
+        {
+          "id": "b2_sibe", "nr": "",
+          "titel": "Sicherheitsbeauftragte",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 22 SGB VII", "DGUV V1"],
+          "hinweise": ["ab 21 AN (DGUV V1)", "Wer ermittelt Schulungsbedarf?", "Teilnahme an Fortbildungsmaßnahmen?"],
+          "pruefpunkte": ["Teilnahme an Lehrgängen, Fortbildungen und Schulungen"],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "b2_schluessel_as", "nr": "",
+          "titel": "Qualifikation für Schlüsselfunktionen (Arbeitsschutz)",
+          "frage": "Ist festgelegt, wer und wie die erforderlichen Qualifikationen für Schlüsselfunktionen ermittelt und die Durchführung entsprechender Fortbildungen organisiert werden, z. B. für Beauftragte und andere Funktionsträger?",
+          "antwort": "jn",
+          "hinweise": ["z. B. Rechtliches Grundlagenwissen bei Funktionsträger, erforderliche Kenntnisse von Weisungsbefugten bzgl. ihres Verantwortungsbereiches"],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "b2_2", "nr": "B2.2",
+          "titel": "Betriebsarzt (BA)",
+          "frage": "Die betriebsärztliche Betreuung ist geregelt.",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 2 ASiG", "§ 3 ASiG", "§ 4 ASiG", "DGUV V 2"],
+          "hinweise": ["Arbeitsmediziner oder Betriebsarzt erforderlich"],
+          "felder": [
+            { "id": "b2_2_regel", "label": "Regelbetreuung", "typ": "auswahl", "optionen": ["intern", "extern"] },
+            { "id": "b2_2_umodell", "label": "Alternative Betreuung (U-Modell)", "typ": "jn" },
+            { "id": "b2_2_fortbildung", "label": "Letzte Fortbildung", "typ": "datum" },
+            { "id": "b2_2_einsatzzeit", "label": "Einsatzzeit", "typ": "text" }
+          ],
+          "pruefpunkte": [
+            "schriftliche Bestellung (Vertrag)",
+            "Einsatzzeit",
+            "Beteiligung",
+            "Einbindung bei Anlässen (U-Modell)",
+            "Tätigkeitsbericht § 5 DGUV V2",
+            "Fachkundenachweis"
+          ]
+        },
+        {
+          "id": "b4_1", "nr": "B4.1",
+          "titel": "Arbeitsmedizinische Vorsorge",
+          "frage": "Die arbeitsmedizinische Vorsorge ist geregelt.",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["ArbMedVV"],
+          "hinweise": [
+            "Pflicht-, Angebots- oder Wunschvorsorge",
+            "Wer ermittelt Bedarf? Zuständiger BA aufgeführt?",
+            "G 20-Lärm, G 37-Bildschirm, G 41-Absturz, ArbMedVV, ermittelt durch GB"
+          ],
+          "pruefpunkte": [
+            "organisiert",
+            "durchgeführt",
+            "in der Vorsorgekartei dokumentiert (ArbMedVV)"
+          ],
+          "felder": [{ "id": "b4_1_dokumente", "label": "Eingesehene Dokumente", "typ": "text" }]
+        },
+        {
+          "id": "b2_3", "nr": "B2.3",
+          "titel": "Arbeitsschutzausschuss (ASA)",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 11 ASiG"],
+          "hinweise": [
+            "ab 21 Mitarbeiter, vierteljährlich",
+            "Teilzeitbeschäftigte: wöchentliche Arbeitszeit > 20 Stunden mit 0,5, > 30 Stunden mit 0,75",
+            "Teilnehmer: Arbeitgeber oder Beauftragter, zwei vom BR/PR, BA, Sifa, SiBe"
+          ],
+          "pruefpunkte": [
+            "aktive Arbeit des ASA",
+            "Zusammenarbeit Sifa/BA/BR",
+            "Berichte"
+          ],
+          "felder": [{ "id": "b2_3_protokoll", "label": "Letztes Protokoll", "typ": "datum" }],
+          "entfaelltMoeglich": true
+        }
+      ]
+    },
+
+    {
+      "id": "s_ersthelfer",
+      "gruppe": "arbeitsschutz",
+      "titel": "Erst- und Brandschutzhelfer",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "b5_1_eh", "nr": "B5.1",
+          "titel": "Ersthelfer",
+          "frage": "Die Maßnahmen zur Ersten Hilfe und sonstigen Notfallmaßnahmen sind organisiert und umgesetzt.",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["DGUV V1", "§ 10 ArbSchG"],
+          "hinweise": [
+            "Fortbildung alle 2 Jahre",
+            "Anzahl der Ersthelfer: bis 20 AN 1 Ersthelfer",
+            "10 % der gewerblichen, 5 % der kaufmännischen MA"
+          ],
+          "felder": [
+            { "id": "b5_1_eh_anzahl", "label": "Anzahl", "typ": "zahl" },
+            { "id": "b5_1_eh_dokumente", "label": "Eingesehene Dokumente", "typ": "text" }
+          ]
+        },
+        {
+          "id": "b5_1_bsh", "nr": "B5.1",
+          "titel": "Brandschutzhelfer",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 10 Abs. 2 ArbSchG", "ASR A2.2 Punkt 7.3 Abs. 2 u. 3"],
+          "hinweise": ["5 % der MA"],
+          "felder": [
+            { "id": "b5_1_bsh_anzahl", "label": "Anzahl", "typ": "zahl" },
+            { "id": "b5_1_bsh_dokumente", "label": "Eingesehene Dokumente", "typ": "text" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_unterweisung",
+      "gruppe": "arbeitsschutz",
+      "titel": "Unterweisungen und Betriebsanweisungen",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "b3_1_unterweisung", "nr": "B3.1",
+          "titel": "Regelmäßige Unterweisungen",
+          "frage": "Die Unterweisungen sind bezogen auf den Arbeitsplatz oder den Aufgabenbereich organisiert, durchgeführt und dokumentiert.",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 12 ArbSchG"],
+          "hinweise": ["vor Arbeitsaufnahme, mindestens einmal jährlich"],
+          "felder": [
+            { "id": "b3_1_datum", "label": "Datum der letzten Unterweisung", "typ": "datum" },
+            { "id": "b3_1_organisiert", "label": "Organisation/Durchführung/Dokumentation", "typ": "mehrfach", "optionen": ["organisiert", "durchgeführt", "dokumentiert"] }
+          ],
+          "pruefpunkte": ["Teilnehmer", "Unterweisender", "Unterzeichnet", "Unterweisungsthema"]
+        },
+        {
+          "id": "b3_1_betriebsanweisung", "nr": "B3.1",
+          "titel": "Betriebsanweisung",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 4 Nr. 7 ArbSchG", "§ 12 BetrSichV", "§ 14 GefStoffV", "TRGS 555", "DGUV I 211-010"],
+          "hinweise": ["Stand? Plausibel? Unterschrieben? Verfügbar?"],
+          "felder": [
+            { "id": "b3_1_ba1", "label": "Eingesehene Betriebsanweisung 1", "typ": "text" },
+            { "id": "b3_1_ba2", "label": "Eingesehene Betriebsanweisung 2", "typ": "text" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_pruefungen",
+      "gruppe": "arbeitsschutz",
+      "titel": "Überwachung der Einhaltung übertragener Pflichten",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "pf_terminverfolgung", "nr": "",
+          "frage": "Ist ein System zur Terminverfolgung bzw. Überwachung von Prüffristen vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 3 Abs. 6 i. V. m. Anhang 3 BetrSichV", "Prüfaufzeichnung gemäß § 14 Abs. 7 BetrSichV"],
+          "hinweise": [
+            "z. B. überwachungsbedürftige Anlagen wie Druckbehälter, Aufzüge, Ex-Geräte, AwSV, Krane und Flurförderzeuge",
+            "Prüfliste, Excel-Tabellen, Wiedervorlagesystem"
+          ],
+          "felder": [{ "id": "pf_prueplan", "label": "Prüfplan vorhanden?", "typ": "jn" }],
+          "referenz": "pruefungen"
+        }
+      ]
+    },
+
+    {
+      "id": "s_exschutz",
+      "gruppe": "arbeitsschutz",
+      "titel": "Explosionsschutzdokument",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "ex_dokument", "nr": "",
+          "frage": "Ex-Schutzdokument vorhanden und Prüfungen durchgeführt?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["Anhang 2 Abs. 3 BetrSichV", "§ 6 Abs. 9 GefStoffV"],
+          "hinweise": ["Prüfung durch befähigte Person"],
+          "pruefpunkte": [
+            "Prüfung vor Inbetriebnahme",
+            "Alle 6 Jahre: Gesamte Anlage mit Ex-Schutzdokument",
+            "Jährlich: Lüftungsanlagen, Gaswarneinrichtungen"
+          ],
+          "entfaelltMoeglich": true
+        },
+        { "id": "ex_bereiche", "nr": "", "frage": "Welche Bereiche wurden betrachtet?", "antwort": "text" },
+        { "id": "ex_pruefbericht", "nr": "", "frage": "Prüfbericht", "antwort": "text" },
+        {
+          "id": "ex_elektro", "nr": "",
+          "frage": "Elektrische Anlagen im Ex-Bereich (Lackieranlagen, Lacklager)",
+          "antwort": "keine",
+          "pruefpunkte": ["Alle 3 Jahre durch befähigte Person im Ex-Schutz"]
+        }
+      ]
+    },
+
+    {
+      "id": "s_gefahrstoffe",
+      "gruppe": "arbeitsschutz",
+      "titel": "Gefahrstoffe",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "gs_verzeichnis", "nr": "",
+          "frage": "Gefahrstoffverzeichnis vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 6 Abs. 12 GefStoffV"],
+          "hinweise": ["Bezeichnung", "Einstufung (H/P-Sätze)", "Mengen", "Arbeitsbereiche"],
+          "felder": [{ "id": "gs_verzeichnis_dok", "label": "Eingesehene Dokumente", "typ": "text" }],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "gs_sdb", "nr": "",
+          "frage": "Sicherheitsdatenblätter vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 4 GefStoffV", "§ 5 GefStoffV"],
+          "hinweise": ["ggf. beim Lieferanten anfordern"],
+          "felder": [{ "id": "gs_sdb_stichprobe", "label": "Stichprobe aus Gefahrstoffverzeichnis", "typ": "text" }]
+        },
+        {
+          "id": "gs_ba", "nr": "",
+          "frage": "Betriebsanweisungen nach GefStoffV vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 14 Abs. 1 GefStoffV"],
+          "hinweise": ["Muster teilweise bei BG erhältlich", "Neuester Stand (Symbole)"],
+          "felder": [{ "id": "gs_ba_stichprobe", "label": "Eingesehene Stichprobe(n)", "typ": "text" }]
+        },
+        {
+          "id": "gs_unterweisung", "nr": "",
+          "frage": "Werden Unterweisungen beim Umgang mit Gefahrstoffen durchgeführt?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 14 Abs. 2 GefStoffV"],
+          "hinweise": ["vor Arbeitsaufnahme und mindestens einmal jährlich, anhand der Betriebsanweisungen"]
+        },
+        {
+          "id": "gs_unterweisung_doku", "nr": "",
+          "frage": "Werden diese Unterweisungen dokumentiert?",
+          "antwort": "jn",
+          "hinweise": ["schriftliche Dokumentation erforderlich, AN zeichnen gegen"],
+          "felder": [
+            { "id": "gs_unterweisung_dok", "label": "Eingesehene Dokumente", "typ": "text" },
+            { "id": "gs_unterweisung_datum", "label": "Datum letzte Unterweisung", "typ": "datum" }
+          ]
+        },
+        {
+          "id": "gs_expositionsverzeichnis", "nr": "",
+          "frage": "Ist ein Expositionsverzeichnis vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 14 Abs. 3 GefStoffV"]
+        }
+      ]
+    },
+
+    {
+      "id": "s_zusatz",
+      "gruppe": "arbeitsschutz",
+      "titel": "Zusatzfragen",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "zf_unfaelle", "nr": "",
+          "frage": "Umgang mit Unfällen/Beinahe-Unfällen: Unfallanzeige an BG, Kopie an GAA?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 193 Abs. 7 SGB VII"],
+          "hinweise": ["Bei > 3 Tagen Arbeitsunfähigkeit"],
+          "felder": [{ "id": "zf_letzter_unfall", "label": "Letzter Unfall", "typ": "datum" }]
+        },
+        {
+          "id": "zf_aushang", "nr": "",
+          "frage": "Sind aushangpflichtige Gesetze zur Einsichtnahme für Arbeitnehmer ausgelegt oder einsehbar?",
+          "antwort": "jn",
+          "hinweise": ["ArbZG, MuSchG, JArbSchG, UVV"]
+        },
+        {
+          "id": "zf_infoquellen", "nr": "",
+          "frage": "Wie bekommen Sie aktuelle Infos zu Arbeitsschutzthemen?",
+          "antwort": "text",
+          "hinweise": ["BG Zeitschrift, Internet, Fachzeitschriften, Verbände, Sachverständige"]
+        }
+      ]
+    },
+
+    {
+      "id": "s_gb",
+      "gruppe": "arbeitsschutz",
+      "titel": "C Gefährdungsbeurteilung",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "c_gb_vorhanden", "nr": "C",
+          "titel": "GB mit Dokumentation",
+          "frage": "Wurde eine GB mit Dokumentation durchgeführt?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 5 ArbSchG", "§ 3 BetrSichV", "LASI LV 59"],
+          "hinweise": [
+            "Ab 1 AN",
+            "Überprüfung von zwei unterschiedlichen Arbeitsplätzen bzw. Tätigkeiten vor Ort",
+            "Sobald ein Arbeitsprogramm (GDA) durchgeführt wird, stellt dieses eine der beiden Überprüfungen dar"
+          ],
+          "felder": [
+            { "id": "c_gb_datum", "label": "Datum der GB", "typ": "datum" },
+            { "id": "c_gb_ueberpruefung", "label": "Die Überprüfung der GB erfolgt", "typ": "auswahl", "optionen": ["kontinuierlich", "anlassbezogen"] },
+            { "id": "c_gb_dokumente", "label": "Eingesehene Dokumente", "typ": "text" },
+            { "id": "c_gb_ap1", "label": "Überprüfter Arbeitsplatz/Tätigkeit 1", "typ": "text" },
+            { "id": "c_gb_ap2", "label": "Überprüfter Arbeitsplatz/Tätigkeit 2", "typ": "text" },
+            { "id": "c_gb_stichprobe", "label": "Stichprobe bzw. Teilbereich GB", "typ": "text" },
+            { "id": "c_gb_mitwirkende", "label": "Wer hat alles bei der GB mitgewirkt?", "typ": "text" },
+            { "id": "c_gb_durchfuehrung", "label": "Wie durchgeführt (inhaltliche Betrachtung)", "typ": "text" }
+          ]
+        },
+        {
+          "id": "c1_1", "nr": "C1.1",
+          "titel": "Prozess der Gefährdungsbeurteilung",
+          "frage": "Die methodische Vorgehensweise ist nachvollziehbar bzgl. der:",
+          "antwort": "ampel",
+          "pruefpunkte": [
+            "Systematik des Prozesses",
+            "notwendigen Beteiligung (AG, Sifa, BA, BR/PR)",
+            "Festlegung von Verantwortlichkeiten"
+          ]
+        },
+        {
+          "id": "c2_1", "nr": "C2.1",
+          "titel": "Ermittlung und Beurteilung von Gefährdungen",
+          "frage": "Die wesentlichen Gefährdungen sind:",
+          "antwort": "ampel",
+          "pruefpunkte": ["ermittelt", "zutreffend bewertet (z. B. Handlungsbedarf, Ampel)"]
+        },
+        {
+          "id": "c2_2", "nr": "C2.2",
+          "titel": "Festlegung von Maßnahmen",
+          "frage": "Bei der Auswahl der festzulegenden Maßnahmen wird berücksichtigt:",
+          "antwort": "ampel",
+          "rechtsgrundlagen": ["§ 4 ArbSchG"],
+          "pruefpunkte": [
+            "der Stand der Technik, Arbeitsmedizin und Hygiene sowie gesicherte arbeitswissenschaftliche Erkenntnisse",
+            "die Rangfolge (TOP) der Maßnahmen nach § 4 ArbSchG"
+          ]
+        },
+        {
+          "id": "c2_3", "nr": "C2.3",
+          "frage": "Besondere Personengruppen sind berücksichtigt:",
+          "antwort": "ampel",
+          "pruefpunkte": ["Schwangere", "Jugendliche", "Psychische Belastung"]
+        },
+        {
+          "id": "c3_1", "nr": "C3.1",
+          "titel": "Umsetzung der Maßnahmen und Wirksamkeit",
+          "frage": "Die festgelegten Maßnahmen sind vollständig umgesetzt.",
+          "antwort": "ampel"
+        },
+        {
+          "id": "c3_2", "nr": "C3.2",
+          "frage": "Die Wirksamkeit ist überprüft:",
+          "antwort": "ampel",
+          "pruefpunkte": [
+            "die Maßnahmen sind geeignet",
+            "die Gefährdungen sind beseitigt bzw. hinreichend reduziert"
+          ]
+        },
+        {
+          "id": "c4", "nr": "C4",
+          "frage": "Die Dokumentation ist angemessen bzgl.:",
+          "antwort": "ampel",
+          "pruefpunkte": [
+            "des Ergebnisses der GB",
+            "der festgesetzten Maßnahmen des Arbeitsschutzes",
+            "des Ergebnisses ihrer Überprüfung"
+          ]
+        },
+        {
+          "id": "c5", "nr": "C5",
+          "titel": "Fortschreibung",
+          "frage": "Die Überprüfung der GB erfolgt kontinuierlich bzw. anlassbezogen.",
+          "antwort": "ampel"
+        },
+        {
+          "id": "c6_ap1", "nr": "C6",
+          "titel": "Ergebnis der Überprüfung beider Arbeitsplätze/Tätigkeiten (Compliance) – 1. Arbeitsplatz",
+          "antwort": "ampel",
+          "hinweise": ["GB mit Arbeitsplatz vergleichen"],
+          "felder": [{ "id": "c6_ap1_bezeichnung", "label": "1. Arbeitsplatz", "typ": "text" }],
+          "pruefpunkte": [
+            "die Gefährdungen sind zutreffend ermittelt",
+            "die Gefährdungen sind zutreffend beurteilt",
+            "die Maßnahmen sind umgesetzt und wirksam"
+          ]
+        },
+        {
+          "id": "c6_ap2", "nr": "C6",
+          "titel": "Ergebnis der Überprüfung beider Arbeitsplätze/Tätigkeiten (Compliance) – 2. Arbeitsplatz",
+          "antwort": "ampel",
+          "hinweise": ["GB mit Arbeitsplatz vergleichen"],
+          "felder": [{ "id": "c6_ap2_bezeichnung", "label": "2. Arbeitsplatz", "typ": "text" }],
+          "pruefpunkte": [
+            "die Gefährdungen sind zutreffend ermittelt",
+            "die Gefährdungen sind zutreffend beurteilt",
+            "die Maßnahmen sind umgesetzt und wirksam"
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_us_allgemein",
+      "gruppe": "umweltschutz",
+      "titel": "Umweltschutz allgemein",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "us_beschwerden", "nr": "",
+          "frage": "Sind Ihnen Beschwerden aus der Nachbarschaft bekannt? Wenn ja, wie wird damit umgegangen?",
+          "antwort": "jn",
+          "hinweise": ["Lärm, Licht, Geruch, Staub"]
+        },
+        {
+          "id": "us_sonstiges", "nr": "",
+          "frage": "Sonstiges: z. B. Emissionen, Lärm, Gerüche",
+          "antwort": "jn",
+          "hinweise": ["siehe Genehmigung"]
+        }
+      ]
+    },
+
+    {
+      "id": "s_feuerung",
+      "gruppe": "umweltschutz",
+      "titel": "Feuerungsanlage",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "fa_emission", "nr": "",
+          "frage": "Emissionsmessung von Holzfeuerungsanlage: Schornsteinfeger bei 1. BImSchV",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["1. BImSchV (Kleinfeuerungsanlagen ≤ 1 MW)", "44. BImSchV (mittelgroße Feuerungsanlagen ≥ 1 MW)"],
+          "felder": [
+            { "id": "fa_brennstoff", "label": "Brennstoff", "typ": "text" },
+            { "id": "fa_leistung", "label": "Leistung", "typ": "text" },
+            { "id": "fa_letzte_pruefung", "label": "Letzte Prüfung", "typ": "datum" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_awsv",
+      "gruppe": "umweltschutz",
+      "titel": "AwSV Anlagen",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "awsv_anlagen", "nr": "",
+          "frage": "Sind im Betrieb prüfpflichtige AwSV-Anlagen vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 43 AwSV (Anlagendokumentation)", "§ 44 AwSV (Betriebsanweisung/Merkblatt)"],
+          "hinweise": [
+            "Geltungsbereich: > 0,22 m³ (220 l) flüssige Stoffe, > 0,2 t feste/gasförmige Stoffe",
+            "Welche WGK die Stoffe und welche Mengen werden gelagert?",
+            "Prüfpflichtigkeit siehe Anlagen der AwSV",
+            "Anlagendokumentation: Aufbau, Abgrenzung, Stoffe, Bauart, Sicherheitseinrichtungen",
+            "Merkblatt bei Anlagen der Gefährdungsstufe A, Eigenverbrauchstankstellen, Heizölverbraucheranlagen, Anlagen zum Umgang mit aufschwimmenden flüssigen Stoffen mit einem Volumen bis zu 100 Kubikmetern und Anlagen mit festen Gemischen bis zu 1 000 Tonnen"
+          ],
+          "felder": [
+            { "id": "awsv_dokumentation", "label": "Anlagendokumentation vorhanden", "typ": "jn" },
+            { "id": "awsv_ba_merkblatt", "label": "Betriebsanweisung oder Merkblatt vorhanden", "typ": "jn" },
+            { "id": "awsv_wgk_mengen", "label": "WGK / Stoffe / Mengen", "typ": "text" }
+          ]
+        },
+        { "id": "awsv_pruefbericht", "nr": "", "frage": "Sachverständigen-Prüfbericht", "antwort": "text" },
+        {
+          "id": "awsv_unterweisung", "nr": "",
+          "frage": "Werden Beschäftigte über die innerbetrieblichen Regelungen zum Umweltschutz unterwiesen?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 44 AwSV"],
+          "hinweise": ["Nur wenn eine Betriebsanweisung notwendig ist"],
+          "felder": [{ "id": "awsv_unterweisung_datum", "label": "Datum der letzten Unterweisung", "typ": "datum" }],
+          "pruefpunkte": ["Teilnehmer?", "Unterweisender?", "Unterzeichnet?", "Unterweisungsthema?"]
+        }
+      ]
+    },
+
+    {
+      "id": "s_abfall",
+      "gruppe": "umweltschutz",
+      "titel": "Abfallrecht",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "ab_vermeidung", "nr": "",
+          "frage": "Werden Maßnahmen zur Vermeidung/Verwertung von Abfällen durchgeführt? Wenn ja, welche?",
+          "antwort": "jn",
+          "hinweise": ["z. B. selbst Entsorgungsbetrieb, Fehlwürfe werden aussortiert"]
+        },
+        {
+          "id": "ab_anfall", "nr": "",
+          "frage": "Welche Abfälle fallen im Kalenderjahr an?",
+          "antwort": "keine",
+          "hinweise": ["Mengen, Abfallschlüssel"],
+          "felder": [
+            { "id": "ab_gefaehrlich", "label": "Gefährlich", "typ": "text" },
+            { "id": "ab_nicht_gefaehrlich", "label": "Nicht gefährlich", "typ": "text" }
+          ]
+        },
+        {
+          "id": "ab_gef_belege", "nr": "",
+          "titel": "Gefährliche Abfälle",
+          "frage": "Liegen Belege über die Entsorgung vor?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 49 KrWG (Registerpflicht: Menge, Art, Ursprung, Bestimmung)"],
+          "hinweise": [
+            "Ab 20 t/a: elektronisches Nachweisverfahren (Begleitschein einsehen)",
+            "Ab 2 t/a: Sammelentsorgung bis max. 20 t (Übernahmeschein einsehen)",
+            "Pro Abfallschlüssel"
+          ],
+          "felder": [
+            { "id": "ab_erzeugernr", "label": "Erzeuger-Nr.", "typ": "text" },
+            { "id": "ab_gef_dokumente", "label": "Eingesehene Dokumente", "typ": "text" }
+          ]
+        },
+        {
+          "id": "ab_ngef_belege", "nr": "",
+          "titel": "Nicht gefährliche Abfälle",
+          "frage": "Liegen Belege über die Entsorgung vor?",
+          "antwort": "jn",
+          "hinweise": ["Für nicht gefährliche Abfälle als Praxisbelege z. B. Wiegeschein, Lieferschein, Rechnung, Entsorgungsweg o. ä."],
+          "felder": [{ "id": "ab_ngef_dokumente", "label": "Eingesehene Dokumente", "typ": "text" }]
+        }
+      ]
+    },
+
+    {
+      "id": "s_us_beauftragte",
+      "gruppe": "umweltschutz",
+      "titel": "Bestellungspflichten Umweltschutz – Beauftragte Personen",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "bf_immissionsschutz", "nr": "",
+          "frage": "Immissionsschutzbeauftragter",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["Anhang I 5. BImSchV"],
+          "entfaelltMoeglich": true
+        },
+        {
+          "id": "bf_abfall", "nr": "",
+          "frage": "Abfallbeauftragter",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 59 KrWG", "§ 2 AbfBeauftrV"],
+          "hinweise": ["> 100 t/a gefährlicher Abfall", "> 2000 t/a nicht gefährlicher Abfall"],
+          "entfaelltMoeglich": true
+        },
+        { "id": "bf_stoerfall", "nr": "", "frage": "Störfallbeauftragter", "antwort": "jn", "hinweise": ["obere Klasse"], "entfaelltMoeglich": true },
+        { "id": "bf_gefahrgut", "nr": "", "frage": "Gefahrgutbeauftragter", "antwort": "jn", "entfaelltMoeglich": true },
+        { "id": "bf_strahlenschutz", "nr": "", "frage": "Strahlenschutzbeauftragter", "antwort": "jn", "entfaelltMoeglich": true },
+        {
+          "id": "bf_berichte", "nr": "",
+          "frage": "Werden die erforderlichen Berichte erstellt?",
+          "antwort": "jn",
+          "hinweise": ["Stichprobe z. B. 11. BImSchV"],
+          "entfaelltMoeglich": true
+        }
+      ]
+    },
+
+    {
+      "id": "s_us_qualifikation",
+      "gruppe": "umweltschutz",
+      "titel": "Qualifikation Umweltschutz",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "qus_schluessel", "nr": "",
+          "frage": "Ist festgelegt, wer und wie die erforderlichen Qualifikationen für Schlüsselfunktionen ermittelt und die Durchführung entsprechender Fortbildungen organisiert werden, z. B. für Beauftragte und andere Funktionsträger?",
+          "antwort": "jn",
+          "hinweise": ["Wer ermittelt den Schulungsbedarf und wie (z. B. Rechtliches Grundlagenwissen bei Funktionsträger, erforderliche Kenntnisse von Weisungsbefugten bzgl. ihres Verantwortungsbereiches)?"]
+        },
+        {
+          "id": "qus_infoquellen", "nr": "",
+          "frage": "Wie bekommen Sie aktuelle Infos zu Umweltschutzthemen?",
+          "antwort": "text",
+          "hinweise": ["BG Zeitschrift, Internet, Fachzeitschriften, Verbände, Sachverständige"]
+        }
+      ]
+    },
+
+    {
+      "id": "s_bimschg",
+      "gruppe": "umweltschutz",
+      "titel": "Genehmigungsbedürftige Anlage – BImSchG",
+      "entfaellt": true,
+      "items": [
+        {
+          "id": "bi_genehmigung", "nr": "",
+          "frage": "Liegt eine Genehmigung für den Betrieb der Anlage vor?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["Nr. 4. BImSchV", "§ 4 BImSchG", "§ 16 BImSchG", "§ 67 BImSchG (Überführung Baurecht => BImSchG)"],
+          "hinweise": ["Im Amt vorbereiten"],
+          "felder": [
+            { "id": "bi_leistung", "label": "Leistung", "typ": "text" },
+            { "id": "bi_anlagen", "label": "Welche BImSchG-Anlagen?", "typ": "text" },
+            { "id": "bi_aenderungen_betrieb", "label": "Gibt es Änderungen: Betrieb der Anlage? Wenn ja, welche?", "typ": "text" }
+          ]
+        },
+        {
+          "id": "bi_mitteilung_52b", "nr": "",
+          "titel": "Mitteilungspflicht zur Betriebsorganisation",
+          "frage": "Gibt es Änderungen?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["§ 52 b BImSchG"],
+          "hinweise": ["Vordruck ist im GAA vorhanden", "Wer ist die verantwortliche Person? (Immer GF)"],
+          "felder": [{ "id": "bi_verantwortliche_person", "label": "Verantwortliche Person", "typ": "text" }]
+        },
+        {
+          "id": "bi_auflagen", "nr": "",
+          "titel": "Auflagenmanagement",
+          "frage": "Wie erfolgt die Umsetzung der Auflagen aus Genehmigungen (Auflagenmanagement)? Gibt es ein Auflagenkataster?",
+          "antwort": "jn",
+          "hinweise": ["G/NB-Kataster", "Bei mehreren Genehmigungen sinnvoll"],
+          "felder": [
+            { "id": "bi_auflagen_umsetzung", "label": "Umsetzung", "typ": "text" },
+            { "id": "bi_auflagen_stichprobe", "label": "Stichprobe(n) bzgl. der Einhaltung der Genehmigungsauflagen", "typ": "text" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_rundgang_plakette",
+      "gruppe": "rundgang",
+      "titel": "Rundgang – Folgende Bereiche aufsuchen",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "rg_fluchtwege", "nr": "",
+          "frage": "Sind Flucht- und Rettungswege ausreichend ausgeschildert?",
+          "antwort": "jn",
+          "felder": [{ "id": "rg_fluchtwege_bereich", "label": "Bereich", "typ": "text" }]
+        },
+        {
+          "id": "rg_anfahrschutz", "nr": "",
+          "frage": "Anfahrschutz Regale, Maschinen und Gehwege",
+          "antwort": "jn",
+          "hinweise": ["Regalbelastungsschild? Trägersicherung vorhanden? Durchschubsicherung? Beschädigungen?"],
+          "felder": [{ "id": "rg_anfahrschutz_bereich", "label": "Bereich", "typ": "text" }]
+        },
+        {
+          "id": "rg_feuerloescher", "nr": "",
+          "frage": "Sind Feuerlöscher vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Prüfung i. d. R. alle 2 Jahre"],
+          "felder": [
+            { "id": "rg_fl_bereich", "label": "Bereich", "typ": "text" },
+            { "id": "rg_fl_pruefung", "label": "Letzte Prüfung", "typ": "datum" },
+            { "id": "rg_fl_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ],
+          "referenz": "pruefungen"
+        },
+        {
+          "id": "rg_tore", "nr": "",
+          "frage": "Sind kraftbetriebene Türen und Tore vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Inbetriebnahme und jährlich"],
+          "felder": [
+            { "id": "rg_tore_bereich", "label": "Bereich", "typ": "text" },
+            { "id": "rg_tore_pruefung", "label": "Letzte Prüfung", "typ": "datum" },
+            { "id": "rg_tore_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ]
+        },
+        {
+          "id": "rg_stapler", "nr": "",
+          "frage": "Sind Gabelstapler/Flurförderzeuge vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Prüfung jährlich", "Steckt der Schlüssel?"],
+          "felder": [
+            { "id": "rg_stapler_bez", "label": "Bezeichnung", "typ": "text" },
+            { "id": "rg_stapler_bereich", "label": "Bereich", "typ": "text" },
+            { "id": "rg_stapler_pruefung", "label": "Letzte Prüfung", "typ": "datum" },
+            { "id": "rg_stapler_schluessel", "label": "Schlüssel steckt", "typ": "jn" },
+            { "id": "rg_stapler_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ]
+        },
+        {
+          "id": "rg_kraene", "nr": "",
+          "frage": "Sind Kräne vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Prüfung jährlich"],
+          "felder": [
+            { "id": "rg_kraene_bez", "label": "Bezeichnung", "typ": "text" },
+            { "id": "rg_kraene_bereich", "label": "Bereich", "typ": "text" },
+            { "id": "rg_kraene_pruefung", "label": "Letzte Prüfung", "typ": "datum" },
+            { "id": "rg_kraene_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ]
+        },
+        {
+          "id": "rg_absaugung", "nr": "",
+          "frage": "Sind Absauganlagen vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Prüfung monatlich auf Wirksamkeit"],
+          "_pruefhinweis": "Im Bogen S. 3 'Inbetriebnahme und jährlich', hier 'monatlich auf Wirksamkeit' – Bogenwortlaut jeweils übernommen.",
+          "felder": [
+            { "id": "rg_absaugung_bereich", "label": "Bereich", "typ": "text" },
+            { "id": "rg_absaugung_pruefung", "label": "Letzte Prüfung", "typ": "datum" },
+            { "id": "rg_absaugung_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_rundgang_ersthilfe",
+      "gruppe": "rundgang",
+      "titel": "Rundgang – Erste Hilfe",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "rg_ersthilfe", "nr": "",
+          "frage": "Erste-Hilfe-Material",
+          "antwort": "jn",
+          "hinweise": [
+            "Erste-Hilfe-Plakat mit Notruf-Nr. bei BG erhältlich",
+            "Verbandbuch (Abreißblock): Erste-Hilfe-Leistungen notieren"
+          ],
+          "felder": [
+            { "id": "rg_eh_bereich", "label": "Bereich", "typ": "text" },
+            { "id": "rg_eh_plakat", "label": "Erste-Hilfe-Plakat vorhanden", "typ": "jn" },
+            { "id": "rg_eh_verbandbuch", "label": "Verbandbuch geführt", "typ": "jn" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "s_rundgang_anlagen",
+      "gruppe": "rundgang",
+      "titel": "Überwachungsbedürftige Anlagen ProdSG / BetrSichV im Betrieb",
+      "entfaellt": false,
+      "items": [
+        {
+          "id": "rg_aufzuege", "nr": "",
+          "frage": "Sind Aufzüge vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["TRBS 3121", "TRBS 1201 Teil 4", "Anhang 1 Abschnitt 2 BetrSichV", "Anhang 1 Nr. 4 BetrSichV", "Anhang 2 BetrSichV"],
+          "hinweise": [
+            "Notrufleitsystem, Notfallplan (Zwei-Wege-Kommunikationssystem)",
+            "Regelmäßig auf offensichtliche Mängel",
+            "Prüfungen vor Inbetriebnahme, nach prüfpflichtiger Änderung, wiederkehrende Prüfungen"
+          ],
+          "felder": [{ "id": "rg_aufzuege_plakette", "label": "Prüfplakette", "typ": "jn" }],
+          "referenz": "pruefungen"
+        },
+        {
+          "id": "rg_druckbehaelter", "nr": "",
+          "frage": "Sind Druckbehälter vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["Anhang 2 BetrSichV"],
+          "hinweise": [
+            "ZÜS-Prüfung (Zentrale Überwachungsstelle, z. B. TÜV, DEKRA), BP (befähigte Person)",
+            "PS x V > 1000 (ZÜS, ansonsten BP)",
+            "Innere Prüfung alle 5 Jahre, FP alle 10 Jahre"
+          ],
+          "felder": [
+            { "id": "rg_db_v", "label": "V", "typ": "zahl", "einheit": "l" },
+            { "id": "rg_db_p", "label": "P", "typ": "zahl", "einheit": "bar" },
+            { "id": "rg_db_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ]
+        },
+        {
+          "id": "rg_rohrleitungen", "nr": "",
+          "frage": "Sind Rohrleitungen vorhanden?",
+          "antwort": "jn",
+          "rechtsgrundlagen": ["Anhang 2 BetrSichV"],
+          "hinweise": [
+            "Anfahrschutz vorhanden? Gelbe Rohre: Gas",
+            "PS x DN > 2000 oder DN > 25 und PS > 0,5 (ZÜS, ansonsten BP)",
+            "Äußere Prüfung alle 5 Jahre, FP alle 5 Jahre"
+          ],
+          "felder": [
+            { "id": "rg_rl_dn", "label": "DN (Nennweite)", "typ": "zahl" },
+            { "id": "rg_rl_v", "label": "V", "typ": "zahl", "einheit": "l" },
+            { "id": "rg_rl_p", "label": "P", "typ": "zahl", "einheit": "bar" },
+            { "id": "rg_rl_anfahrschutz", "label": "Anfahrschutz vorhanden", "typ": "jn" },
+            { "id": "rg_rl_plakette", "label": "Prüfplakette", "typ": "jn" }
+          ]
+        },
+        {
+          "id": "rg_abfuellanlagen", "nr": "",
+          "frage": "Sind Abfüllanlagen vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Betriebstankstelle, Abfüllstation für Öle usw."]
+        },
+        {
+          "id": "rg_lagerbehaelter", "nr": "",
+          "frage": "Sind Lagerbehälter vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Verordnung brennbare Flüssigkeiten (alt)", "z. B. Öle, Fette, Benzin, Aceton (zum Reinigen)"]
+        },
+        {
+          "id": "rg_ex_elektro", "nr": "",
+          "frage": "Sind elektrische Anlagen im Ex-Bereich vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["Lackieranlagen, Lacklager", "Sind diese Anlagen Ex-geschützt? Bereich gekennzeichnet?"],
+          "felder": [
+            { "id": "rg_ex_geschuetzt", "label": "Ex-geschützt", "typ": "jn" },
+            { "id": "rg_ex_gekennzeichnet", "label": "Bereich gekennzeichnet", "typ": "jn" }
+          ]
+        },
+        {
+          "id": "rg_neue_maschinen", "nr": "",
+          "frage": "Sind neue Maschinen vorhanden?",
+          "antwort": "jn",
+          "hinweise": ["CE-Kennzeichnung", "Konformitätserklärung"],
+          "felder": [
+            { "id": "rg_nm_ce", "label": "CE-Kennzeichnung vorhanden", "typ": "jn" },
+            { "id": "rg_nm_konformitaet", "label": "Konformitätserklärung vorhanden", "typ": "jn" }
+          ]
+        }
+      ]
+    }
+  ]
+}

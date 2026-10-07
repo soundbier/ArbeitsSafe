@@ -8,7 +8,8 @@ import { loadBogen } from './schema.js';
 import * as store from './store.js';
 import { abschnittFortschritt, gesamtFortschritt, abschnittEntfaellt, istBeantwortet, zaehlt } from './progress.js';
 import { abschnittTemplate, kopfdatenTemplate, gruppeLabel, ANTWORT_LABEL } from './render.js';
-import { befunde, ensureFeststellung, getFeststellungen, GRUND_LABEL } from './auswertung.js';
+import { befunde, ensureFeststellung, getFeststellungen, inEntwurfUebernehmen, GRUND_LABEL } from './auswertung.js';
+import { loadBausteine, findBaustein, zugeordnet, zuordnen, entfernen, vorbelegen } from './bausteine.js';
 
 const $ = id => document.getElementById(id);
 const DOM = {
@@ -26,14 +27,22 @@ const DOM = {
     errorBanner: $('bgErrorBanner'),
     auswertung: $('bgAuswertung'),
     auswertungMeta: $('bgAuswertungMeta'),
-    rundgangToggle: $('bgRundgangNein')
+    rundgangToggle: $('bgRundgangNein'),
+    toDraftBtn: $('bgToDraftBtn'),
+    zuordnung: $('bgZuordnung'),
+    pickModal: $('bgPickModal'),
+    pickTitle: $('bgPickTitle'),
+    pickSearch: $('bgPickSearch'),
+    pickList: $('bgPickList')
 };
 
 const ui = {
     def: null,
     rev: null,
     page: 'kopf',         // 'kopf' oder Abschnitts-ID
-    rundgangNein: false   // Auswertung: „Nein“ im Rundgang (= nicht vorhanden) einbeziehen
+    rundgangNein: false,  // Auswertung: „Nein“ im Rundgang (= nicht vorhanden) einbeziehen
+    pickItem: null,       // Zuordnung: Item, für das gerade ein Baustein gewählt wird
+    bausteineOk: false
 };
 
 /* =========================================================================
@@ -53,11 +62,12 @@ const confirmDelete = () => localStorage.getItem('arbeitsSafe_confirmdelete') !=
    ROUTING
    ========================================================================= */
 
-const VIEWS = ['#revisionen', '#erfassen', '#auswertung'];
+const VIEWS = ['#revisionen', '#erfassen', '#auswertung', '#zuordnung'];
+const OHNE_REVISION = ['#revisionen', '#zuordnung'];
 
 function navigate(hash) {
     let route = VIEWS.includes(hash) ? hash : '#revisionen';
-    if (route !== '#revisionen' && !ui.rev) route = '#revisionen';
+    if (!OHNE_REVISION.includes(route) && !ui.rev) route = '#revisionen';
 
     DOM.views.forEach(v => v.classList.toggle('is-active', v.dataset.route === route));
     DOM.navItems.forEach(n => {
@@ -68,6 +78,7 @@ function navigate(hash) {
     if (route === '#revisionen') renderRevList();
     if (route === '#erfassen') renderForm();
     if (route === '#auswertung') renderAuswertung();
+    if (route === '#zuordnung') renderZuordnung();
     if (location.hash !== route) history.replaceState(null, '', route);
 }
 
@@ -265,11 +276,18 @@ function feststellungEditor(item, fs) {
             <textarea class="input bg-textarea" id="fs-${id}-${key}" rows="${rows}" data-fs-item="${id}" data-fs-key="${key}">${esc(value)}</textarea>
             ${hint ? `<p class="bg-hint">${hint}</p>` : ''}
         </div>`;
+    const zug = zugeordnet(item.id).map(findBaustein).filter(Boolean);
     return `
     <div class="bg-fs-editor">
+        ${zug.length ? `
+        <div class="bg-fs-bausteine">
+            <span class="bg-hint">Zugeordnete Textbausteine: ${zug.map(b => esc(`${b.gesetzKuerzel} ${b.paragraf}${b.absatz ? ` Abs. ${b.absatz}` : ''}`)).join(', ')}</span>
+            <button type="button" class="btn btn--ghost btn--sm js-fs-fill" data-item="${id}">${icon('sparkles', 15)} Leere Felder aus Textbausteinen füllen</button>
+        </div>` : ''}
         ${area('sachverhalt', 'Sachverhalt', fs.sachverhalt)}
         ${area('feststellung', 'Feststellung', fs.feststellung)}
         ${area('rechtsgrundlage', 'Rechtsgrundlage', fs.rechtsgrundlage.join('\n'), 2, 'Eine Rechtsgrundlage je Zeile.')}
+        ${area('rechtsgrundlageText', 'Rechtsgrundlage (Wortlaut)', fs.rechtsgrundlageText || '', 3)}
         ${area('massnahme', 'Maßnahme', fs.massnahme)}
         <div class="field bg-field">
             <label class="field-label" for="fs-${id}-frist">Frist</label>
@@ -320,6 +338,7 @@ function renderAuswertung() {
 
 function updateAuswertungMeta(count) {
     const n = getFeststellungen(ui.def, ui.rev).length;
+    DOM.toDraftBtn.disabled = n === 0;
     DOM.auswertungMeta.innerHTML = `
         <span class="chip">${count} auffällige Punkte</span>
         <span class="chip${n ? ' chip--accent' : ''}">${n} Feststellung${n === 1 ? '' : 'en'} übernommen</span>`;
@@ -343,6 +362,103 @@ function onFeststellungInput(el) {
     const key = el.dataset.fsKey;
     fs[key] = key === 'rechtsgrundlage' ? el.value.split('\n').map(s => s.trim()).filter(Boolean) : el.value;
     afterChange();
+}
+
+function fillFromBausteine(itemId) {
+    const fs = ui.rev.feststellungen[itemId];
+    if (!fs) return;
+    if (!vorbelegen(fs, itemId)) { showToast('Keine Textbausteine verfügbar', 'error'); return; }
+    afterChange();
+    const scroller = DOM.auswertung.closest('.scroll-area');
+    const top = scroller.scrollTop;
+    renderAuswertung();
+    scroller.scrollTop = top;
+}
+
+function toDraft() {
+    const list = getFeststellungen(ui.def, ui.rev);
+    if (!list.length) return;
+    store.flush();
+    try {
+        const { neu, vorhanden } = inEntwurfUebernehmen(list);
+        if (!neu) { showToast('Alle Feststellungen sind bereits im Entwurf'); return; }
+        showToast(`${neu} Punkt${neu === 1 ? '' : 'e'} in den Entwurf übernommen${vorhanden ? ` (${vorhanden} bereits vorhanden)` : ''}`, 'success');
+        setTimeout(() => { location.href = 'index.html#document'; }, 700);
+    } catch (e) {
+        console.error(e);
+        showToast('Übernahme fehlgeschlagen', 'error');
+    }
+}
+
+/* =========================================================================
+   ZUORDNUNG TEXTBAUSTEINE (aus den Einstellungen erreichbar)
+   ========================================================================= */
+
+const bausteinLabel = b => `${b.gesetzKuerzel} ${b.paragraf}${b.absatz ? ` Abs. ${b.absatz}` : ''}`;
+
+function renderZuordnung() {
+    if (!ui.def) return;
+    if (!ui.bausteineOk) {
+        DOM.zuordnung.innerHTML = '<p class="bg-empty">Die Textbausteine (gesetze.csv) konnten nicht geladen werden.</p>';
+        return;
+    }
+    DOM.zuordnung.innerHTML = ui.def.abschnitte.map(a => `
+        <section class="bg-section">
+            <header class="bg-section-head">
+                <div class="bg-section-tags"><span class="chip">${esc(gruppeLabel(a.gruppe))}</span></div>
+                <h2>${esc(a.titel)}</h2>
+            </header>
+            ${a.items.map(it => {
+                const keys = zugeordnet(it.id);
+                return `
+                <div class="bg-item bg-zuo-item">
+                    <header class="bg-item-head">
+                        ${it.nr ? `<span class="chip chip--accent">${esc(it.nr)}</span>` : ''}
+                        <h3>${esc(it.titel || it.frage)}</h3>
+                    </header>
+                    ${keys.length ? `<div class="bg-zuo-chips">${keys.map(k => {
+                        const b = findBaustein(k);
+                        return `<span class="chip${b ? '' : ' bg-zuo-missing'}" title="${esc(b ? b.titel : 'Baustein nicht mehr in der Datenbank')}">
+                            ${esc(b ? bausteinLabel(b) : k.split('|').slice(0, 2).join(' '))}
+                            <button type="button" class="bg-zuo-x js-unassign" data-item="${esc(it.id)}" data-key="${esc(k)}" aria-label="Zuordnung entfernen">${icon('x', 14)}</button>
+                        </span>`;
+                    }).join('')}</div>` : ''}
+                    <button type="button" class="btn btn--ghost btn--sm js-pick" data-item="${esc(it.id)}">${icon('plus', 15)} Textbaustein zuordnen</button>
+                </div>`;
+            }).join('')}
+        </section>`).join('');
+}
+
+let bausteinCache = [];
+
+function openPicker(itemId) {
+    const item = ui.def.abschnitte.flatMap(a => a.items).find(i => i.id === itemId);
+    if (!item) return;
+    ui.pickItem = itemId;
+    DOM.pickTitle.textContent = item.titel || item.frage;
+    DOM.pickSearch.value = '';
+    renderPickList();
+    DOM.pickModal.hidden = false;
+    DOM.pickSearch.focus();
+}
+
+function closePicker() {
+    DOM.pickModal.hidden = true;
+    ui.pickItem = null;
+}
+
+function renderPickList() {
+    const q = DOM.pickSearch.value.trim().toLowerCase();
+    const taken = new Set(zugeordnet(ui.pickItem));
+    const list = bausteinCache.filter(b => !taken.has(b.key) && (!q ||
+        `${b.gesetzKuerzel} ${b.paragraf} ${b.absatz} ${b.titel} ${b.mangelVorgefunden}`.toLowerCase().includes(q)));
+    DOM.pickList.innerHTML = list.length
+        ? list.map(b => `
+            <button type="button" class="bg-pick-row js-assign" data-key="${esc(b.key)}">
+                <strong>${esc(bausteinLabel(b))} — ${esc(b.titel)}</strong>
+                <span>${esc((b.mangelVorgefunden || b.handlungsaufforderung || '').slice(0, 160))}</span>
+            </button>`).join('')
+        : '<p class="bg-empty">Keine passenden Textbausteine.</p>';
 }
 
 function gotoItem(abschnittId, itemId) {
@@ -378,6 +494,28 @@ function wireEvents() {
 
         const choice = t.closest('.choice');
         if (choice) { onChoice(choice); return; }
+
+        if (t.closest('.js-to-draft')) { toDraft(); return; }
+
+        const fill = t.closest('.js-fs-fill');
+        if (fill) { fillFromBausteine(fill.dataset.item); return; }
+
+        const pick = t.closest('.js-pick');
+        if (pick) { openPicker(pick.dataset.item); return; }
+
+        const assign = t.closest('.js-assign');
+        if (assign) {
+            zuordnen(ui.pickItem, assign.dataset.key);
+            closePicker();
+            renderZuordnung();
+            showToast('Textbaustein zugeordnet', 'success');
+            return;
+        }
+
+        const unassign = t.closest('.js-unassign');
+        if (unassign) { entfernen(unassign.dataset.item, unassign.dataset.key); renderZuordnung(); return; }
+
+        if (t.closest('[data-close-pick]') || t === DOM.pickModal) { closePicker(); return; }
 
         const goto = t.closest('.js-goto-item');
         if (goto) { gotoItem(goto.dataset.abschnitt, goto.dataset.item); return; }
@@ -427,6 +565,9 @@ function wireEvents() {
         renderAuswertung();
     });
 
+    DOM.pickSearch.addEventListener('input', renderPickList);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !DOM.pickModal.hidden) closePicker(); });
+
     DOM.newBtn.addEventListener('click', () => {
         if (!ui.def) { showToast('Bogen nicht geladen', 'error'); return; }
         const rev = store.createRevision(ui.def);
@@ -470,6 +611,13 @@ async function boot() {
         DOM.errorBanner.hidden = false;
         DOM.errorBanner.textContent = 'Der Revisionsbogen konnte nicht geladen werden.';
         DOM.newBtn.disabled = true;
+    }
+
+    try {
+        bausteinCache = await loadBausteine();
+        ui.bausteineOk = true;
+    } catch (e) {
+        console.error(e);
     }
 
     const active = store.getActiveId();

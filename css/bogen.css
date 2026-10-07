@@ -279,3 +279,31 @@
 .bg-take { font-weight: 700; }
 .bg-fs-editor { display: flex; flex-direction: column; gap: var(--sp-3); padding-top: var(--sp-2); border-top: 1px dashed var(--c-border); }
 .bg-befund .link-btn { align-self: flex-start; }
+
+/* --- Textbausteine --- */
+.bg-fs-bausteine { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.bg-zuo-item { gap: var(--sp-2); }
+.bg-zuo-item .btn { align-self: flex-start; }
+.bg-zuo-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.bg-zuo-chips .chip { padding-right: 4px; }
+.bg-zuo-missing { background: var(--c-danger-soft); color: var(--c-danger); }
+.bg-zuo-x {
+    display: grid; place-items: center;
+    width: 28px; height: 28px;
+    border: 0; border-radius: var(--r-full);
+    background: transparent; color: inherit;
+}
+.bg-zuo-x:hover { background: var(--c-surface); }
+.bg-pick-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.bg-pick-row {
+    display: flex; flex-direction: column; gap: 2px;
+    min-height: 48px;
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-sm);
+    background: var(--c-surface-2);
+    text-align: left;
+    font-size: var(--fs-sm);
+}
+.bg-pick-row:hover { border-color: var(--c-accent); }
+.bg-pick-row span { color: var(--c-text-3); }

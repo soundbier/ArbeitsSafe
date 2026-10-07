@@ -19,6 +19,7 @@ const DOM = {
     revList: $('bgRevList'),
     newBtn: $('bgNewBtn'),
     sectionBar: $('bgSectionBar'),
+    overall: $('bgOverall'),
     form: $('bgForm'),
     formScroll: $('bgFormScroll'),
     prevBtn: $('bgPrevBtn'),
@@ -145,7 +146,8 @@ const abschnittById = id => ui.def.abschnitte.find(a => a.id === id);
 function sectionChip(id) {
     if (id === 'kopf') {
         return `<button type="button" class="bg-chip js-page" data-page="kopf" aria-current="${ui.page === 'kopf'}">
-                    <span class="bg-chip-title">Kopfdaten</span></button>`;
+                    <span class="bg-chip-title">Kopfdaten</span>
+                    <span class="bg-chip-count">Angaben zum Betrieb</span></button>`;
     }
     const a = abschnittById(id);
     const p = abschnittFortschritt(a, ui.rev);
@@ -154,14 +156,33 @@ function sectionChip(id) {
     <button type="button" class="bg-chip js-page${p.entfallen ? ' is-entfallen' : ''}${complete ? ' is-complete' : ''}"
             data-page="${esc(id)}" aria-current="${ui.page === id}" title="${esc(a.titel)}">
         <span class="bg-chip-title">${esc(a.titel)}</span>
-        <span class="bg-chip-count">${p.entfallen ? 'entfällt' : `${p.done}/${p.total}`}</span>
+        <span class="bg-chip-count">${complete ? icon('check', 12) : ''}${p.entfallen ? 'entfällt' : `${p.done}/${p.total}`}</span>
+        ${p.entfallen || !p.total ? '' : `<span class="bg-chip-bar" aria-hidden="true"><span style="width:${Math.round(p.done / p.total * 100)}%"></span></span>`}
     </button>`;
+}
+
+function renderOverall() {
+    const p = gesamtFortschritt(ui.def, ui.rev);
+    const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+    DOM.overall.innerHTML = `
+        <span class="bg-overall-text"><strong>${pct} %</strong> beantwortet · ${p.done} von ${p.total} Fragen</span>
+        <span class="bg-progress" role="progressbar" aria-label="Gesamtfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></span>`;
+}
+
+function centerCurrentChip() {
+    const cur = DOM.sectionBar.querySelector('[aria-current="true"]');
+    if (!cur) return;
+    if (DOM.sectionBar.scrollWidth > DOM.sectionBar.clientWidth) {
+        DOM.sectionBar.scrollLeft = cur.offsetLeft - (DOM.sectionBar.clientWidth - cur.offsetWidth) / 2;
+    } else {
+        DOM.sectionBar.scrollTop = cur.offsetTop - (DOM.sectionBar.clientHeight - cur.offsetHeight) / 2;
+    }
 }
 
 function renderSectionBar() {
     DOM.sectionBar.innerHTML = pages().map(sectionChip).join('');
-    const cur = DOM.sectionBar.querySelector('[aria-current="true"]');
-    if (cur) DOM.sectionBar.scrollLeft = cur.offsetLeft - (DOM.sectionBar.clientWidth - cur.offsetWidth) / 2;
+    renderOverall();
+    centerCurrentChip();
 }
 
 function updateSectionChip(id) {
@@ -170,6 +191,7 @@ function updateSectionChip(id) {
     const tmp = document.createElement('div');
     tmp.innerHTML = sectionChip(id);
     el.replaceWith(tmp.firstElementChild);
+    renderOverall();
 }
 
 function renderForm() {
@@ -188,7 +210,8 @@ function renderForm() {
     const idx = list.indexOf(ui.page);
     DOM.prevBtn.disabled = idx === 0;
     DOM.nextBtn.disabled = idx === list.length - 1;
-    DOM.pagerLabel.textContent = `${idx + 1} / ${list.length}`;
+    const titel = ui.page === 'kopf' ? 'Kopfdaten' : abschnittById(ui.page).titel;
+    DOM.pagerLabel.innerHTML = `<span class="bg-pager-count">${idx + 1} / ${list.length}</span><span class="bg-pager-title">${esc(titel)}</span>`;
     DOM.formScroll.scrollTop = 0;
 }
 

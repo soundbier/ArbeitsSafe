@@ -10,7 +10,7 @@ import {
     setDataStatus, syncSearchFieldState, isDesktop, isSplitView, DESKTOP_QUERY
 } from './ui.js';
 
-const APP_VERSION = '2.0.10';
+const APP_VERSION = '2.0.11';
 const LS = {
     theme: 'arbeitsSafe_theme',
     density: 'arbeitsSafe_compact',
